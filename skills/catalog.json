@@ -152,7 +152,7 @@
         "sh scripts/check.sh"
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
-      "lastReviewedRevision": "510dc179d2e2a801de3a0deb2bc6fa4fad1a0866"
+      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
     },
     {
       "id": "portfolio-feed",
@@ -178,7 +178,7 @@
         "npm test"
       ],
       "continuation": "skills/service-portfolio-feed/continuation.md",
-      "lastReviewedRevision": "09d48da09361b9d29f461b3dc0f35afdffafb21e"
+      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
     },
     {
       "id": "dashboard-web",
@@ -205,7 +205,7 @@
         "npm test"
       ],
       "continuation": "skills/service-dashboard-web/continuation.md",
-      "lastReviewedRevision": "09d48da09361b9d29f461b3dc0f35afdffafb21e"
+      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
     }
   ]
 }
