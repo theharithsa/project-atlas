@@ -87,13 +87,14 @@ function chart(view, sources, profileSources, selectedDate) {
   const source = developer ? external('https://github.com/' + login + '?tab=overview&from=' + month.key + '-01&to=' + days.at(-1).date,
     'GitHub contribution profile for @' + e(login) + ' ' + icon('external',12),'text-link') : '';
   const pending = view.loading ? 'Checking history… · ' : '';
-  const coverage = pending + number(s.covered) + ' of ' + number(range.length) + ' dates fully checked';
+  const coverage = pending + number(s.covered) + ' of ' + number(range.length) + ' ' + unit + ' dates fully checked';
+  const partialTotal = commits.covered < range.length || (profile && profile.covered < range.length);
   const landing = long ? monthsView(months,month.key,route,unit) + `<h3 class="month-detail">${e(longMonth(month.key+'-01'))} <small>${renderValue(month.total,!month.complete)} ${unit}${month.total === 1 ? '' : 's'}</small></h3>` : '';
   const note = unit === 'commit' ? 'Streaks use committed dates in India time.' : 'Streaks use the dates on the public GitHub contribution calendar.';
   const profileNote = developer ? ' Total contributions follows GitHub’s profile counting rules.' : '';
   return `<div class="streak-stats">${stats}</div>${landing}${scale}${detailDays(days,unit,selected.date)}
     <div class="activity-caption"><output data-day-detail aria-live="polite">${e(dayLabel(selected,unit))}</output><span>${e(coverage)}</span></div>
-    <p class="activity-note">${note} Today can extend yesterday’s streak.${profileNote}${s.covered < range.length || s.touchesStart ? ' A ≥ value is a confirmed minimum.' : ''}</p>${source ? '<p class="activity-source">'+source+'</p>' : ''}`;
+    <p class="activity-note">${note} Today can extend yesterday’s streak. The current year refreshes hourly.${profileNote}${partialTotal || s.touchesStart ? ' A ≥ value is a confirmed minimum.' : ''}</p>${source ? '<p class="activity-source">'+source+'</p>' : ''}`;
 }
 
 export function codingPanel(data, products, route, users) {
