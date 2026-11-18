@@ -1,7 +1,6 @@
 name: Task
 description: Maintenance, research, documentation or infrastructure work
 title: "[Task] "
-type: Task
 labels: ["type: task"]
 body:
   - type: textarea

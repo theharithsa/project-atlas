@@ -1,14 +1,13 @@
 name: Bug report
 description: Safe reproduction and expected behavior
 title: "[Bug] "
-type: Bug
 labels: ["type: bug"]
 body:
   - type: textarea
     id: reproduction
     attributes:
-      label: Reproduction and actual behavior
-      description: Synthetic examples only. Use a private channel for vulnerabilities.
+      label: Which view, filter or public board shows the problem?
+      description: Include steps, the feed check time and a public source link if available. Redact private issue titles and credentials.
     validations:
       required: true
   - type: textarea

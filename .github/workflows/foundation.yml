@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Project Atlas CI
 on:
   pull_request:
     types: [opened, reopened, synchronize, edited, ready_for_review]
@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -25,9 +25,14 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Check foundation, links and tests
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install locked function dependencies
+        run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Verify repository, services, docs and application
         env:
-          APP_LAUNCHPAD_RELEASE_BASE: ${{ github.repository == 'theharithsa/app-launchpad-template' && github.event.pull_request.base.sha || '' }}
           PYTHON: python
           PYTHONWARNDEFAULTENCODING: '1'
           PYTHONWARNINGS: error::EncodingWarning

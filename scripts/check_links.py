@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check local Markdown links (including hidden agent files); never access the network."""
 import argparse
+import os
 from pathlib import Path
 import re
 from urllib.parse import unquote, urlsplit
@@ -8,8 +9,12 @@ from urllib.parse import unquote, urlsplit
 
 def check_links(root):
     errors = []
-    files = sorted(p for p in root.rglob('*') if p.is_file() and p.suffix in ('.md', '.mdc')
-                   and not any(part in ('.git', 'node_modules', '.venv', '__pycache__') for part in p.parts))
+    files = []
+    for base, directories, names in os.walk(root):
+        directories[:] = [d for d in directories if d not in {
+            '.git', 'node_modules', '.venv', '__pycache__', 'local-archive', '.firebase'
+        }]
+        files.extend(Path(base) / n for n in names if Path(n).suffix in ('.md', '.mdc'))
     for file in files:
         content = re.sub(r'^```.*?^```[^\n]*$', '', file.read_text(encoding='utf-8'), flags=re.MULTILINE | re.DOTALL)
         inline = re.findall(r'\]\(\s*(<[^>]+>|[^\s)]+)', content)

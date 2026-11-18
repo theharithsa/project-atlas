@@ -6,13 +6,13 @@ import sys
 import unittest
 from unittest.mock import patch
 import warnings
-import test_foundation as fixtures
+import repo_fixture as fixtures
 ROOT = fixtures.ROOT
 from skill_catalog import safe_path, validate_catalog, warn_unavailable_revision
 
 class CatalogTests(unittest.TestCase):
-    setUp = fixtures.FoundationTests.setUp
-    fixture = fixtures.FoundationTests.fixture
+    setUp = fixtures.RepositoryTests.setUp
+    fixture = fixtures.RepositoryTests.fixture
 
     def catalog(self, root, change):
         file = root / 'skills/catalog.json'
