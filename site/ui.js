@@ -57,13 +57,15 @@ function external(url, label, cls = '', aria = '') {
     ? `<a class="${cls}" href="${href}" target="_blank" rel="noopener noreferrer"${aria ? ` aria-label="${e(aria)}"` : ''}>${label}</a>`
     : label;
 }
+let routePrefix = '#';
+export function setRoutePrefix(prefix) { routePrefix = prefix || '#'; }
 function url(page, product = 'all', extras = {}) {
   const q = new URLSearchParams();
   if (product !== 'all') q.set('product', product);
   for (const [k, v] of Object.entries(extras))
     if (v !== undefined && v !== null && v !== '') q.set(k, v);
   const qs = q.toString();
-  return '#' + page + (qs ? '?' + qs : '');
+  return routePrefix + page + (qs ? '?' + qs : '');
 }
 function productMark(p, small = false) {
   return `<span class="product-mark tone-${p.color}${small ? ' small' : ''}" aria-hidden="true">${icon(p.icon, small ? 15 : 18)}</span>`;

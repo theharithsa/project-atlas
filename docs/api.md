@@ -11,6 +11,7 @@
 | `projects[].items[].closedAt`, `reason` | UTC ISO 8601 closure instant for a closed issue when GitHub provides it, otherwise null. The native closure reason is uppercase when available. |
 | `sourceSettings` | Shared endpoint only. Active `users` and `organizations` arrays and their `refreshSeconds` (300). A configured empty portfolio returns both arrays empty and no projects. |
 | `repositories` | Map keyed by owner/repository. Each entry has its own check time, open milestones with dates and counts, and latest published release when available. |
+| `repositories[slug].activity` | Optional 28-day aggregate for the verified public repository’s default branch. The activity contract below also applies to a developer lookup. |
 | `unavailable[]` | Source label and bounded explanation for a board or repository whose data could not be included, or a warning that the last validated owner list is in use. |
 | `directoryOwners`, `directoryRefreshSeconds` | GitHub owners in scope and the membership refresh period in seconds (600). These fields were added in 0.2.0. |
 | `boardRefreshSeconds`, `repositoryRefreshSeconds` | Normal refresh periods for board contents and release metadata (60 and 180 seconds). |
@@ -22,6 +23,16 @@
 The browser makes at most two concurrent owner reads and combines results by board key and repository. It uses the oldest successful check for portfolio freshness and the newest available release record for each repository. A valid empty directory returns 200 with zero boards. GitHub’s missing directory response maps to 404 with `public_owner_unavailable`. A temporary upstream failure or busy function returns 503 with a retry interval. Partial results carry warnings. Individual GitHub owner lookups can appear in infrastructure request logs. The service stores no per-visitor owner lists.
 
 Each function instance coalesces duplicate reads, retains up to 16 individual owner caches and runs up to two personal refreshes at once. A personal refresh has a 45-second and 160-request upstream budget. Completed boards can be returned with a coverage warning when a limit is reached. Cold personal REST reads pause when GitHub reports ten or fewer remaining anonymous requests. The shared feed has an independent cache and can still use the remaining allowance.
+
+## Read public commit activity
+
+`GET /api/v1/developers/{login}/activity` returns `{login, activity}` for one validated public GitHub login. HEAD returns headers. The route accepts an empty query string. The developer feed uses anonymous commit search with the public visibility, author login and committed-date qualifiers. A completed search with no matches yields an empty count map. Its coverage describes the public search index. [GitHub commit search](https://docs.github.com/en/rest/search/search#search-commits)
+
+Both activity sources provide `start` and `through` as inclusive India dates, `checkedAt` as a UTC instant, `days` as a map of dates with observed commit counts, and `status` as `complete`, `partial` or `unavailable`. An omitted date is zero only when covered by a complete result. Partial counts are lower bounds and an unavailable result carries no counts. The repository collector counts unique commit hashes per public repository. Developer search counts each distinct hash for that author once across results. Responses contain date counts only. [GitHub list commits API](https://docs.github.com/en/rest/commits/commits#list-commits)
+
+Checks use at most three pages of 100 commits per repository and six per developer. Repositories and developer lookups have separate, bounded in-memory caches. A complete result is reused for up to an hour, and incomplete results retry after five minutes on demand. The window advances at India midnight. GitHub's search rate limit is handled independently of the board directory quota. The public developer endpoint also supports a 200 response with unavailable coverage during an upstream outage. [Activity collector](../functions/activity.js)
+
+The share link stores typed owners and route filters in the URL fragment. A recipient requests the existing public owner feeds and can browse the temporary portfolio without a settings write. The server never needs a combined owner list or an issue search term to build a link. [Sharing guide](handbook.md#share-the-current-view)
 
 ## Shared settings and discovery
 

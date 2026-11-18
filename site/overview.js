@@ -1,4 +1,5 @@
-import { day, iso, fmt, span, monday, phase, sprintStats, targets, shortSprint } from './model.js';
+import {codingPanel} from './activity.js';
+import { day, iso, fmt, span, monday, phase, sprintStats, targets, shortSprint, deliveryMetrics } from './model.js';
 import { icon, e, external, url, productMark, dot, empty, progress } from './ui.js';
 function calendar(data, products, route) {
   const preferred = window.matchMedia('(max-width:580px)').matches ? 4 : 6;
@@ -92,7 +93,8 @@ function distribution(pList, r) {
   return `<section class="panel status-mix"><div class="panel-head"><h2>Open work by GitHub status</h2><span class="subcount">${total} issues</span></div><div class="mix-bar" aria-hidden="true">${sorted.map((x, i) => `<i class="tone-${colors[i % colors.length]}" style="flex:${x.count}"></i>`).join('')}</div><div class="mix-legend">${sorted.map((x, i) => `<a href="${e(jump(x))}"><i class="product-dot tone-${colors[i % colors.length]}"></i>${e(x.label)} <b>${x.count}</b></a>`).join('')}</div></section>`;
 }
 
-function overview(data, products, route) {
+function overview(data, products, route, users = []) {
+  const delivery = deliveryMetrics(data, products);
   const open = products.reduce((n, p) => n + p.open.length, 0);
   const currentOpen = products.reduce(
     (n, p) => n + p.current.reduce((t, s) => t + sprintStats(p, s).open, 0),
@@ -135,8 +137,17 @@ function overview(data, products, route) {
       'Upcoming version milestones',
       url('roadmap', route.product, { when: 'upcoming' }),
     ],
+    ['clock', 'green', 'Closed in 7 days', delivery.recentlyClosed, 'Unique issues closed on these boards',
+      url('history', route.product, {window:'7d'})],
+    ['check', 'violet', 'Sprint completion', delivery.completion === null ? '—' : delivery.completion + '%',
+      delivery.currentTotal ? delivery.currentClosed + ' of ' + delivery.currentTotal + ' assigned issues closed' : 'No issues in current sprints',
+      url('sprints', route.product, {period:'current'})],
+    ['calendar', 'blue', 'Needs a sprint', delivery.needsSprint, 'Open issues with only a milestone',
+      url('backlog', route.product, {scope:'milestone'})],
+    ['flag', 'amber', 'Undated releases', delivery.undated, 'Version milestones with open work',
+      url('roadmap', route.product, {kind:'releases', when:'undated'})],
   ];
   return `<div class="metrics">${metrics.map(([ic, c, label, n, help, href]) => `<a href="${e(href)}" class="metric"><span class="metric-heading"><span class="metric-icon tone-${c}">${icon(ic, 17)}</span>${e(label)}</span><b>${n}</b><small>${e(help)}</small></a>`).join('')}</div>
-    <div class="overview-panels">${calendar(data, products, route)}${upcomingCard(data, products, route)}</div>${productTable(data, products)}${distribution(products, route)}`;
+    <div class="overview-panels">${calendar(data, products, route)}${upcomingCard(data, products, route)}</div>${codingPanel(data, products, route, users)}${productTable(data, products)}${distribution(products, route)}`;
 }
 export { overview, calendar };

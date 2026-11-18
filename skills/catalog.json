@@ -165,7 +165,8 @@
         "functions/github.js",
         "functions/feed.js",
         "functions/owner-settings.js",
-        "functions/owner-feed.js"
+        "functions/owner-feed.js",
+        "functions/activity.js"
       ],
       "owner": "theharithsa",
       "status": "active",
@@ -191,7 +192,9 @@
         "site/index.html",
         "site/app.js",
         "site/model.js",
-        "site/portfolio.js"
+        "site/portfolio.js",
+        "site/sharing.js",
+        "site/activity.js"
       ],
       "owner": "theharithsa",
       "status": "active",

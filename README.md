@@ -16,11 +16,14 @@ Project Atlas gives product owners and maintainers one place to see what each te
 | Which issues still need planning? | **Backlog → Unscheduled** shows open work without a sprint or delivery milestone. **Board backlog** shows the source board’s Backlog and Todo statuses, including scheduled issues. |
 | Which issues closed recently? | **History** lists closed issues newest first. Select a product or search by issue number, title or repository. |
 | How do I build my own dashboard? | Choose **My portfolio** at the top, enter GitHub users and organizations, then select **Save and view my portfolio**. Switch back to **Shared portfolio** at any time. |
+| How do I share the sprint I’m looking at? | In **My portfolio**, open a product and sprint, apply your filters, then choose **Share view → Copy link**. Anyone who opens it sees that live selection. Both dashboards keep their saved settings. |
+| Where can I see coding activity? | In **Overview → Coding streak**, choose **Projects** for the selected repositories or **Developer** for a GitHub username. Select a day to inspect its commit count. |
 | How do I change the shared accounts? | **Data sources → Edit owners on GitHub** opens the shared user and organization list for a pull request. |
 | What is expected to ship next? | **Roadmap** shows versioned milestone targets. **Data sources** links to the latest published release for each repository. |
+| Which work closed or still needs scheduling? | The overview tiles open seven-day issue history, current sprint completion, milestone-only work and release targets awaiting a date. |
 | How fresh are the numbers? | The status at the top shows the last board check in India time. Open **Data sources** for coverage or use the refresh button. |
 
-While the page is visible it checks boards every minute. Repository milestones and release tags refresh on demand every three minutes. Workload counts exclude pull requests, archived entries and parent rollups. Atlas discovers open public boards under the configured users and organizations every ten minutes. It checks for changes to the shared owner settings every five minutes while the dashboard is in use. The dashboard also tracks its own work. [Atlas sprint](https://pipeline.theharithsanotes.com/#sprints?product=theharithsa-5) · [Atlas planning board](https://github.com/users/theharithsa/projects/5) · [Dashboard guide](docs/handbook.md)
+While the page is visible it checks boards every minute. Repository milestones and release tags refresh on demand every three minutes. Commit activity covers the last 28 India calendar dates and refreshes hourly on demand. Workload counts exclude pull requests, archived entries and parent rollups. Atlas discovers open public boards under the configured users and organizations every ten minutes. It checks for changes to the shared owner settings every five minutes while the dashboard is in use. The dashboard also tracks its own work. [Atlas sprint](https://pipeline.theharithsanotes.com/#sprints?product=theharithsa-5) · [Atlas planning board](https://github.com/users/theharithsa/projects/5) · [Dashboard guide](docs/handbook.md)
 
 ## Run locally
 

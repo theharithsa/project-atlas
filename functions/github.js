@@ -1,3 +1,4 @@
+import {repositoryActivity} from './activity.js';
 import { createProjectDirectory, directoryRefreshSeconds } from './discovery.js';
 import { publishedOwnerSettings, settingsRefreshSeconds } from './owner-settings.js';
 
@@ -38,6 +39,7 @@ async function readGitHub(url, accept = 'text/html', method = 'GET', deadline) {
   }
   if (method === 'HEAD' && response.status >= 300 && response.status < 400)
     return response;
+  if (rest && response.status === 409 && new URL(url).pathname.endsWith('/commits')) return response;
   if (!response.ok) throw new SourceError(response.status);
   return response;
 }
@@ -448,6 +450,16 @@ export async function collectPortfolio(loadSettings = publishedOwnerSettings, st
       });
     }
   }
+  // Complete the board and release reads before spending the optional activity budget.
+  const activityDeadline = AbortSignal.timeout(8_000);
+  const readActivity = (url, accept, method, signal) => {
+    activityDeadline.throwIfAborted();
+    return read(url, accept, method, AbortSignal.any([signal, activityDeadline]));
+  };
+  await boundedResults(Object.keys(repositories), async slug => {
+    const activity = await repositoryActivity('repository', slug, readActivity);
+    repositories[slug] = {...repositories[slug], activity};
+  });
   const active = new Set(names);
   for (const slug of repoCache.keys()) if (!active.has(slug)) repoCache.delete(slug);
   const now = new Date();
@@ -484,10 +496,11 @@ export function createPersonalCollector(owner) {
     // The public owner route has its own work budget and never consumes the shared cache.
     const deadline = AbortSignal.timeout(45_000);
     let remaining = 160;
-    const read = (url, accept, method) => {
+    const read = (url, accept, method, activitySignal) => {
       deadline.throwIfAborted();
+      if (activitySignal && remaining <= 0) throw new Error('Owner activity budget used');
       if (--remaining < 0) throw new Error('Owner exceeds the refresh budget');
-      return readGitHub(url, accept, method, deadline);
+      return readGitHub(url, accept, method, activitySignal ? AbortSignal.any([deadline, activitySignal]) : deadline);
     };
     const data = await collectPortfolio(settings, state, read);
     if (deadline.aborted || remaining < 0)

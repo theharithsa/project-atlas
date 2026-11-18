@@ -1,3 +1,4 @@
+import {developerFromPath, publicDeveloperActivity} from '../functions/activity.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import {ownerFromPath, publicOwnerFeed, missingOwner} from '../functions/owner-feed.js';
@@ -14,7 +15,7 @@ const site = new URL('../site/', import.meta.url);
 const mime = new Map([
   ['index.html', 'text/html; charset=utf-8'],
   ['styles.css', 'text/css; charset=utf-8'],
-  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio'].map((f) => [
+  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity'].map((f) => [
     f + '.js',
     'text/javascript; charset=utf-8',
   ]),
@@ -31,9 +32,10 @@ const server = createServer(async (req, res) => {
     return;
   }
   const owner = ownerFromPath(req.url);
+  const developer = developerFromPath(req.url);
   try {
-    if (owner || path === 'api/v1/portfolio') {
-      const data = owner ? await publicOwnerFeed(owner) : await currentPortfolio();
+    if (developer || owner || path === 'api/v1/portfolio') {
+      const data = developer ? {login:developer, activity:await publicDeveloperActivity(developer)} : owner ? await publicOwnerFeed(owner) : await currentPortfolio();
       res
         .writeHead(200, { 'Content-Type': 'application/json' })
         .end(req.method === 'HEAD' ? undefined : JSON.stringify(data));
