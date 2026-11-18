@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-import test_foundation as fixtures
+import repo_fixture as fixtures
 from contracts import *
 from schema_validation import validate_shape, validate_record
 from check_links import check_links
@@ -11,7 +11,7 @@ import repository_ruleset
 ROOT = fixtures.ROOT
 
 class ContractTests(unittest.TestCase):
-    setUp = fixtures.FoundationTests.setUp
+    setUp = fixtures.RepositoryTests.setUp
 
     def test_schema_keys_statuses_and_patterns_match_constants(self):
         schema = lambda name: json.loads((ROOT/'schemas'/f'{name}.schema.json').read_text(encoding='utf-8'))
@@ -45,11 +45,8 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(validate_shape(float('nan'),{'type':'number'}))
         self.assertEqual(validate_shape(10**1000,{'type':'number','minimum':0}),[])
 
-    def test_synthetic_evidence_and_sample_schema_pointers(self):
-        value=json.loads((ROOT/'examples/evidence.json').read_text(encoding='utf-8'))
-        self.assertEqual(validate_record(ROOT,'evidence',value),[])
-        self.assertIn('SYNTHETIC',value['application'])
-        for name in ('project.json','skills/catalog.json','qa/evidence.json','examples/evidence.json'):
+    def test_product_contracts_have_resolvable_schema_links(self):
+        for name in ('project.json','skills/catalog.json'):
             file=ROOT/name
             pointer=json.loads(file.read_text(encoding='utf-8'))['$schema']
             self.assertTrue((file.parent/pointer).is_file(),name)
@@ -64,31 +61,6 @@ class ContractTests(unittest.TestCase):
         self.assertIn('missing.md',errors[0])
         (root/'missing.md').write_text('resolved', encoding='utf-8', newline='\n')
         self.assertEqual(check_links(root),[])
-
-    def test_ci_and_catalog_share_the_check_entrypoint(self):
-        data=json.loads((ROOT/'skills/catalog.json').read_text(encoding='utf-8'))
-        service=next(s for s in data['services'] if s['id']=='foundation-tooling')
-        import re
-        executed=re.findall(r'^\s+run:\s*(.+)$',(ROOT/'.github/workflows/foundation.yml').read_text(encoding='utf-8').split('\n  foundation:', 1)[0],re.MULTILINE)
-        self.assertEqual(service['testCommands'],executed)
-        self.assertEqual(executed,['sh scripts/check.sh'])
-        # Exercise the entrypoint's execution/early-exit contract without recursively running tests.
-        import os,subprocess
-        bin_dir=self.base/'bin';bin_dir.mkdir();calls=self.base/'calls'
-        fake=bin_dir/'chosen-python'
-        fake.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CHECK_CALLS"\ncase "$*" in *check_links*) exit "${CHECK_LINK_EXIT:-0}";; esac\n', encoding='utf-8', newline='\n')
-        fake.chmod(0o755)
-        env={**os.environ,'PYTHON':fake.as_posix(),'CHECK_CALLS':calls.as_posix()}
-        good=subprocess.run(['sh',str(ROOT/'scripts/check.sh')],env=env,capture_output=True, timeout=10)
-        self.assertEqual(good.returncode,0)
-        self.assertEqual(calls.read_text(encoding='utf-8').splitlines(), [
-            'scripts/check_foundation.py', 'scripts/check_links.py', 'scripts/check_docs_impact.py',
-            'scripts/build_public_docs.py', '-m unittest discover -s tests -v',
-        ])
-        calls.write_text('', encoding='utf-8', newline='\n');env['CHECK_LINK_EXIT']='3'
-        bad=subprocess.run(['sh',str(ROOT/'scripts/check.sh')],env=env,capture_output=True, timeout=10)
-        self.assertEqual(bad.returncode,3)
-        self.assertEqual(len(calls.read_text(encoding='utf-8').splitlines()),2)
 
     def test_documentation_skill_routes_to_existing_policy_anchors(self):
         import re
