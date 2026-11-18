@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1 · 18 November 2026
+
+- Serve the new Atlas mark at a dedicated URL for returning visitors. Match the navigation scrollbar to the dark theme. [Asset fix](https://github.com/theharithsa/project-atlas/issues/21)
+
 ## 0.8.0 · 18 November 2026
 
 - Use the dark Astryx developer workspace across all pages. It includes a new Atlas mark, a short terminal opening and a rotating globe on Overview.

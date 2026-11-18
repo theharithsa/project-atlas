@@ -39,6 +39,7 @@
 }
 
 .rail { background: var(--shell); }
+.rail-body { scrollbar-color: #405467 transparent; scrollbar-width: thin; }
 .brand { font-weight: 700; letter-spacing: -.06em; }
 .brand img { box-shadow: none; border-radius: 8px; }
 .nav-heading, .crumb, .snapshot-link, .portfolio-switch select, .timeline-head, .milestone-tag {

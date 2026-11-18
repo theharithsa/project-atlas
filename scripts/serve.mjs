@@ -20,7 +20,7 @@ const mime = new Map([
     f + '.js',
     'text/javascript; charset=utf-8',
   ]),
-  ['assets/atlas.svg', 'image/svg+xml'],
+  ['assets/atlas-mark.svg', 'image/svg+xml'],
   ['generated/space-grotesk.woff2', 'font/woff2'],
   ['generated/jetbrains-mono.woff2', 'font/woff2'],
   ['generated/licenses.txt', 'text/plain; charset=utf-8'],
