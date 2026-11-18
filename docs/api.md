@@ -32,6 +32,20 @@ Both activity sources provide `start` and `through` as inclusive India dates, `c
 
 Checks use at most three pages of 100 commits per repository and six per developer. Repositories and developer lookups have separate, bounded in-memory caches. A complete result is reused for up to an hour, and incomplete results retry after five minutes on demand. The window advances at India midnight. GitHub's search rate limit is handled independently of the board directory quota. The public developer endpoint also supports a 200 response with unavailable coverage during an upstream outage. [Activity collector](../functions/activity.js)
 
+### Calendar-year history
+
+The following credential-free GET and HEAD routes load on demand. Each accepts one calendar year from the current India year or its five predecessors, which allows a rolling five-year window to cross six calendar years. They require an empty query string.
+
+| Route | Response |
+| --- | --- |
+| `/api/v1/developers/{login}/contributions/{year}` | `login`, `year`, `metric` and `activity`. Each count comes from the exact daily value on the signed-out GitHub contribution calendar. GitHub controls attribution and visibility. |
+| `/api/v1/developers/{login}/commits/{year}` | The same envelope for public commit search. Counts use the committed timestamp in India time and deduplicate hashes across search results. |
+| `/api/v1/owners/{kind}/{login}/projects/{number}/commits/{year}` | Use `users` or `orgs` as the kind. Returns the verified public board key, year and `repositories` map. Each repository listed by that board has its own activity record. Unknown public boards return 404 or a retryable 503 if the owner feed has incomplete coverage. |
+
+Each annual record uses the existing calendar fields and adds `retryAfterSeconds`. Current years stop at the date of the check. The interface clips the first and last year to the selected window and merges repeated repositories only once. It sums the public profile’s original calendar dates for contribution totals. Commit and contribution dates can differ under GitHub’s attribution rules. [Public contribution criteria](https://docs.github.com/en/account-and-profile/reference/profile-contributions-reference)
+
+Repository history pages are pinned to the initial public default-branch revision. Commit search splits intervals above GitHub’s 1,000-result ceiling into disjoint time windows. Each function instance coalesces duplicate lookups, retains progress across bounded reads and resumes after upstream rate limits. Requests expose aggregates, coverage and retry intervals. Partial totals are lower bounds. A single source year with 25,000 distinct observed commits can be capped. Current completed years refresh hourly and closed years daily. [History collector](../functions/history.js) · [Example annual count](https://pipeline.theharithsanotes.com/api/v1/developers/theharithsa/contributions/2024)
+
 The share link stores typed owners and route filters in the URL fragment. A recipient requests the existing public owner feeds and can browse the temporary portfolio without a settings write. The server never needs a combined owner list or an issue search term to build a link. [Sharing guide](handbook.md#share-the-current-view)
 
 ## Shared settings and discovery

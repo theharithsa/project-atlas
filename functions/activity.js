@@ -105,8 +105,8 @@ export function createActivityCache(capacity, maxPending, clock = Date.now) {
 export const repositoryActivity = createActivityCache(96, 6);
 const developerActivity = createActivityCache(48, 1);
 let searchPausedUntil = 0;
-async function readSearch(url, accept, method, signal) {
-  if (Date.now() < searchPausedUntil) throw new Error('Search is cooling down');
+export async function readSearch(url, accept, method, signal) {
+  if (Date.now() < searchPausedUntil) throw Object.assign(new Error('Search is cooling down'), {retryAt:searchPausedUntil});
   const response = await fetch(url, {method, signal, redirect:'error', headers:{
     Accept:accept, 'User-Agent':'Project-Atlas-Public-Dashboard', 'X-GitHub-Api-Version':'2026-03-10',
   }});
@@ -115,7 +115,7 @@ async function readSearch(url, accept, method, signal) {
     const reset = Number(response.headers.get('x-ratelimit-reset')) * 1000;
     searchPausedUntil = Math.max(Date.now() + 30_000, Math.min(reset, Date.now() + 600_000));
   }
-  if (!response.ok) throw new Error('Commit search unavailable');
+  if (!response.ok) throw Object.assign(new Error('Commit search unavailable'), {retryAt:searchPausedUntil});
   return response;
 }
 export const publicDeveloperActivity = login => developerActivity('developer', login, readSearch);

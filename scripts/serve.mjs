@@ -1,3 +1,4 @@
+import {historyRoute, historyPayload} from '../functions/history.js';
 import {developerFromPath, publicDeveloperActivity} from '../functions/activity.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -15,7 +16,7 @@ const site = new URL('../site/', import.meta.url);
 const mime = new Map([
   ['index.html', 'text/html; charset=utf-8'],
   ['styles.css', 'text/css; charset=utf-8'],
-  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity'].map((f) => [
+  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity', 'activity-range'].map((f) => [
     f + '.js',
     'text/javascript; charset=utf-8',
   ]),
@@ -31,11 +32,12 @@ const server = createServer(async (req, res) => {
     res.writeHead(405, { Allow: 'GET, HEAD' }).end();
     return;
   }
+  const history = historyRoute(req.url);
   const owner = ownerFromPath(req.url);
   const developer = developerFromPath(req.url);
   try {
-    if (developer || owner || path === 'api/v1/portfolio') {
-      const data = developer ? {login:developer, activity:await publicDeveloperActivity(developer)} : owner ? await publicOwnerFeed(owner) : await currentPortfolio();
+    if (history || developer || owner || path === 'api/v1/portfolio') {
+      const data = history ? await historyPayload(history, publicOwnerFeed) : developer ? {login:developer, activity:await publicDeveloperActivity(developer)} : owner ? await publicOwnerFeed(owner) : await currentPortfolio();
       res
         .writeHead(200, { 'Content-Type': 'application/json' })
         .end(req.method === 'HEAD' ? undefined : JSON.stringify(data));
@@ -46,6 +48,10 @@ const server = createServer(async (req, res) => {
         .end(req.method === 'HEAD' ? undefined : content);
     } else res.writeHead(404).end();
   } catch (error) {
+    if (history && missingOwner(error)) {
+      res.writeHead(404, {'Content-Type':'application/json','Cache-Control':'no-store'}).end('{"error":"public_history_unavailable"}');
+      return;
+    }
     if (owner && missingOwner(error)) {
       res.writeHead(404, {'Content-Type':'application/json', 'Cache-Control':'no-store'}).end('{"error":"public_owner_unavailable"}');
       return;

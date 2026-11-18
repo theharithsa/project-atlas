@@ -12,3 +12,5 @@ Keep sprint IDs scoped to a product. Count leaf issues for workload and exclude 
 Run `npm test`, exercise a sprint drilldown and inspect narrow navigation for layout changes. Publish through the dedicated Firebase Hosting site and use its release history to restore a previous frontend. [API](../../docs/api.md) · [Operations](../../docs/delivery.md) · [Continuation](continuation.md)
 
 Version 0.5 adds route serialization in `site/sharing.js` and project and developer streak presentation in `site/activity.js`. Preserve owner settings when entering a linked view. Keep project-scoped delivery measures and global developer search independently labeled. [Guide](../../docs/handbook.md#explore-coding-streaks)
+
+The range model in `site/activity-range.js` clips multiple source years to inclusive calendar windows. Keep daily and month selections accessible and shareable. Missing dates must stay distinguishable from confirmed zeros. [Dashboard guide](../../docs/handbook.md#explore-coding-streaks)

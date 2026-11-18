@@ -1,3 +1,4 @@
+import {historyRoute, historyPayload} from './history.js';
 import {developerFromPath, publicDeveloperActivity} from './activity.js';
 import { onRequest } from 'firebase-functions/v2/https';
 import { currentPortfolio } from './feed.js';
@@ -14,16 +15,23 @@ export const atlasPublicFeed = onRequest(
   },
   async (req, res) => {
     res.set('X-Content-Type-Options', 'nosniff');
+    const history = historyRoute(req.path);
     const owner = ownerFromPath(req.path);
     const developer = developerFromPath(req.path);
     if (
-      (!owner && !developer && !['/', '/api/v1/portfolio'].includes(req.path)) ||
+      (!owner && !developer && !history && !['/', '/api/v1/portfolio'].includes(req.path)) ||
       Object.keys(req.query).length
     )
       return res.status(404).end();
     if (!['GET', 'HEAD'].includes(req.method))
       return res.set('Allow', 'GET, HEAD').status(405).end();
     try {
+      if (history) {
+        const result = await historyPayload(history, publicOwnerFeed);
+        const records = result.activity ? [result.activity] : Object.values(result.repositories);
+        const ttl = Math.min(60, ...records.map(item => item.retryAfterSeconds));
+        return res.set('Cache-Control', 'public, max-age=0, s-maxage=' + ttl + ', must-revalidate').json(result);
+      }
       if (developer) {
         const activity = await publicDeveloperActivity(developer);
         const ttl = activity.status === 'complete' ? 3600 : 300;
@@ -45,6 +53,7 @@ export const atlasPublicFeed = onRequest(
         )
         .json(data);
     } catch (error) {
+      if (history && missingOwner(error)) return res.status(404).set('Cache-Control','no-store').json({error:'public_history_unavailable'});
       if (owner && missingOwner(error))
         return res.status(404).set('Cache-Control', 'no-store').json({error: 'public_owner_unavailable'});
       return res

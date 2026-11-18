@@ -1,140 +1,225 @@
 import {day, iso, fmt, span} from './model.js';
 import {e, url, icon, tabs, external} from './ui.js';
+import {activityRange, ranges, streakSummary, monthBuckets} from './activity-range.js';
+export {streakSummary} from './activity-range.js';
 
 const validLogin = value => typeof value === 'string' && value.length <= 39 && /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/i.test(value);
+const number = n => n.toLocaleString('en-US');
+const shortMonth = date => fmt(date,{month:'short'});
+const longMonth = date => fmt(date,{month:'long',year:'numeric'});
+const fullDate = date => fmt(date,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+const renderValue = (n, uncertain) => uncertain ? n ? '≥' + number(n) : '—' : number(n);
+
 export function repositoryRecords(data, products) {
   const repositories = new Map(Object.entries(data.repositories).map(([slug, value]) => [slug.toLowerCase(), value]));
   const names = new Set(products.flatMap(p => p.repos.map(slug => slug.toLowerCase())));
   return [...names].map(slug => repositories.get(slug)?.activity);
 }
+export function activityHref(route, changes) {
+  const params = Object.fromEntries(route.q);
+  delete params.product;
+  return url('overview', route.product, {...params,...changes});
+}
+export function developerRoute(route, value) {
+  const login = value.trim().replace(/^@/, '').toLowerCase();
+  return validLogin(login) ? activityHref(route,{activity:'developer',developer:login}) : null;
+}
 
-export function streakSummary(asOf, records) {
-  const end = day(asOf);
-  const days = Array.from({length:28}, (_, index) => {
-    const date = iso(end - 27 + index);
-    let count = 0, complete = records.length > 0;
-    for (const record of records) {
-      if (!record || record.status === 'unavailable' || record.start > date || record.through < date) {
-        complete = false;
-        continue;
-      }
-      count += record.days?.[date] || 0;
-      if (record.status !== 'complete' || (date === record.through && date < asOf)) complete = false;
-    }
-    return {date, count, complete};
-  });
-  let run = 0, best = 0;
-  for (const d of days) {
-    run = d.count ? run + 1 : 0;
-    best = Math.max(run, best);
+function dayLabel(d,unit) {
+  return fullDate(d.date) + ' · ' + (!d.count && !d.complete ? 'Coverage unknown' :
+    (d.complete ? '' : 'At least ') + number(d.count) + ' ' + unit + (d.count === 1 ? '' : 's'));
+}
+function level(count, complete) {
+  return count >= 8 ? 3 : count >= 3 ? 2 : count > 0 ? 1 : complete ? 0 : 'unknown';
+}
+function detailDays(days, unit, selected) {
+  const weeks = [];
+  for (let index = 0; index < days.length; index += 7) {
+    const week = days.slice(index,index+7);
+    const buttons = week.map(d => {
+      const label = e(dayLabel(d,unit));
+      return `<button type="button" class="heat-day level-${level(d.count,d.complete)}" data-activity-day="${d.date}" aria-pressed="${d.date === selected}" title="${label}" aria-label="${label}">${Number(d.date.slice(-2))}</button>`;
+    }).join('');
+    weeks.push(`<div class="activity-week"><small>${e(fmt(week[0].date))}</small><div>${buttons}</div></div>`);
   }
-  let last = days.length - 1;
-  if (days[last].count === 0) last--; // Today's open day can still extend yesterday's streak.
-  let current = 0;
-  while (last >= 0 && days[last].count) { current++; last--; }
-  const active = days.filter(d => d.count).length;
-  const unknown = days.some(d => !d.count && !d.complete);
-  const currentUnknown = (days.at(-1).count === 0 && !days.at(-1).complete) ||
-    (last >= 0 && !days[last].complete);
-  return {days, current, best, active, unknown, currentUnknown,
-    touchesStart:current > 0 && (days.at(-1).count ? current === 28 : current === 27),
-    complete:records.filter(r => r?.status === 'complete' && r.through === asOf).length};
+  return `<div class="activity-weeks" role="group" aria-label="Daily ${unit} counts">${weeks.join('')}</div>`;
+}
+function monthsView(months, selected, route, unit) {
+  const years = new Map();
+  for (const month of months) {
+    const year = month.key.slice(0,4);
+    if (!years.has(year)) years.set(year,[]);
+    years.get(year).push(month);
+  }
+  const rows = [...years].reverse().map(([year,entries]) => {
+    const cells = Array.from({length:12},(_,i) => {
+      const month = entries.find(m => Number(m.key.slice(-2)) === i+1);
+      if (!month) return '<span class="month-spacer" aria-hidden="true"></span>';
+      const date = month.key + '-01';
+      const label = longMonth(date) + ' · ' + (month.complete || month.total ? renderValue(month.total,!month.complete) + ' ' + unit + (month.total === 1 ? '' : 's') : 'Coverage unknown');
+      return `<a class="heat-month level-${level(month.total / month.days.length, month.complete)}" href="${e(activityHref(route,{month:month.key}))}" title="${e(label)}" aria-label="${e(label)}"${month.key === selected ? ' aria-current="true"' : ''}>${e(shortMonth(date))}</a>`;
+    }).join('');
+    return `<div class="activity-year"><strong>${year}</strong><div class="year-months">${cells}</div></div>`;
+  }).join('');
+  return `<p class="activity-note">Choose a month for daily counts. Shading shows its daily average.</p><div class="activity-months" aria-label="Months in the selected range">${rows}</div>`;
 }
 
-const fullDate = date => fmt(date, {weekday:'short', day:'numeric', month:'short'});
-function dayLabel(d) {
-  const amount = !d.count && !d.complete ? 'Coverage unknown' :
-    (d.complete ? '' : 'At least ') + d.count + (d.count === 1 ? ' commit' : ' commits');
-  return fullDate(d.date) + ' · ' + amount;
-}
-function chart(asOf, records, coverage) {
-  const s = streakSummary(asOf, records);
-  const measure = (n, uncertain, extendsPast = false) => uncertain || extendsPast ? n ? '≥' + n : '—' : String(n);
-  const measurements = [
-    ['Current streak', measure(s.current, s.currentUnknown, s.touchesStart), s.current === 1 ? 'day' : 'days'],
-    ['Best in 28 days', measure(s.best, s.unknown), s.best === 1 ? 'day' : 'days'],
-    ['Active days', measure(s.active, s.unknown), '/ 28'],
+function chart(view, sources, profileSources, selectedDate) {
+  const {range,route,developer,metric,login} = view;
+  const commits = streakSummary(range.through,sources,range.start);
+  const profile = developer ? streakSummary(range.through,profileSources,range.start) : null;
+  const s = metric === 'contributions' ? profile : commits;
+  const unit = metric === 'contributions' ? 'contribution' : 'commit';
+  const metrics = [
+    ...(profile ? [['Total contributions',renderValue(profile.total,profile.covered < range.length),'']] : []),
+    ['Total commits',renderValue(commits.total,commits.covered < range.length),''],
+    ['Current streak',renderValue(s.current,s.currentUnknown || s.touchesStart),s.current === 1 ? 'day':'days'],
+    ['Best in range',renderValue(s.best,s.unknown),s.best === 1 ? 'day':'days'],
+    ['Active days',renderValue(s.active,s.unknown),'/ ' + number(range.length)],
   ];
-  const weeks = [0,7,14,21].map(offset => {
-    const week = s.days.slice(offset, offset + 7);
-    return '<div class="activity-week"><small>' + e(fmt(week[0].date)) + '</small><div>' + week.map(d => {
-      const level = d.count >= 8 ? 3 : d.count >= 3 ? 2 : d.count ? 1 : d.complete ? 0 : 'unknown';
-      return '<button type="button" class="heat-day level-' + level + '" data-activity-day aria-pressed="' + (d.date === asOf) +
-        '" title="' + e(dayLabel(d)) + '" aria-label="' + e(dayLabel(d)) + '">' + Number(d.date.slice(-2)) + '</button>';
-    }).join('') + '</div></div>';
-  }).join('');
-  const legend = '<div class="heat-legend" aria-label="Commits per day">' + [['0','0'],['1','1–2'],['2','3–7'],['3','8+'], ...(s.days.some(d => !d.complete) ? [['unknown','Unknown']] : [])]
-    .map(([level, label]) => '<span><i class="heat-day level-' + level + '"></i>' + label + '</span>').join('') + '</div>';
-  return '<div class="streak-stats">' + measurements.map(([label, n, unit]) =>
-    '<div><span>' + label + '</span><strong>' + n + ' <small>' + unit + '</small></strong></div>').join('') +
-    '</div>' + legend + '<div class="activity-weeks" role="group" aria-label="Commit activity by day">' + weeks + '</div>' +
-    '<div class="activity-caption"><output data-day-detail aria-live="polite">' + e(dayLabel(s.days.at(-1))) +
-    '</output><span>' + e(coverage(s)) + '</span></div>' +
-    '<p class="activity-note">Consecutive days with a commit, in India time. Today can extend yesterday’s streak.' +
-    (s.unknown || s.touchesStart ? ' A ≥ value is the confirmed minimum.' : '') + '</p>';
+  const stats = metrics.map(([label,value,unit]) => `<div><span>${label}</span><strong>${value} <small>${unit}</small></strong></div>`).join('');
+  const months = monthBuckets(s.days), long = range.key !== '28d';
+  const month = months.find(m => m.key === route.q.get('month')) || months.at(-1);
+  const days = long ? month.days : s.days;
+  const selected = days.find(d => d.date === selectedDate) || days.at(-1);
+  const legend = [['0','0'],['1','1–2'],['2','3–7'],['3','8+'],...(s.covered < range.length ? [['unknown','Unknown']] : [])];
+  const scale = `<div class="heat-legend" aria-label="${unit}s per day">${legend.map(([level,label]) => `<span><i class="heat-day level-${level}"></i>${label}</span>`).join('')}</div>`;
+  const source = developer ? external('https://github.com/' + login + '?tab=overview&from=' + month.key + '-01&to=' + days.at(-1).date,
+    'GitHub contribution profile for @' + e(login) + ' ' + icon('external',12),'text-link') : '';
+  const pending = view.loading ? 'Checking history… · ' : '';
+  const coverage = pending + number(s.covered) + ' of ' + number(range.length) + ' dates fully checked';
+  const landing = long ? monthsView(months,month.key,route,unit) + `<h3 class="month-detail">${e(longMonth(month.key+'-01'))} <small>${renderValue(month.total,!month.complete)} ${unit}${month.total === 1 ? '' : 's'}</small></h3>` : '';
+  const note = unit === 'commit' ? 'Streaks use committed dates in India time.' : 'Streaks use the dates on the public GitHub contribution calendar.';
+  const profileNote = developer ? ' Total contributions follows GitHub’s profile counting rules.' : '';
+  return `<div class="streak-stats">${stats}</div>${landing}${scale}${detailDays(days,unit,selected.date)}
+    <div class="activity-caption"><output data-day-detail aria-live="polite">${e(dayLabel(selected,unit))}</output><span>${e(coverage)}</span></div>
+    <p class="activity-note">${note} Today can extend yesterday’s streak.${profileNote}${s.covered < range.length || s.touchesStart ? ' A ≥ value is a confirmed minimum.' : ''}</p>${source ? '<p class="activity-source">'+source+'</p>' : ''}`;
 }
 
 export function codingPanel(data, products, route, users) {
   const developer = route.q.get('activity') === 'developer';
   const login = route.q.has('developer') ? route.q.get('developer') : (users[0] || '');
-  const params = Object.fromEntries(route.q);
-  delete params.product;
-  delete params.activity;
-  delete params.developer;
-  const links = [
-    ['project', 'Projects', url('overview', route.product, params)],
-    ['developer', 'Developer', url('overview', route.product, {...params, activity:'developer', developer:login || null})],
-  ];
-  let body;
-  if (developer) {
-    body = '<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="' +
-      e(login) + '" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none"><button>View streak</button></div>' +
-      '<span id="developer-error" role="alert">' + (login && !validLogin(login) ? 'Enter a valid GitHub username.' : '') + '</span></form>' +
-      (validLogin(login) ? '<div data-developer-activity="' + e(login.toLowerCase()) + '"><p class="activity-note" role="status">Checking public commits…</p></div>' : '');
-  } else {
-    const records = repositoryRecords(data, products);
-    body = records.length ? chart(data.asOf, records, s => s.complete + ' of ' + records.length + (records.length === 1 ? ' repository fully checked' : ' repositories fully checked')) :
-      '<p class="activity-note">No public repositories are linked to this selection.</p>';
-  }
-  return '<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>' +
-    e(span(iso(day(data.asOf) - 27), data.asOf, true)) + ' · ' +
-    (developer ? 'Public commits by one developer' : 'Default-branch commits across selected projects') + '</p></div>' +
-    tabs('Coding streak scope', links, developer ? 'developer' : 'project') + '</div>' + body + '</section>';
+  const range = activityRange(data.asOf,route.q.get('range'));
+  const metric = developer && route.q.get('metric') === 'contributions' ? 'contributions' : 'commits';
+  const scope = tabs('Coding streak scope',[
+    ['project','Projects',activityHref(route,{activity:null,developer:null,metric:null})],
+    ['developer','Developer',activityHref(route,{activity:'developer',developer:login || null})],
+  ],developer ? 'developer':'project');
+  const selector = `<label>Time range<select id="activity-range">${ranges.map(([key,label]) => `<option value="${key}"${range.key===key?' selected':''}>${label}</option>`).join('')}</select></label>`;
+  const measure = developer ? `<label>Streak based on<select id="activity-metric"><option value="commits">Commits</option><option value="contributions"${metric === 'contributions' ? ' selected':''}>Profile contributions</option></select></label>` : '';
+  const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none"><button>View streak</button></div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
+  const hasScope = developer ? validLogin(login) : products.some(p => p.repos.length);
+  const chartBody = hasScope ? `<div id="activity-chart" data-login="${developer ? e(login.toLowerCase()) : ''}"><p class="activity-note" role="status">Checking activity…</p></div>` :
+    (developer ? '' : '<p class="activity-note">No public repositories are linked to this selection.</p>');
+  return `<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>${e(span(range.start,range.through,true))} · ${developer ? 'Public activity by one developer':'Default-branch commits across selected projects'}</p></div>${scope}</div><div class="activity-controls">${selector}${form}${measure}</div>${chartBody}</section>`;
 }
 
-let latestLookup;
-export function hydrateDeveloper(asOf) {
-  const target = document.querySelector('[data-developer-activity]');
-  if (!target) return;
-  const login = target.dataset.developerActivity;
-  if (!latestLookup || latestLookup.login !== login || latestLookup.asOf !== asOf || Date.now() >= latestLookup.expires) {
-    const request = {login, asOf, expires:Date.now() + 60_000};
-    request.value = fetch('/api/v1/developers/' + encodeURIComponent(login) + '/activity', {signal:AbortSignal.timeout(20_000)})
-      .then(async response => {
-        if (!response.ok) throw new Error('Activity unavailable');
-        const result = await response.json();
-        if (result.login !== login || !['complete','partial','unavailable'].includes(result.activity?.status)) throw new Error('Invalid activity');
-        request.expires = Date.parse(result.activity.checkedAt) + (result.activity.status === 'complete' ? 3600 : 300) * 1000;
-        return result.activity;
-      }).catch(() => null);
-    latestLookup = request;
+const cache = new Map();
+function readPath(path) {
+  const now = Date.now(), existing = cache.get(path);
+  if (existing && (existing.pending || existing.expires > now)) return existing.pending || Promise.resolve(existing);
+  const entry = existing || {data:null,expires:0};
+  cache.delete(path); cache.set(path,entry);
+  if (cache.size > 384) {
+    const idle = [...cache].find(([,v]) => !v.pending && v !== entry);
+    if (idle) cache.delete(idle[0]);
   }
-  if (latestLookup.target === target) return;
-  latestLookup.target = target;
-  latestLookup.value.then(activity => {
-    if (!target.isConnected) return;
-    const coverage = s => s.complete ? 'Public commit search complete' : activity?.status === 'partial' ? 'Partial public commit search' : 'Public commit search unavailable';
-    const since = new Date(iso(day(asOf) - 27) + 'T00:00:00+05:30').toISOString();
-    const until = activity?.checkedAt || new Date().toISOString();
-    const query = 'is:public author:' + login + ' committer-date:' + since + '..' + until;
-    const source = external('https://github.com/search?type=commits&q=' + encodeURIComponent(query), 'View commits by @' + e(login) + ' on GitHub ' + icon('external', 12), 'text-link');
-    target.innerHTML = chart(asOf, [activity], coverage) + '<p class="activity-source">' + source + '</p>';
-  });
+  entry.pending = (async () => {
+    try {
+      const res = await fetch(path,{signal:AbortSignal.timeout(75_000)});
+      if (!res.ok) throw new Error('Activity request unavailable');
+      const data = await res.json();
+      const records = data.activity ? [data.activity] : Object.values(data.repositories || {});
+      if (records.some(r => !r || !['complete','partial','unavailable'].includes(r.status) || !r.days)) throw new Error('Invalid activity');
+      const ttl = Math.min(3600,...records.map(r => r.retryAfterSeconds || (r.status === 'complete'?3600:60)));
+      entry.data = data; entry.expires = Date.now() + Math.max(2,ttl) * 1000;
+    } catch { entry.expires = Date.now() + 30_000; }
+    return entry;
+  })().finally(() => { entry.pending = null; });
+  return entry.pending;
 }
-export function developerRoute(route, value) {
-  const login = value.trim().replace(/^@/, '').toLowerCase();
-  if (!validLogin(login)) return null;
-  const params = Object.fromEntries(route.q);
-  delete params.product;
-  return url('overview', route.product, {...params, activity:'developer', developer:login});
+export function historyPaths(projects, range, login) {
+  const paths = [];
+  if (login) {
+    const base = '/api/v1/developers/' + encodeURIComponent(login) + '/';
+    for (const year of range.years) paths.push({kind:'profile',year,path:base + 'contributions/' + year});
+    if (range.key === '28d') paths.push({kind:'commits',path:base+'activity'});
+    else for (const year of range.years) paths.push({kind:'commits',year,path:base+'commits/'+year});
+  } else if (range.key !== '28d') {
+    for (const year of range.years) for (const p of projects) {
+      const board = /^https:\/\/github\.com\/(users|orgs)\/([\w-]+)\/projects\/([1-9]\d*)$/i.exec(p.url);
+      if (board && p.repos.length) paths.push({kind:'board',project:p.key,year,
+        path:'/api/v1/owners/'+board[1]+'/'+board[2].toLowerCase()+'/projects/'+board[3]+'/commits/'+year});
+    }
+  }
+  return paths;
+}
+function recordsFor(view) {
+  const found = view.paths.map(task => [task,cache.get(task.path)?.data]);
+  if (view.developer) {
+    const records = kind => [found.filter(([t])=>t.kind===kind).map(([t,d]) =>
+      d?.login === view.login && (!t.year || d.year === t.year) ? d.activity : null)];
+    return [records('commits'),records('profile')];
+  }
+  if (view.range.key === '28d') return [repositoryRecords(view.data,view.products),[]];
+  const repos = new Map(view.products.flatMap(p => p.repos.map(n => [n.toLowerCase(),new Map()])));
+  for (const [task,data] of found) {
+    if (!data || data.project !== task.project || data.year !== task.year) continue;
+    for (const [name,record] of Object.entries(data.repositories)) {
+      const years = repos.get(name.toLowerCase());
+      if (!years) continue;
+      const prev = years.get(task.year);
+      if (!prev || record.status === 'complete' || (prev.status !== 'complete' && record.checkedAt >= prev.checkedAt)) years.set(task.year,record);
+    }
+  }
+  return [[...repos.values()].map(years => [...years.values()]),[]];
+}
+
+let active;
+export function hydrateActivity(data, route) {
+  const target = document.getElementById('activity-chart');
+  if (active?.target === target) return;
+  if (active) clearTimeout(active.timer);
+  active = null;
+  if (!target) return;
+  const range = activityRange(data.asOf,route.q.get('range'));
+  const products = data.projects.filter(p => route.product === 'all' || p.key === route.product);
+  const login = target.dataset.login, developer = Boolean(login);
+  const view = {target,range,products,data,route,login,developer, loading:false,
+    metric:developer && route.q.get('metric')==='contributions' ? 'contributions':'commits',
+    paths:historyPaths(products,range,login)};
+  active = view;
+  const visible = () => active === view && target.isConnected;
+  function paint() {
+    if (!visible()) return;
+    const selected = target.querySelector('[data-activity-day][aria-pressed="true"]')?.dataset.activityDay;
+    const focused = target.contains(document.activeElement) ? document.activeElement : null;
+    const keepDay = focused?.dataset.activityDay, keepLink = focused?.getAttribute('href');
+    target.innerHTML = chart(view,...recordsFor(view),selected);
+    if (keepDay || keepLink) [...target.querySelectorAll('a,button')].find(el => keepDay ? el.dataset.activityDay===keepDay : el.getAttribute('href')===keepLink)?.focus({preventScroll:true});
+  }
+  async function load() {
+    if (!visible()) return;
+    if (document.hidden && target.childElementCount > 1) { view.timer = setTimeout(load,15_000); return; }
+    const tasks = view.paths.filter(t => !(cache.get(t.path)?.expires > Date.now()));
+    view.loading = tasks.length > 0;
+    paint();
+    const queue = tasks.values();
+    async function worker() {
+      for (const task of queue) {
+        if (!visible()) return;
+        await readPath(task.path);
+        if (visible()) paint();
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(2,tasks.length)},worker));
+    if (!visible()) return;
+    view.loading = false;
+    if (tasks.length) paint();
+    if (view.paths.length) {
+      const next = Math.min(...view.paths.map(t => cache.get(t.path)?.expires || Date.now()+30_000));
+      view.timer = setTimeout(load,Math.max(2000,next - Date.now()+100));
+    }
+  }
+  load();
 }

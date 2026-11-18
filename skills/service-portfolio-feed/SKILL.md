@@ -12,3 +12,5 @@ Construct upstream paths from the tracked GitHub owner, confirmed project number
 Run `npm ci --prefix functions --ignore-scripts` and `npm test`. Check live coverage when GitHub changes its public presentation. For recovery, redeploy the last known compatible function and lockfile from a checked tag. [Operations](../../docs/delivery.md) · [Continuation](continuation.md)
 
 The activity collector aggregates public default-branch commits for verified repositories and indexed public commits for a developer login. Retain partial counts and the original check time when upstream coverage is incomplete. [Activity contract](../../docs/api.md#read-public-commit-activity)
+
+Annual history in `functions/history.js` verifies board membership, pinned repository revisions, search pagination and exact profile day counts. Retain coverage and retry intervals when a year cannot be completed in a single read. [Calendar-year API](../../docs/api.md#calendar-year-history)

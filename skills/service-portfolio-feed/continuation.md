@@ -9,3 +9,5 @@ The 0.3.0 collector reads the public owner file every five minutes on demand. A 
 The 0.4.0 personal routes accept a single validated user or organization login. Personal collectors isolate membership and release caches, enforce a finite refresh budget, and reserve remaining REST quota for the shared feed. Check successful empty owners, partial coverage, coalescing, quota and a real owner outside shared settings. [API](../../docs/api.md#select-a-personal-owner)
 
 Version 0.5.0 adds per-repository activity aggregates and a separately bounded developer search. Exercise completed, capped and unavailable GitHub reads, date rollover, single-owner coverage and duplicate hashes. [Contract](../../docs/api.md#read-public-commit-activity)
+
+Version 0.6.0 adds annual activity routes. Exercise disjoint search partitions, concurrent cache reads, source outages, profile tooltip validation and prior-year completion. Check the selected range against public GitHub sources. [History issue](https://github.com/theharithsa/project-atlas/issues/15)

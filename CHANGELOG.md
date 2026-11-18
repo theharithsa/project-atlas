@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0 · 18 November 2026
+
+- Choose activity ranges from four weeks to five years for projects and developers. Inspect monthly and daily counts and share the same range and month. [Activity history](https://github.com/theharithsa/project-atlas/issues/15)
+- See total commits in the selected window and GitHub’s public profile contribution count for a developer. Switch the streak measure to inspect consecutive contribution days.
+
 ## 0.5.0 · 18 November 2026
 
 - Share a personal portfolio with its current product, sprint, issue filters and search. Recipients can browse the live view and return to their saved portfolio. [Shareable views](https://github.com/theharithsa/project-atlas/issues/12)
