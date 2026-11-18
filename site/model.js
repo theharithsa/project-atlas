@@ -51,26 +51,24 @@ export function sprintStats(product, sprint) {
     pct: work.length ? Math.round((100 * closed) / work.length) : null,
   };
 }
-export const identity = {
-  'App Launchpad Template': ['App Launchpad', 'layers', 'violet'],
-  'Aroha Retreat': ['Aroha Retreat', 'leaf', 'green'],
-  FinBuddy: ['FinBuddy', 'wallet', 'amber'],
-  SalesDrone: ['SalesDrone', 'plane', 'blue'],
-  'The Harithsa Notes': ['The Harithsa Notes', 'book', 'rose'],
-};
+const productColors = ['violet', 'green', 'amber', 'blue', 'rose'];
+function productColor(key) {
+  let hash = 0;
+  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return productColors[hash % productColors.length];
+}
 export function prepare(snapshot) {
   if (snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.projects))
     throw Error('Unsupported snapshot format');
   const projects = snapshot.projects
     .map((p) => {
-      const [label, icon, color] = identity[p.name] || [p.name, 'box', 'violet'];
       const work = p.items.filter(activeIssue),
         open = work.filter((i) => i.state === 'OPEN');
       return {
         ...p,
-        label,
-        icon,
-        color,
+        label: p.name,
+        icon: 'box',
+        color: productColor(p.key),
         work,
         open,
         backlog: open.filter((i) => bucket(i) === 'backlog'),

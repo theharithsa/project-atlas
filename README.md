@@ -17,7 +17,7 @@ Project Atlas gives product owners and maintainers one place to see what each te
 | What is expected to ship next? | **Roadmap** shows versioned milestone targets. **Data sources** links to the latest published release for each repository. |
 | How fresh are the numbers? | The status at the top shows the last board check in India time. Open **Data sources** for coverage or use the refresh button. |
 
-While the page is visible it checks boards every minute. Repository milestones and release tags refresh on demand every three minutes. Workload counts exclude pull requests, archived entries and parent rollups. The configured portfolio covers App Launchpad, Aroha Retreat, FinBuddy, SalesDrone and The Harithsa Notes. [Dashboard guide](docs/handbook.md)
+While the page is visible it checks boards every minute. Repository milestones and release tags refresh on demand every three minutes. Workload counts exclude pull requests, archived entries and parent rollups. Atlas discovers open public boards under theharithsa and ArohaRetreat every ten minutes. The dashboard also tracks its own work. [Atlas sprint](https://pipeline.theharithsanotes.com/#sprints?product=theharithsa-5) · [Atlas planning board](https://github.com/users/theharithsa/projects/5) [Dashboard guide](docs/handbook.md)
 
 ## Run locally
 
@@ -38,7 +38,7 @@ npm test
 
 ## How it works
 
-The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function reads an explicit list of public boards and repositories as a signed-out visitor, paginates board items, and returns only the planning fields used by the dashboard. Concurrent visitors share the same refresh. The browser never needs a GitHub token.
+The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Concurrent visitors share the same refresh. The browser never needs a GitHub token.
 
 | Source | Responsibility |
 | --- | --- |

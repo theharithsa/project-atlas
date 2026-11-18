@@ -1,36 +1,13 @@
+import { createProjectDirectory, directoryRefreshSeconds, owners } from './discovery.js';
+
 const SITE = 'https://github.com';
 const TIMEZONE = 'Asia/Kolkata';
-const PERSONAL = 'theharithsa';
-const publicProject = (account, number, org, repos) => ({
-  account,
-  number,
-  repos: repos.map((name) => account + '/' + name),
-  url:
-    SITE +
-    '/' +
-    (org ? 'orgs' : 'users') +
-    '/' +
-    account +
-    '/projects/' +
-    number,
-});
-export const boards = [
-  publicProject(PERSONAL, 1, false, ['finbuddy']),
-  publicProject(PERSONAL, 2, false, ['theharithsanotes']),
-  publicProject(PERSONAL, 3, false, ['app-launchpad-template']),
-  publicProject(PERSONAL, 4, false, ['SalesDrone']),
-  publicProject('ArohaRetreat', 1, true, [
-    'developer',
-    'mcp',
-    'natura',
-    'website',
-  ]),
-];
 const headers = {
   'User-Agent':
     'Project-Atlas-Public-Dashboard (the-harithsa-notes-pipeline.web.app)',
 };
 const hidden = new Set([401, 403, 404, 410, 451]);
+const removedBoard = new Set([401, 404, 410, 451]);
 class SourceError extends Error {
   constructor(code) {
     super('GitHub source unavailable');
@@ -39,7 +16,11 @@ class SourceError extends Error {
 }
 async function read(url, accept = 'text/html', method = 'GET') {
   const response = await fetch(url, {
-    headers: { ...headers, Accept: accept },
+    headers: {
+      ...headers,
+      Accept: accept,
+      ...(accept === 'application/vnd.github+json' ? {'X-GitHub-Api-Version': '2026-03-10'} : {}),
+    },
     method,
     redirect: 'manual',
     signal: AbortSignal.timeout(12000),
@@ -88,7 +69,11 @@ function readFields(columns) {
   }
   return { byName, sprint, periods };
 }
-export function publicItem(row, permitted, fields) {
+function repositorySlug(slug) {
+  return typeof slug === 'string' &&
+    /^[a-z\d][a-z\d-]{0,38}\/(?!\.{1,2}$)[a-z\d._-]{1,100}$/i.test(slug);
+}
+function itemIdentity(row) {
   if (
     !['Issue', 'PullRequest'].includes(row.contentType) ||
     row.isArchived ||
@@ -102,12 +87,12 @@ export function publicItem(row, permitted, fields) {
     ]),
   );
   const repo = values.get('Repository');
-  if (repo?.isPublic !== true || !permitted.includes(repo.nameWithOwner))
+  if (repo?.isPublic !== true || !repositorySlug(repo.nameWithOwner))
     return null;
   const slug = repo.nameWithOwner;
   const title = values.get('Title');
   if (
-    !title?.title?.raw ||
+    typeof title?.title?.raw !== 'string' || !title.title.raw ||
     !Number.isSafeInteger(title.number) ||
     title.number < 1
   )
@@ -121,6 +106,9 @@ export function publicItem(row, permitted, fields) {
     '/' +
     title.number;
   if (row.content?.url !== url) return null;
+  return {values, slug, title, url};
+}
+function mapItem(row, {values, slug, title, url}, permitted, fields) {
   const option = (name) => {
     const col = fields.byName.get(name);
     const id = values.get(col?.id)?.id;
@@ -154,10 +142,24 @@ export function publicItem(row, permitted, fields) {
       (values.get('Sub-issues progress')?.total || 0) > 0 ||
       values.get('Type')?.name === 'Epic',
     parent:
-      permitted.includes(parentRepo) && Number.isSafeInteger(parent.number)
+      permitted.has(parentRepo) && Number.isSafeInteger(parent.number) && parent.number > 0
         ? parentRepo + '#' + parent.number
         : null,
     archived: false,
+  };
+}
+export function boardContents(rows, fields) {
+  const verified = [];
+  const repos = new Set();
+  for (const row of rows) {
+    const item = itemIdentity(row);
+    if (!item) continue;
+    repos.add(item.slug);
+    verified.push([row, item]);
+  }
+  return {
+    repos: [...repos].sort(),
+    items: verified.map(([row, item]) => mapItem(row, item, repos, fields)),
   };
 }
 export async function publicPages(fetchPage) {
@@ -257,10 +259,7 @@ async function collectBoard(board) {
     sprints: [...fields.periods.values()].sort((a, b) =>
       a.start.localeCompare(b.start),
     ),
-    repos: board.repos,
-    items: rows
-      .map((row) => publicItem(row, board.repos, fields))
-      .filter(Boolean),
+    ...boardContents(rows, fields),
   };
 }
 async function milestonesFromApi(slug) {
@@ -373,13 +372,35 @@ async function collectRepo(slug) {
   repoCache.set(slug, value);
   return value;
 }
+async function boundedResults(values, load) {
+  const results = [];
+  const queue = values.entries();
+  async function worker() {
+    for (const [i, value] of queue) {
+      try {
+        results[i] = {status: 'fulfilled', value: await load(value)};
+      } catch (reason) {
+        results[i] = {status: 'rejected', reason};
+      }
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(4, values.length)}, worker));
+  return results;
+}
+const discover = createProjectDirectory((url) => read(url, 'application/vnd.github+json'));
 export async function collectPortfolio() {
-  const boardsFound = await Promise.allSettled(boards.map(collectBoard));
-  const unavailable = [],
-    projects = [];
+  const directories = await Promise.allSettled(owners.map(discover));
+  const unavailable = [], boards = [], projects = [];
+  for (const [i, result] of directories.entries()) {
+    if (result.status === 'fulfilled') boards.push(...result.value);
+    else unavailable.push({owner: owners[i].account, reason: 'Public project directory unavailable'});
+  }
+  if (directories.every((r) => r.status === 'rejected'))
+    throw new Error('Public project directories temporarily unavailable');
+  const boardsFound = await boundedResults(boards, collectBoard);
   for (const [i, result] of boardsFound.entries()) {
     if (result.status === 'fulfilled') projects.push(result.value);
-    else
+    else if (!removedBoard.has(result.reason?.status))
       unavailable.push({
         owner: boards[i].account + ' · project ' + boards[i].number,
         reason: 'Public board unavailable',
@@ -387,11 +408,11 @@ export async function collectPortfolio() {
   }
   if (
     !projects.length &&
-    boardsFound.some((r) => !hidden.has(r.reason?.status))
+    boardsFound.some((r) => r.status === 'rejected' && !removedBoard.has(r.reason?.status))
   )
     throw new Error('Public boards temporarily unavailable');
   const names = [...new Set(projects.flatMap((p) => p.repos))];
-  const fetched = await Promise.allSettled(names.map(collectRepo));
+  const fetched = await boundedResults(names, collectRepo);
   const repositories = {};
   for (const [i, result] of fetched.entries()) {
     const name = names[i];
@@ -404,11 +425,8 @@ export async function collectPortfolio() {
       });
     }
   }
-  // Board items independently confirm repository visibility on every board refresh.
-  for (const p of projects)
-    p.repos = p.repos.filter(
-      (n) => repositories[n] || p.items.some((i) => i.repo === n),
-    );
+  const active = new Set(names);
+  for (const slug of repoCache.keys()) if (!active.has(slug)) repoCache.delete(slug);
   const now = new Date();
   return {
     schemaVersion: 1,
@@ -420,10 +438,12 @@ export async function collectPortfolio() {
       month: '2-digit',
       day: '2-digit',
     }).format(now),
-    owner: PERSONAL,
+    owner: owners[0].account,
+    directoryOwners: owners.map((o) => o.account),
     projects,
     repositories,
     unavailable,
+    directoryRefreshSeconds,
     boardRefreshSeconds: 60,
     repositoryRefreshSeconds: 180,
   };

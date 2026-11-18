@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { publicPages, publicItem, flatBoardPage } from '../github.js';
+import { publicPages, boardContents, flatBoardPage } from '../github.js';
 import { createFeed } from '../feed.js';
 
 const slug = 'owner/product';
@@ -53,14 +53,15 @@ test('rejects changing or incomplete membership totals', async () => {
   );
   await assert.rejects(publicPages(async () => batch([1], false, 2)));
 });
-test('projects only allowlisted, public issue fields', () => {
+test('discovers the repository from a verified public item and projects only public fields', () => {
   const row = example();
   row.privateNotes = 'ignore';
   row.memexProjectColumnValues.push({
     memexProjectColumnId: 'Parent issue',
     value: { owner: 'private', repository: 'other', number: 1 },
   });
-  const item = publicItem(row, [slug], fields);
+  const {items: [item], repos} = boardContents([row], fields);
+  assert.deepEqual(repos, [slug]);
   assert.equal(item.kind, 'Issue');
   assert.equal(item.rollup, true);
   assert.equal(item.title, 'Issue <example>');
@@ -87,9 +88,31 @@ test('omits drafts, archived entries, private repositories and unexpected URLs',
   ]) {
     const row = example();
     mutate(row);
-    assert.equal(publicItem(row, [slug], fields), null);
+    assert.deepEqual(boardContents([row], fields), {repos: [], items: []});
   }
-  assert.equal(publicItem(example(), ['another/repo'], fields), null);
+});
+test('new repository membership and parent references require canonical public items on the board', () => {
+  const second = example();
+  const secondSlug = 'another-owner/next-product';
+  second.memexProjectColumnValues[0].value.nameWithOwner = secondSlug;
+  second.content.url = 'https://github.com/' + secondSlug + '/issues/3';
+  const first = example();
+  first.memexProjectColumnValues.push({
+    memexProjectColumnId: 'Parent issue',
+    value: {owner:'another-owner', repository:'next-product', number:3},
+  });
+  const board = boardContents([first, second], fields);
+  assert.deepEqual(board.repos, [secondSlug, slug]);
+  assert.equal(board.items[0].parent, secondSlug + '#3');
+  second.memexProjectColumnValues[0].value.isPublic = false;
+  assert.deepEqual(boardContents([first, second], fields).repos, [slug]);
+  assert.equal(boardContents([first, second], fields).items[0].parent, null);
+  for (const invalid of ['owner/..', 'owner/a/b', 'owner/repo?query', 'owner/repo#fragment']) {
+    const row = example();
+    row.memexProjectColumnValues[0].value.nameWithOwner = invalid;
+    row.content.url = 'https://github.com/' + invalid + '/issues/3';
+    assert.deepEqual(boardContents([row], fields), {repos:[], items:[]});
+  }
 });
 test('maps native sprint, status, priority, milestone and merged pull request states', () => {
   const row = example();
@@ -124,7 +147,7 @@ test('maps native sprint, status, priority, milestone and merged pull request st
     sprint: { id: 72 },
     periods: new Map([['s2', {}]]),
   };
-  const item = publicItem(row, [slug], f);
+  const [item] = boardContents([row], f).items;
   assert.deepEqual(
     [item.state, item.status, item.priority, item.sprint, item.milestone],
     [

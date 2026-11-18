@@ -1,6 +1,8 @@
 # Delivery, deployment and recovery
 
-Project Atlas uses GitHub Issues and release milestones to track its own work. The GitHub Projects boards displayed inside the app belong to the products it follows. This repository has one production branch, `main`, and one deployed Firebase environment.
+Project Atlas tracks its own work on its public GitHub Project. The repository is linked, and its issues and pull requests enter the board through GitHub’s native auto-add rule. Issues opened from the board use the Atlas repository. Use the Sprint iteration for a two-week work window and the issue milestone for release scope. [All work](https://github.com/users/theharithsa/projects/5/views/1) · [Current sprint](https://github.com/users/theharithsa/projects/5/views/2) · [Sprint planning](https://github.com/users/theharithsa/projects/5/views/3) · [Backlog](https://github.com/users/theharithsa/projects/5/views/4) · [Milestones](https://github.com/users/theharithsa/projects/5/views/5) · [Roadmap](https://github.com/users/theharithsa/projects/5/views/6) · [Kanban](https://github.com/users/theharithsa/projects/5/views/7)
+
+New items start in Todo. Reopened issues and PRs return to Todo. Closing work or merging a PR moves it to Done. Review open work at the end of each sprint and assign its next iteration deliberately. This repository has one production branch, `main`, and one deployed Firebase environment.
 
 ## From issue to source release
 
