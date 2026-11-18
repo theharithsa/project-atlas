@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 · 18 November 2026
+
+- Maintainers can add or remove shared GitHub users and organizations from Data sources through a checked settings PR. Owner changes take effect without a Firebase deployment. [Owner settings issue](https://github.com/theharithsa/project-atlas/issues/7)
+- Browse and search closed issues across the portfolio or by product, sorted by GitHub closure time. History includes unscheduled issues and parent issues, with links to their sprints and complete repository history. Sprint details now open with both open and closed work. [Issue history](https://github.com/theharithsa/project-atlas/issues/8)
+
 ## 0.2.0 · 18 November 2026
 
 - Discover open public projects in the tracked owner directories and populate sprint, backlog and roadmap views without maintaining a per-board list.

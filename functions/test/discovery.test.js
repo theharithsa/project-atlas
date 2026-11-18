@@ -19,11 +19,11 @@ test('discovers every directory page, validates scope and deduplicates boards', 
       ? page([entry(2), entry(3, {public: false}), entry(4, {state: 'closed'}),
           entry(5, {owner: {login: 'elsewhere'}}), entry(6, {deleted_at: 'today'}),
           entry(7, {closed_at: 'today'})], 'https://api.github.com/user/123/projectsV2?after=next%2Bpage')
-      : page([entry(2), entry(8)]);
+      : page([entry(2), entry(8, {owner:{login:'EXAMPLE'}})]);
   });
   const boards = await directory(owner);
   assert.deepEqual(boards.map(b => b.number), [2, 8]);
-  assert.equal(boards[1].url, 'https://github.com/users/Example/projects/8');
+  assert.equal(boards[1].url, 'https://github.com/users/EXAMPLE/projects/8');
   assert.equal(requests[1].pathname, '/users/Example/projectsV2');
   assert.equal(requests[1].searchParams.get('after'), 'next+page');
 });
@@ -71,8 +71,11 @@ function boardHtml(number, visible) {
 test('an empty board is visible during a partial directory outage and disappears if it becomes private', async (t) => {
   let visible = true, orgOnline = false, reads = 0;
   t.mock.method(globalThis, 'fetch', async (url, options) => {
-    assert.equal(options.headers.Authorization, undefined);
+    assert.equal(options.headers?.Authorization, undefined);
     const u = new URL(url);
+    if (u.hostname === 'raw.githubusercontent.com' && u.pathname.endsWith('/main/config/owners.json')) {
+      return Response.json({users:['theharithsa'], organizations:['ArohaRetreat']});
+    }
     if (u.pathname === '/orgs/ArohaRetreat/projectsV2') {
       return orgOnline ? page([]) : new Response(null, {status:503});
     }

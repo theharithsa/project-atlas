@@ -1,4 +1,5 @@
-import { createProjectDirectory, directoryRefreshSeconds, owners } from './discovery.js';
+import { createProjectDirectory, directoryRefreshSeconds } from './discovery.js';
+import { publishedOwnerSettings, settingsRefreshSeconds } from './owner-settings.js';
 
 const SITE = 'https://github.com';
 const TIMEZONE = 'Asia/Kolkata';
@@ -121,13 +122,18 @@ function mapItem(row, {values, slug, title, url}, permitted, fields) {
   const parent = values.get('Parent issue');
   const parentRepo = parent && parent.owner + '/' + parent.repository;
   const sprintId = values.get(fields.sprint?.id)?.id;
+  const state = String(title.state || row.state).toUpperCase();
+  const closed = row.issueClosedAt || values.get('Closed')?.value;
+  const closedTime = row.contentType === 'Issue' && state === 'CLOSED' &&
+    typeof closed === 'string' ? Date.parse(closed) : NaN;
   return {
     kind: row.contentType,
     title: title.title.raw,
     number: title.number,
     url,
     repo: slug,
-    state: String(title.state || row.state).toUpperCase(),
+    state,
+    closedAt: Number.isFinite(closedTime) ? new Date(closedTime).toISOString() : null,
     reason: title.stateReason?.toUpperCase() || null,
     status: option('status'),
     priority: option('priority'),
@@ -388,14 +394,16 @@ async function boundedResults(values, load) {
   return results;
 }
 const discover = createProjectDirectory((url) => read(url, 'application/vnd.github+json'));
-export async function collectPortfolio() {
-  const directories = await Promise.allSettled(owners.map(discover));
+export async function collectPortfolio(loadSettings = publishedOwnerSettings) {
+  const {owners, stale} = await loadSettings();
+  const directories = await boundedResults(owners, discover);
   const unavailable = [], boards = [], projects = [];
+  if (stale) unavailable.push({owner: 'Portfolio settings', reason: 'Using the last verified owner list'});
   for (const [i, result] of directories.entries()) {
     if (result.status === 'fulfilled') boards.push(...result.value);
     else unavailable.push({owner: owners[i].account, reason: 'Public project directory unavailable'});
   }
-  if (directories.every((r) => r.status === 'rejected'))
+  if (directories.length && directories.every((r) => r.status === 'rejected'))
     throw new Error('Public project directories temporarily unavailable');
   const boardsFound = await boundedResults(boards, collectBoard);
   for (const [i, result] of boardsFound.entries()) {
@@ -438,8 +446,13 @@ export async function collectPortfolio() {
       month: '2-digit',
       day: '2-digit',
     }).format(now),
-    owner: owners[0].account,
+    owner: owners[0]?.account || null,
     directoryOwners: owners.map((o) => o.account),
+    sourceSettings: {
+      users: owners.filter(o => o.kind === 'users').map(o => o.account),
+      organizations: owners.filter(o => o.kind === 'orgs').map(o => o.account),
+      refreshSeconds: settingsRefreshSeconds,
+    },
     projects,
     repositories,
     unavailable,

@@ -99,6 +99,24 @@ export function targets(data, products) {
 export function issueRows(products, predicate) {
   return products.flatMap((p) => p.open.filter(predicate).map((i) => ({ p, i })));
 }
+export function closedIssues(products) {
+  const issues = new Map();
+  for (const p of products) {
+    for (const i of p.items) {
+      if (i.kind !== 'Issue' || i.state !== 'CLOSED' || i.archived) continue;
+      const existing = issues.get(i.url);
+      if (existing) {
+        existing.memberships.push({p, i});
+        if ((i.closedAt || '') > (existing.i.closedAt || '')) existing.i = i;
+      } else {
+        issues.set(i.url, {p, i, memberships: [{p, i}]});
+      }
+    }
+  }
+  return [...issues.values()].sort((a, b) =>
+    (b.i.closedAt || '').localeCompare(a.i.closedAt || '') ||
+    compare(a.i.repo, b.i.repo) || b.i.number - a.i.number);
+}
 export function shortSprint(name) {
   return name.split(/\s+[—–]\s+/)[0];
 }

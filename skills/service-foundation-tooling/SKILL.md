@@ -10,3 +10,5 @@ The maintainer is theharithsa. This module runs in CI and on contributor machine
 The two GitHub intake workflows assign personal-repository issue types and fill missing milestones using GitHub metadata. PR changes and test suites run without production credentials. `scripts/repository_ruleset.py` reads the target and previews the policy by default. Its apply mode changes the named ruleset on explicit authorization. [Protection](../../docs/repository-ruleset.md)
 
 Run `sh scripts/check.sh` with Python 3.11+ and Node 22. Keep test commands and CI aligned across Linux and Windows. [Testing](../../docs/testing.md) · [Continuation](continuation.md)
+
+The preview server in `scripts/serve.mjs` reads the owner file from the local checkout. It calls the production settings validator and GitHub collector. [Preview guide](../../README.md#run-locally)

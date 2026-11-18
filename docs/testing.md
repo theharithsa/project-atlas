@@ -12,9 +12,9 @@ If the default Python is older, select the newer executable, for example `PYTHON
 
 | Layer | What it verifies |
 | --- | --- |
-| Feed unit tests | Owner-directory pagination and expiry, removal and outages, empty boards, canonical public repository evidence, flat item pagination, native fields and cache sharing. |
+| Feed unit tests | Shared owner validation, changes, removals, expiry, failure recovery and empty configurations, owner-directory pagination, removal and outages, empty boards, canonical public repository evidence, flat item pagination, native closure dates and cache sharing. |
 | HTTP boundary | Actual Firebase handler denies writes and arbitrary source selectors, returns a bounded retryable error, and local preview serves only configured public assets. |
-| Dashboard model | Current-sprint closure, open leaf work, backlog classification and shared milestone deduplication using fictional boards. |
+| Dashboard model | Current-sprint closure, open leaf work, backlog classification, closed issues across multiple boards and sprints, missing dates and shared milestone deduplication using fictional boards. |
 | Repository | Service catalog, template provenance, Markdown links, PR documentation impact, tracked-file publication checks and tooling regressions. |
 
-The automated suite uses a local ephemeral port and synthetic fixtures, including for upstream failures. The local preview command in the README uses the real public feed. For a release smoke test, open the deployed dashboard, choose a sprint, open a scheduled issue, and check its source timestamp. Test the same views at phone width when navigation or layout changes. [CI results](https://github.com/theharithsa/project-atlas/actions/workflows/foundation.yml)
+The automated suite uses a local ephemeral port and synthetic fixtures, including for upstream failures. The local preview command in the README uses the real public feed. For a release smoke test, open the deployed dashboard, choose a sprint, open a scheduled issue, and check its source timestamp. Open **History**, compare a closure date with GitHub and try search, pagination and a product filter. Open **Data sources** to verify the account types and settings editor. Test the same views at phone width when navigation or layout changes. [CI results](https://github.com/theharithsa/project-atlas/actions/workflows/foundation.yml)

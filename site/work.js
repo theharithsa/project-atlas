@@ -9,16 +9,19 @@ import {
   bucket,
   nativeBacklog,
   issueRows,
+  closedIssues,
   targets,
 } from './model.js';
 import { icon, e, external, url, productMark, dot, githubStatus, empty, tabs, progress } from './ui.js';
 import { calendar } from './overview.js';
 let tableRows = [],
   term = '',
-  page = 0;
+  page = 0,
+  showingHistory = false;
 const PAGE_SIZE = 12;
-function setIssueTable(rows, title) {
-  tableRows = [...rows].sort(
+function setIssueTable(rows, title, history = false) {
+  showingHistory = history;
+  tableRows = history ? rows : [...rows].sort(
     (a, b) =>
       compare(a.p.label, b.p.label) ||
       compare(a.i.priority || 'zz', b.i.priority || 'zz') ||
@@ -29,14 +32,32 @@ function setIssueTable(rows, title) {
   page = 0;
   return `<section class="panel issue-panel"><div class="panel-head list-head"><h2>${e(title)}</h2><label class="search-box">${icon('search', 16)}<input id="issue-search" type="search" placeholder="Find an issue…" aria-label="Search issues by title, number or repository" autocomplete="off"></label></div><div id="issue-results"></div></section>`;
 }
+const closureDate = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric',
+});
+function closureReason(reason) {
+  return { COMPLETED: 'Completed', NOT_PLANNED: 'Not planned', DUPLICATE: 'Duplicate' }[reason] || 'Closed';
+}
+function historyRow({p, i, memberships}) {
+  const date = i.closedAt
+    ? `<time datetime="${e(i.closedAt)}">${e(closureDate.format(new Date(i.closedAt)))}</time>`
+    : '<span class="muted">Date unavailable</span>';
+  const plans = memberships.map(({p: product, i: item}) => {
+    const sprint = product.sprints.find(s => s.id === item.sprint);
+    const name = sprint ? product.label + ' · ' + sprint.name : product.label;
+    const href = sprint ? url('sprints', product.key, {sprint:sprint.id, show:'closed'}) : url('overview', product.key);
+    return `<a href="${e(href)}">${e(name)}</a>`;
+  }).join('');
+  return `<article class="work-row history-row"><div class="work-main">${productMark(p, true)}<div><strong>${external(i.url, e(i.title), 'issue-title', i.title + ' on GitHub')}</strong><small>${e(i.repo)}#${e(i.number)}</small></div></div><div class="history-closure">${date}<small>${e(closureReason(i.reason))}</small></div><div class="work-plan history-plans">${plans}</div></article>`;
+}
 function paintIssues() {
   const target = document.querySelector('#issue-results');
   if (!target) return;
   const needle = term.trim().toLowerCase();
   const matches = tableRows.filter(
-    ({ p, i }) =>
+    ({ p, i, memberships }) =>
       !needle ||
-      [p.label, i.title, '#' + i.number, i.repo, i.status, i.priority, i.milestoneTitle]
+      [p.label, ...(memberships || []).map(m => m.p.label), showingHistory ? closureReason(i.reason) : '', i.title, '#' + i.number, i.repo, i.status, i.priority, i.milestoneTitle]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -46,7 +67,9 @@ function paintIssues() {
   page = Math.min(page, max);
   const visible = matches.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const rows = visible
-    .map(({ p, i }) => {
+    .map((row) => {
+      if (showingHistory) return historyRow(row);
+      const {p, i} = row;
       const s = p.sprints.find((s) => s.id === i.sprint);
       const reference = `${i.repo}#${i.number}`;
       const assignment = s
@@ -57,7 +80,7 @@ function paintIssues() {
       return `<article class="work-row"><div class="work-main">${productMark(p, true)}<div><strong>${external(i.url, e(i.title), 'issue-title', i.title + ' on GitHub')}</strong><small>${e(reference)}${i.state === 'CLOSED' ? ' · Closed' : ''}</small></div></div><div class="work-status">${githubStatus(i.status)}${i.priority ? `<span class="priority">${e(i.priority)}</span>` : ''}</div><div class="work-plan">${assignment}</div></article>`;
     })
     .join('');
-  target.innerHTML = `${rows ? `<div class="work-head"><span>Issue</span><span>GitHub status</span><span>Sprint or milestone</span></div>${rows}` : empty(needle ? 'No matching issues' : 'No issues in this selection', needle ? 'Try another title, number or repository.' : 'No public issues match this filter.')}<div class="pagination"><span aria-live="polite">${matches.length ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, matches.length)} of ${matches.length}` : '0'} ${matches.length === 1 ? 'issue' : 'issues'}</span><div><button data-pager="-1" aria-label="Previous issue page" ${page === 0 ? 'disabled' : ''}>${icon('left', 15)}</button><button data-pager="1" aria-label="Next issue page" ${page >= max ? 'disabled' : ''}>${icon('right', 15)}</button></div></div>`;
+  target.innerHTML = `${rows ? `<div class="work-head"><span>Issue</span><span>${showingHistory ? 'Closed on' : 'GitHub status'}</span><span>${showingHistory ? 'Product / sprint' : 'Sprint or milestone'}</span></div>${rows}` : empty(needle ? 'No matching issues' : (showingHistory ? 'No closed issues in this selection' : 'No issues in this selection'), needle ? 'Try another title, number or repository.' : 'No public issues match this filter.')}<div class="pagination"><span aria-live="polite">${matches.length ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, matches.length)} of ${matches.length}` : '0'} ${matches.length === 1 ? 'issue' : 'issues'}</span><div><button data-pager="-1" aria-label="Previous issue page" ${page === 0 ? 'disabled' : ''}>${icon('left', 15)}</button><button data-pager="1" aria-label="Next issue page" ${page >= max ? 'disabled' : ''}>${icon('right', 15)}</button></div></div>`;
 }
 export function saveIssueView() {
   return {term, page};
@@ -128,7 +151,17 @@ function backlogPage(products, r) {
       url('backlog', r.product, { scope: key }),
     ]),
     scope,
-  )}${picker}</div><p class="filter-note">${e(buckets.find((t) => t[0] === scope)[2])}</p>${setIssueTable(shown, buckets.find((t) => t[0] === scope)[1])}`;
+  )}${picker}</div><p class="filter-note">${e(buckets.find((t) => t[0] === scope)[2])} <a class="text-link" href="${e(url('history', r.product))}">View closed issues</a></p>${setIssueTable(shown, buckets.find((t) => t[0] === scope)[1])}`;
+}
+export function historyPage(products) {
+  const rows = closedIssues(products);
+  const repositories = [...new Set(products.flatMap(p => p.repos))].sort(compare);
+  const links = repositories.map(repo => external(
+    'https://github.com/' + repo + '/issues?q=is%3Aissue+is%3Aclosed', e(repo), 'text-link',
+  )).join('');
+  return setIssueTable(rows, 'Closed issues', true) + (links
+    ? `<section class="panel source-intro history-repos"><h2>Repository history</h2><p>GitHub also lists closed issues archived or removed from these boards.</p><div>${links}</div></section>`
+    : '');
 }
 function sprintPage(data, products, r) {
   const id = r.q.get('sprint');
@@ -139,15 +172,15 @@ function sprintPage(data, products, r) {
   if (detail) {
     const { p, s } = detail,
       stats = sprintStats(p, s);
-    const which = ['open', 'closed', 'all'].includes(r.q.get('show')) ? r.q.get('show') : 'open';
+    const which = ['open', 'closed', 'all'].includes(r.q.get('show')) ? r.q.get('show') : 'all';
     const scoped = stats.work.filter((i) => which === 'all' || i.state.toLowerCase() === which);
     return `<a class="back-link" href="${e(url('sprints', r.product, { period: phase(s, data.asOf) }))}">${icon('left', 14)} Sprint list</a><section class="panel sprint-detail tone-${p.color}"><div class="detail-name">${productMark(p)}<span>${e(p.label)}</span>${githubStatus(phase(s, data.asOf) === 'current' ? 'Current' : phase(s, data.asOf) === 'upcoming' ? 'Upcoming' : 'Past')}</div><h2>${e(s.name)}</h2><p>${e(span(s.start, s.end, true))}</p><div class="detail-progress">${progress(stats.closed, stats.total)}<span>${stats.closed} of ${stats.total} issues closed</span></div></section>
     ${tabs(
       'Sprint issue state',
       [
+        ['all', `All · ${stats.total}`],
         ['open', `Open · ${stats.open}`],
         ['closed', `Closed · ${stats.closed}`],
-        ['all', `All · ${stats.total}`],
       ].map(([k, l]) => [k, l, url('sprints', p.key, { sprint: id, show: k })]),
       which,
     )}${setIssueTable(

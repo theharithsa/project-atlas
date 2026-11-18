@@ -11,6 +11,10 @@ New items start in Todo. Reopened issues and PRs return to Todo. Closing work or
 3. Review the current candidate and resolve conversations. Merge through GitHub after the checks pass. The solo-maintainer baseline requires a pull request with zero mandatory independent approvals, blocks force pushes, and automatically deletes eligible merged branches.
 4. Create an unused semantic version tag on the reviewed commit and publish its release notes. Results belong on the issue, PR, Actions run and release. [Source releases](https://github.com/theharithsa/project-atlas/releases)
 
+## Publish a shared owner change
+
+For a settings-only PR, edit the user and organization arrays and run the normal checks. On merge, the running collector will read the published file during its next settings refresh. Verify the active lists and board coverage on **Data sources**. To undo the change, revert the settings edit through a checked PR. [Shared owner file](../config/owners.json) · [Data sources](https://pipeline.theharithsanotes.com/#sources)
+
 ## Deploy the checked source to Firebase
 
 The GitHub workflow runs checks. A maintainer with deployment access runs Firebase CLI from the reviewed revision after production deployment is authorized.
@@ -29,7 +33,7 @@ npm test
 firebase deploy --project the-harithsa-notes-94 --only functions:project-atlas,hosting:the-harithsa-notes-pipeline
 ```
 
-Use the named Hosting site and codebase because this Firebase project also hosts other products. Check HTTPS, `GET /api/v1/portfolio`, source coverage and a sprint drilldown. Record the hosting version and function revision separately from the Git commit.
+Use the named Hosting site and codebase because this Firebase project also hosts other products. Check HTTPS, `GET /api/v1/portfolio`, source coverage, a sprint drilldown and closed-issue history against a public GitHub issue. Record the hosting version and function revision separately from the Git commit.
 
 ## Recover
 

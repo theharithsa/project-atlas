@@ -1,6 +1,13 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { currentPortfolio } from '../functions/feed.js';
+import { createFeed } from '../functions/feed.js';
+import { collectPortfolio } from '../functions/github.js';
+import { createOwnerSettings } from '../functions/owner-settings.js';
+
+const settingsFile = new URL('../config/owners.json', import.meta.url);
+const localSettings = createOwnerSettings(async () =>
+  JSON.parse(await readFile(settingsFile, 'utf8')));
+const currentPortfolio = createFeed(() => collectPortfolio(localSettings));
 
 const site = new URL('../site/', import.meta.url);
 const mime = new Map([
