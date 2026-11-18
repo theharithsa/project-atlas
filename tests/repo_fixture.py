@@ -13,7 +13,7 @@ class RepositoryTests(unittest.TestCase):
     def setUp(self):
         work = tempfile.TemporaryDirectory()
         self.addCleanup(work.cleanup)
-        self.base = Path(work.name)
+        self.base = Path(work.name).resolve()
 
     def fixture(self):
         root = self.base / "repo"

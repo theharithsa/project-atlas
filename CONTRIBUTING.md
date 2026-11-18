@@ -1,10 +1,7 @@
-# Contributing
+# Contributing to Project Atlas
 
-Start with an issue that describes the behavior, expected outcome, and a way to verify the change. Check the repository's linked GitHub Project for work already in progress.
-
-1. Branch from the default branch and keep the change focused on the linked issue.
-2. Follow the project README for setup and the [testing guide](docs/testing.md) for checks. Use isolated services and synthetic data for tests, screenshots, and recordings.
-3. Open a PR that explains the behavior change and the checks you ran. Use a closing keyword when the PR fully resolves its linked issue.
-4. Refresh affected documentation and public launch material when behavior changes.
-
-See the [delivery procedure](docs/delivery.md) for issue and release tracking. Report suspected vulnerabilities through the private route in the [security policy](SECURITY.md).
+1. Open or reuse an issue with a user-visible outcome and acceptance criteria. For a data discrepancy, give the public GitHub link, dashboard view, active filters and last board check time. Use the security reporting route for sensitive details. [Issue forms](https://github.com/theharithsa/project-atlas/issues/new/choose) · [Security](SECURITY.md)
+2. Branch from `main` and include the issue number in the branch name. Start the [local preview](README.md#run-locally). The [service inventory](docs/services.md) identifies the code and tests to change.
+3. Run the relevant application tests and the full repository check. Use fictional data for regression cases and documentation screenshots. [Testing guide](docs/testing.md)
+4. Open a pull request. Include `Closes #N` for an issue it resolves, actual test results, the documentation impact, and recovery steps for runtime changes. Keep the issue and PR on the same intended release milestone.
+5. Merge through the checked PR. Release tags point to a reviewed commit on the default branch. Firebase publication is a separate maintainer operation. [Delivery and rollback](docs/delivery.md)

@@ -1,42 +1,42 @@
 {
   "$schema": "schemas/project.schema.json",
   "schemaVersion": 1,
-  "name": null,
+  "name": "Project Atlas",
   "template": {
     "repository": "theharithsa/app-launchpad-template",
-    "revision": null,
+    "revision": "2e3162b9988a0dec0ec0c1ea12da2e22a5c989fa",
     "version": "1.14.2"
   },
   "decisions": {
     "product": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Public multi-product GitHub sprint, backlog and release dashboard.",
+      "approval": "Established running product and owner-approved public source publication."
     },
     "stack": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Dependency-free browser modules and Node.js 22 Firebase function.",
+      "approval": "Matches the existing live application and function artifact."
     },
     "hosting": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Firebase project the-harithsa-notes-94, dedicated site the-harithsa-notes-pipeline, function atlasPublicFeed in us-east1.",
+      "approval": "Existing production deployment at pipeline.theharithsanotes.com."
     },
     "privacy": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Only allowlisted public planning data, read anonymously. Authenticated local exports stay outside Git and Hosting.",
+      "approval": "Public data boundary of the running dashboard."
     },
     "observability": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "not-applicable",
+      "value": "The source release preserves Firebase provider and application health checks. No Dynatrace destination has been selected.",
+      "approval": "Import of the existing stack has no telemetry integration or new provider resources."
     },
     "license": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "MIT for original source and inherited foundation. Bundled DM Sans retains the SIL Open Font License.",
+      "approval": "Owner selected MIT for the public Project Atlas repository on 18 November 2026."
     }
   }
 }

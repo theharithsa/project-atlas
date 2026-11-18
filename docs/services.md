@@ -1,5 +1,11 @@
 # Service inventory
 
-The machine-readable architecture inventory is [catalog.json](../skills/catalog.json) → `services`. The only implemented module in this template is foundation-tooling; consumer app services are added for the actual architecture.
+| Service | Owner | Entry and boundary | Maintainer notes |
+| --- | --- | --- | --- |
+| Dashboard web | theharithsa | Static assets in `site/`; same-origin portfolio API; no browser credentials or persistent visitor state | [Skill](../skills/service-dashboard-web/SKILL.md) · [Continuation](../skills/service-dashboard-web/continuation.md) |
+| Portfolio feed | theharithsa | Firebase HTTPS function in `functions/`; anonymous public GitHub reads; bounded in-memory caches | [Skill](../skills/service-portfolio-feed/SKILL.md) · [Continuation](../skills/service-portfolio-feed/continuation.md) |
+| Repository tooling | theharithsa | Local and CI checks, service registration, issue intake and opt-in branch rules | [Skill](../skills/service-foundation-tooling/SKILL.md) · [Continuation](../skills/service-foundation-tooling/continuation.md) |
 
-Use the [service ownership and continuation contract](../.agents/skills/app-launchpad/references/services.md), [catalog schema](../schemas/catalog.schema.json) and [synthetic service example](../examples/web/SKILL.md). Review inventory completeness against actual source/runtime/deployment boundaries; automated validation covers declared mappings only.
+The local preview in `scripts/serve.mjs` serves the same web files and imports the collector directly. The optional `scripts/snapshot.py` tool is for a maintainer comparing the authenticated GitHub view. Its output may include private planning data and stays in the ignored `local-archive/` directory. It is outside Hosting, repository releases and the public feed.
+
+The service catalog is the machine-readable ownership record. Update the matching skill and continuation with material changes. [Catalog](../skills/catalog.json) · [API](api.md) · [Operations](delivery.md)

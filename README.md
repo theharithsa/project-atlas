@@ -1,66 +1,55 @@
-# App Launchpad Template
+# Project Atlas
 
-Template version: **1.14.2** · [changelog](docs/template-changelog.md) · [MIT license](LICENSE)
+Project Atlas gives product owners and maintainers one place to see what each team has scheduled, which issues still need a plan, and which releases have a target date. It reads public GitHub Projects and links each result back to its source. Anyone can use the dashboard without signing in.
 
-See the [production documentation checklist](docs/release-plan.md#production-documentation-review). [SalesDrone](https://github.com/theharithsa/SalesDrone) is an existing app that uses App Launchpad delivery practices.
+**[Open Project Atlas](https://pipeline.theharithsanotes.com/)** · [Current sprints](https://pipeline.theharithsanotes.com/#sprints) · [Backlog](https://pipeline.theharithsanotes.com/#backlog) · [Release roadmap](https://pipeline.theharithsanotes.com/#roadmap)
 
-A stack-neutral, **Dynatrace-opinionated** foundation for building and enhancing apps. Choose each product's stack and hosting deliberately; Dynatrace is the chosen observability platform. No tenant or application deployment is preconfigured.
+![Project Atlas overview with three example products, a sprint calendar and upcoming milestones](docs/images/overview.jpg)
 
-This template contains repository tooling, agent skills and a static documentation
-starter. It contains no application scaffold. Build the first application slice
-with your chosen stack after [discovery](docs/getting-started.md).
+*The screenshots use fictional products and issues. The live dashboard reads the configured GitHub boards.*
 
-## Prerequisites
+## Read the dashboard
 
-- Python **3.11+**, Git, and a POSIX shell. On Windows, install Python and Git for Windows (including Git Bash), or use WSL with Python and Git installed inside it.
-- [GitHub CLI (`gh`)](https://cli.github.com/) for the repository-creation command below; authenticate with `gh auth login`. The GitHub web template button is an alternative to the CLI.
-- Check `python3 --version` and `git --version` in your shell. In Windows Git Bash, use `python --version` if Python is installed as `python`; run the checks with `PYTHON=python sh scripts/check.sh`. If the command is unavailable, install Python and reopen the shell before continuing.
+| To answer this question | Open |
+| --- | --- |
+| What is in flight for one product? | Choose the product in **Overview**, then open a sprint in the calendar to see its issues. |
+| Which issues still need planning? | **Backlog → Unscheduled** shows open work without a sprint or delivery milestone. **Board backlog** shows the source board’s Backlog and Todo statuses, including scheduled issues. |
+| What is expected to ship next? | **Roadmap** shows versioned milestone targets. **Data sources** links to the latest published release for each repository. |
+| How fresh are the numbers? | The status at the top shows the last board check in India time. Open **Data sources** for coverage or use the refresh button. |
 
-The foundation scripts use the Python standard library; no `pip install` is required.
+While the page is visible it checks boards every minute. Repository milestones and release tags refresh on demand every three minutes. Workload counts exclude pull requests, archived entries and parent rollups. The configured portfolio covers App Launchpad, Aroha Retreat, FinBuddy, SalesDrone and The Harithsa Notes. [Dashboard guide](docs/handbook.md)
 
-## Create a project
+## Run locally
 
-Confirm the new owner, name, visibility and empty local destination, then use **Use this template → Create a new repository**, or:
-
-```sh
-gh repo create OWNER/PROJECT --template theharithsa/app-launchpad-template --private --clone
-cd PROJECT
-sh scripts/check.sh
-```
-
-Use public visibility only when approved. Follow [getting started](docs/getting-started.md): record source template version/revision, complete discovery decisions and register each actual service before implementation. Then run the discovery gate:
+Use Node.js 22 and a network connection to GitHub. The local server uses the same public collector as the deployed site.
 
 ```sh
-python3 scripts/check_foundation.py --ready --json
+git clone https://github.com/theharithsa/project-atlas.git
+cd project-atlas
+npm start
 ```
 
-The gate checks decisions, not application/release readiness. Add real stack-specific build, test and deployment checks for the selected app.
+Open [localhost:4179](http://127.0.0.1:4179/). To choose a different port, run `npm start -- 4180`. To install the Firebase function dependencies and run the application tests:
 
-## What is included
+```sh
+npm ci --prefix functions --ignore-scripts
+npm test
+```
 
-- [Agent entrypoint](AGENTS.md), tool-specific pointer files and [policy ownership map](docs/policy-map.md).
-- [Visible skills catalog](skills/README.md): design, implementation, tests, deployment, Dynatrace observability, documentation and handoff.
-- Per-service skills/continuation, safe registration tooling and [JSON Schemas](schemas/README.md).
-- [Synthetic worked examples](examples/README.md) for decisions, execution evidence, continuation and a service skill.
-- Issue/agent-brief forms, PR checklist, CI, CODEOWNERS and an opt-in [repository ruleset procedure](docs/repository-ruleset.md).
-- [Ian Xiaohei Illustrations](skills/ian-xiaohei-illustrations/SKILL.md) for useful explanatory images under the [illustration policy](docs/illustrations.md).
+## How it works
 
-## Prepare a public product launch
+The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function reads an explicit list of public boards and repositories as a signed-out visitor, paginates board items, and returns only the planning fields used by the dashboard. Concurrent visitors share the same refresh. The browser never needs a GitHub token.
 
-Use the [product README example](examples/product-readme.md), [contribution guide](CONTRIBUTING.md), [security guide](SECURITY.md), and [landing page starter](site/index.html). Follow the [launch procedure](.agents/skills/app-launchpad/references/product-launch.md) to capture real screenshots with synthetic data, make a short `/brag` video, and publish through GitHub Pages.
+| Source | Responsibility |
+| --- | --- |
+| [site/](site/) | Product filter, sprint calendar, issue search, backlog and roadmap |
+| [functions/](functions/) | GitHub collection, visibility filtering, caching and the public HTTPS handler |
+| [firebase.json](firebase.json) | Dedicated Hosting site, function rewrite and cache headers |
+| [docs/api.md](docs/api.md) | API contract, data scope, timestamps and failure behavior |
+| [docs/delivery.md](docs/delivery.md) | Pull request checks, release, Firebase deployment and rollback |
 
-Build the starter and its five public guides with `python3 scripts/build_public_docs.py --output dist/public-docs` (use an empty output directory). Preview with `python3 -m http.server 8080 --directory dist/public-docs`. Configure GitHub Pages in the generated repository when the content is ready. See the [documentation workflow](.agents/skills/app-launchpad/references/product-launch.md#documentation-on-every-pr).
+To report a mismatch, include the public board or milestone link, the active dashboard filter and the displayed check time. [Open an issue](https://github.com/theharithsa/project-atlas/issues/new/choose) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Release history](CHANGELOG.md)
 
-## Checks and maintenance
+## License
 
-Run **`sh scripts/check.sh`** locally and in CI: metadata validation, local Markdown links and safety/contract tests. For machine-readable diagnostics use `python3 scripts/check_foundation.py --json`; `--ready` adds discovery checks. Foundation success does not certify an application's behavior, deployment or tenant signals.
-
-GitHub template generation copies files, not repository settings or future updates. Adopt upgrades through reviewed PRs and retain project-specific choices. See [versioning and migration](docs/versioning.md), [delivery](docs/delivery.md) and [service inventory](docs/services.md). The partial planning bootstrap was removed; use GitHub template generation or record adoption pending.
-
-## Licensing
-
-The template is MIT-licensed by Vishruth Harithsa. Bundled Ian Xiaohei Illustrations retains its own [MIT license](skills/ian-xiaohei-illustrations/LICENSE) and [attribution/provenance](skills/ian-xiaohei-illustrations/NOTICE.md). Example PNGs are linked upstream rather than redistributed.
-
-A generated application's license is a separate `needs-user-input` decision. Preserve the template and third-party copyright/license notices for inherited material; when selecting the app's license, retain those notices (for example under `LICENSES/`) and document the app's chosen terms separately. Copying the template does not record an approved license choice for new application code.
-
-[GitHub template documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)
+Project Atlas and the inherited App Launchpad foundation are MIT licensed. The bundled DM Sans font is distributed under the SIL Open Font License 1.1. [MIT license](LICENSE) · [Font license](site/assets/dm-sans-license.txt) · [Template provenance](docs/versioning.md)

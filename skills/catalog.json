@@ -100,6 +100,30 @@
         "app-launchpad",
         "ian-xiaohei-illustrations"
       ]
+    },
+    {
+      "id": "service-portfolio-feed",
+      "kind": "service",
+      "path": "skills/service-portfolio-feed/SKILL.md",
+      "description": "Maintain the portfolio-feed service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
+    },
+    {
+      "id": "service-dashboard-web",
+      "kind": "service",
+      "path": "skills/service-dashboard-web/SKILL.md",
+      "description": "Maintain the dashboard-web service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
     }
   ],
   "services": [
@@ -111,10 +135,8 @@
         ".github/workflows"
       ],
       "entrypoints": [
-        "scripts/check_foundation.py",
-        "scripts/check_links.py",
-        "scripts/check_docs_impact.py",
-        "scripts/build_public_docs.py",
+        "scripts/check_repository.py",
+        "scripts/check.sh",
         "scripts/add_service_skill.py",
         "scripts/repository_ruleset.py"
       ],
@@ -124,14 +146,64 @@
       "contracts": [
         "schemas/catalog.schema.json",
         "schemas/project.schema.json",
-        "schemas/evidence.schema.json",
-        "docs/policy-map.md"
+        "docs/delivery.md"
       ],
       "testCommands": [
         "sh scripts/check.sh"
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
-      "lastReviewedRevision": "aabff5c415e37b0d446f5998ecff760206a2ca4d"
+      "lastReviewedRevision": "510dc179d2e2a801de3a0deb2bc6fa4fad1a0866"
+    },
+    {
+      "id": "portfolio-feed",
+      "skillId": "service-portfolio-feed",
+      "sourcePaths": [
+        "functions"
+      ],
+      "entrypoints": [
+        "functions/index.js",
+        "functions/github.js",
+        "functions/feed.js"
+      ],
+      "owner": "theharithsa",
+      "status": "active",
+      "dependsOn": [],
+      "contracts": [
+        "docs/api.md",
+        "firebase.json"
+      ],
+      "testCommands": [
+        "npm test"
+      ],
+      "continuation": "skills/service-portfolio-feed/continuation.md",
+      "lastReviewedRevision": "f37b0e9e8b568f49c3295ae497beac3c1e161cda"
+    },
+    {
+      "id": "dashboard-web",
+      "skillId": "service-dashboard-web",
+      "sourcePaths": [
+        "site"
+      ],
+      "entrypoints": [
+        "site/index.html",
+        "site/app.js",
+        "site/model.js"
+      ],
+      "owner": "theharithsa",
+      "status": "active",
+      "dependsOn": [
+        "portfolio-feed"
+      ],
+      "contracts": [
+        "docs/handbook.md",
+        "docs/api.md",
+        "firebase.json"
+      ],
+      "testCommands": [
+        "npm test"
+      ],
+      "continuation": "skills/service-dashboard-web/continuation.md",
+      "lastReviewedRevision": "f37b0e9e8b568f49c3295ae497beac3c1e161cda"
     }
   ]
 }

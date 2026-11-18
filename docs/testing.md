@@ -1,30 +1,20 @@
-# Foundation checks
+# Testing
 
-Python 3.11+ and a POSIX shell (Git Bash or WSL on Windows); standard library only.
-Git is needed for revision diagnostics and their tests. The required `foundation`
-check aggregates Linux and Windows jobs; both must pass. Each job runs with
-default-encoding warnings treated as errors.
+Use Node.js 22. The repository checks require Python 3.11 or newer and a POSIX shell. Git for Windows provides Bash for the Windows CI job.
 
 ```sh
+npm ci --prefix functions --ignore-scripts
+npm test
 sh scripts/check.sh
-# Windows Git Bash, when Python is installed as python rather than python3:
-PYTHON=python sh scripts/check.sh
-# Strict encoding audit (use python instead of python3 on Windows):
-python3 -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s tests
-python3 scripts/check_foundation.py --json
-python3 scripts/check_foundation.py --ready --json
 ```
 
-The shared entrypoint validates metadata, versions, skills, local Markdown links, the public documentation build and its HTML links, and unit tests. In PR CI it also requires a documentation impact decision in the PR body. README, catalog and CI use the same entrypoint. Foundation validator JSON includes `ok`, deterministic `errors`, and `ready` (whether discovery checks were requested). Failures exit nonzero.
+If the default Python is older, select the newer executable, for example `PYTHON=python3.12 sh scripts/check.sh`.
 
-The [schemas](../schemas/README.md) own field shapes. The Python gate adds internal-path/reference/dependency checks and ready/active semantics. Tests cover multi-error diagnostics, malformed structures, schema/constant parity, SemVer, service generation and rollback, link failures, CI command agreement and ruleset dry-run behavior.
+| Layer | What it verifies |
+| --- | --- |
+| Feed unit tests | Flat pagination including nested issues, completeness, public visibility, allowed source URLs, native fields, cache sharing and retries. |
+| HTTP boundary | Actual Firebase handler denies writes and arbitrary source selectors, returns a bounded retryable error, and local preview serves only configured public assets. |
+| Dashboard model | Current-sprint closure, open leaf work, backlog classification and shared milestone deduplication using fictional boards. |
+| Repository | Service catalog, template provenance, Markdown links, PR documentation impact, tracked-file publication checks and tooling regressions. |
 
-For actual application suites follow the [test contract](../.agents/skills/app-launchpad/references/testing.md) and [evidence rules](../.agents/skills/app-launchpad/references/evidence.md). Record real commands/prerequisites in the relevant service skill after stack selection. `examples/` is synthetic reference material and never execution proof or a cataloged service. Raw local artifacts remain ignored under `qa/local/` or `qa/raw/`.
-
-`PYTHON` selects one executable (a quoted path may contain spaces), not a command
-plus arguments. On Windows, use `py -3` to locate/install Python if needed, then
-set `PYTHON` to that executable; `PYTHON="py -3"` is not supported. UTF-8 mode is
-not required. Symlink tests skip only when the platform denies or lacks symlink
-creation; path, collision and lock tests still run. Missing review commits produce
-a warning when Git history is available; fetch history or review and refresh the
-continuation. Source archives can validate without Git history.
+The automated suite uses a local ephemeral port and synthetic fixtures, including for upstream failures. The local preview command in the README uses the real public feed. For a release smoke test, open the deployed dashboard, choose a sprint, open a scheduled issue, and check its source timestamp. Test the same views at phone width when navigation or layout changes. [CI results](https://github.com/theharithsa/project-atlas/actions/workflows/foundation.yml)
