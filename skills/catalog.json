@@ -176,7 +176,7 @@
         "npm test"
       ],
       "continuation": "skills/service-portfolio-feed/continuation.md",
-      "lastReviewedRevision": "f37b0e9e8b568f49c3295ae497beac3c1e161cda"
+      "lastReviewedRevision": "09d48da09361b9d29f461b3dc0f35afdffafb21e"
     },
     {
       "id": "dashboard-web",
@@ -203,7 +203,7 @@
         "npm test"
       ],
       "continuation": "skills/service-dashboard-web/continuation.md",
-      "lastReviewedRevision": "f37b0e9e8b568f49c3295ae497beac3c1e161cda"
+      "lastReviewedRevision": "09d48da09361b9d29f461b3dc0f35afdffafb21e"
     }
   ]
 }
