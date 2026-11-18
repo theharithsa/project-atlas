@@ -24,3 +24,13 @@ test('a shared milestone appears once on the roadmap and retains its products', 
   assert.equal(releases[0].products.length, 2);
   assert.ok(releases.every(release => release.version && release.due >= data.asOf));
 });
+
+test('a newly discovered empty board can be selected with any public title', () => {
+  const data = samplePortfolio();
+  data.projects.push({ key: 'fixture-72', name: 'constructor', repos: [], items: [], sprints: [] });
+  const board = prepare(data).projects.find(p => p.key === 'fixture-72');
+  assert.equal(board.label, 'constructor');
+  assert.deepEqual(board.current, []);
+  assert.deepEqual(board.backlog, []);
+  assert.deepEqual(targets(data, [board]), []);
+});

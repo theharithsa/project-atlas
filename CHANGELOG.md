@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 · 18 November 2026
+
+- Discover open public projects in the tracked owner directories and populate sprint, backlog and roadmap views without maintaining a per-board list.
+- Discover release repositories from public board items. Report availability per owner and keep empty boards visible.
+- Track Atlas issues, pull requests and sprints on its own public Project. [Planning board](https://github.com/users/theharithsa/projects/5) · [Discovery issue](https://github.com/theharithsa/project-atlas/issues/5)
+
 ## 0.1.0 · 18 November 2026
 
 First GitHub source release of the existing Project Atlas dashboard.

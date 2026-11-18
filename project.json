@@ -25,8 +25,8 @@
     },
     "privacy": {
       "status": "approved",
-      "value": "Only allowlisted public planning data, read anonymously. Authenticated local exports stay outside Git and Hosting.",
-      "approval": "Public data boundary of the running dashboard."
+      "value": "Discover open public Projects within the selected GitHub owner directories and verify public items and repositories anonymously. Authenticated local exports stay outside Git and Hosting.",
+      "approval": "Owner requested automatic discovery of newly created public projects within the existing portfolio."
     },
     "observability": {
       "status": "not-applicable",
