@@ -12,7 +12,7 @@ test('the opening shows briefly, dismisses on input and respects reduced motion'
     assert.equal(query,'(prefers-reduced-motion: reduce)');
     return {matches:reduced};
   };
-  browser.setTimeout = (callback,delay) => { assert.ok(delay <= 1500); dismiss = callback; };
+  browser.setTimeout = (callback,delay) => { assert.ok(delay >= 3100 && delay <= 3500); dismiss = callback; };
   globalThis.document = {getElementById:id => id === 'atlas-intro' ? intro : null};
   globalThis.window = browser;
   t.after(()=>{ delete globalThis.document; delete globalThis.window; });

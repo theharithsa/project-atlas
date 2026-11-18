@@ -10,7 +10,7 @@ export function playAtlasIntro() {
   window.addEventListener('keydown',finish,options);
   window.addEventListener('pointerdown',finish,options);
   intro.addEventListener('animationend',event => { if (event.target === intro) finish(); },{signal:interaction.signal});
-  window.setTimeout(finish,1450);
+  window.setTimeout(finish,3300);
 }
 
 const TAU = Math.PI * 2;

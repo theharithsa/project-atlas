@@ -69,6 +69,17 @@ function url(page, product = 'all', extras = {}) {
   const qs = q.toString();
   return routePrefix + page + (qs ? '?' + qs : '');
 }
+export function selectPicker(id, label, options, selected, {leading, caption = false, kind = ''} = {}) {
+  return `<label class="atlas-picker${kind ? ' picker-' + kind : ''}">${caption ? `<span class="picker-label">${e(label)}</span>` : ''}
+    <span class="picker-control${leading ? ' has-icon' : ''}">
+      ${leading ? `<span class="picker-leading">${icon(leading,15)}</span>` : ''}
+      <select class="atlas-select" id="${e(id)}" aria-label="${e(label)}">${options.map(([value,text]) =>
+        `<option value="${e(value)}"${value === selected ? ' selected' : ''}>${e(text)}</option>`).join('')}</select>
+      <span class="picker-chevron">${icon('down',14)}</span>
+    </span>
+  </label>`;
+}
+
 function productMark(p, small = false) {
   return `<span class="product-mark tone-${p.color}${small ? ' small' : ''}" aria-hidden="true">${icon(p.icon, small ? 15 : 18)}</span>`;
 }

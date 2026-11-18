@@ -3,8 +3,8 @@ import {playAtlasIntro, drawAtlasGlobe} from './atlas-motion.js';
 import {developerRoute, activityHref, hydrateActivity, codingPanel, selectActivityDay, stepActivityDay} from './activity.js';
 import {decodeView, viewLink, linkedIssueFilter, dashboardPage} from './sharing.js';
 import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
-import { prepare } from './model.js';
-import { icon, e, external, url, productMark, setRoutePrefix } from './ui.js';
+import { prepare, portfolioInventory, timeframeOptions, defaultTimeframe, deliveryTimeframe } from './model.js';
+import { icon, e, external, url, productMark, selectPicker, setRoutePrefix } from './ui.js';
 import { overview } from './overview.js';
 import { backlogPage, sprintPage, roadmapPage, historyPage, paintIssues, searchIssues, pageIssues, saveIssueView, restoreIssueView } from './work.js';
 const main = document.getElementById('content'),
@@ -72,7 +72,7 @@ function brand() {
 function navigation(mobile = false) {
   const activeProduct = data.projects.find((p) => p.key === r.product);
   const productPage = ['history','activity'].includes(r.page) ? r.page : 'overview';
-  const productFilters = productPage === 'activity' ? Object.fromEntries(r.q) : {};
+  const productFilters = productPage === 'activity' ? Object.fromEntries(r.q) : {window:r.q.get('window')};
   delete productFilters.product;
   const ownerCount = data.directoryOwners?.length ?? (data.owner ? 1 : 0);
   return `${mobile ? `<button class="menu-close" data-close-menu aria-label="Close navigation">${icon('close')}</button>` : ''}${brand()}
@@ -82,7 +82,7 @@ function navigation(mobile = false) {
       .filter(([k]) => k !== 'sources')
       .map(
         ([k, label]) =>
-          `<a href="${e(url(k, r.product))}" class="${k === r.page ? 'active' : ''}"${k === r.page ? ' aria-current="page"' : ''}>${icon(navIcons[k])}<span>${label}</span></a>`,
+          `<a href="${e(url(k,r.product,k === 'overview' ? {window:r.q.get('window')} : {}))}" class="${k === r.page ? 'active' : ''}"${k === r.page ? ' aria-current="page"' : ''}>${icon(navIcons[k])}<span>${label}</span></a>`,
       )
       .join('')}</nav>
     <div class="nav-heading product-heading">Products <span>${data.projects.length}</span></div><nav class="product-links" aria-label="Filter by product">${data.projects.map((p) => `<a href="${e(url(productPage,p.key,productFilters))}" class="${activeProduct === p ? 'selected-product' : ''}">${productMark(p, true)}<span>${e(p.label)}</span></a>`).join('')}</nav></div>
@@ -102,7 +102,10 @@ function sharedOwnerPanel(settings) {
   return `<section class="panel source-intro owner-settings"><div class="panel-head"><h2>Shared portfolio owners</h2>${external(editOwnersUrl, 'Edit owners on GitHub ' + icon('external', 13), 'text-link')}</div><dl>${groups}</dl><p>Maintainers update the shared list through a pull request. Atlas checks for merged changes every ${e(settings.refreshSeconds / 60)} minutes.</p></section>`;
 }
 function modeControl() {
-  return `<label class="portfolio-switch">${icon('layers', 16)}<select id="portfolio-mode" aria-label="Portfolio"><option value="shared">Shared portfolio</option><option value="personal"${preferences.mode === 'personal' && !linked ? ' selected' : ''}>My portfolio</option>${linked?.owners ? '<option value="linked" selected>Linked portfolio</option>' : ''}</select>${icon('down', 12)}</label>`;
+  const options = [['shared','Shared portfolio'],['personal','My portfolio']];
+  if (linked?.owners) options.push(['linked','Linked portfolio']);
+  return selectPicker('portfolio-mode','Portfolio',options,linked?.owners ? 'linked' : preferences.mode,
+    {leading:'layers',kind:'portfolio'});
 }
 function linkedOwnerPanel() {
   const names = [preferences.users.length && 'Users · ' + preferences.users.join(', '),
@@ -125,8 +128,8 @@ function coverageNotes(notes) {
   return notes.map(s => `<p class="coverage-note">${icon('info', 15)}<span><b>${e(s.owner)}</b> · ${e(s.reason)}.</span></p>`).join('');
 }
 function sourcePage(products) {
-  const selectedCount = products.reduce((n, p) => n + p.items.length, 0),
-    repoNames = [...new Set(products.flatMap((p) => p.repos))];
+  const selectedCount = products.reduce((n, p) => n + p.items.length, 0);
+  const {repositories:repoNames} = portfolioInventory(products);
   const personal = preferences.mode === 'personal';
   const statusPanel = `<section class="panel source-intro"><div class="detail-name"><span class="product-mark tone-violet">${icon('database')}</span><strong>Public GitHub feed</strong></div><p>Boards checked <b data-source-time>${e(checkedTime(data.capturedAt))}</b> on ${e(data.asOf)}. This selection covers <b>${products.length} ${products.length === 1 ? 'board' : 'boards'}</b>, <b>${repoNames.length} ${repoNames.length === 1 ? 'repository' : 'repositories'}</b> and <b>${selectedCount.toLocaleString('en-GB')} public board ${selectedCount === 1 ? 'item' : 'items'}</b>.</p><p>Atlas checks each tracked owner for new public projects every ${e((data.directoryRefreshSeconds || 600) / 60)} minutes. Add a public issue or pull request from each repository to track its releases. This tab checks boards every minute and release data refreshes on demand every three minutes. Each link opens the underlying GitHub source.</p>${coverageNotes(data.unavailable)}</section>`;
   return `${linked ? linkedOwnerPanel() : personal ? personalOwnerPanel() : sharedOwnerPanel(data.sourceSettings)}
@@ -156,8 +159,11 @@ function sourcePage(products) {
     <dt>Unscheduled backlog</dt><dd>Open work with a Backlog or Todo status, or missing status, and no sprint or delivery milestone. Triage and dependency maintenance are intake buckets. Milestone-only work and the native board backlog are available from Backlog.</dd>
     <dt>Planned releases</dt><dd>Versioned milestones supply dates and scope. Other named planning milestones and undated targets have their own filters. Publication evidence comes from GitHub Releases. A closed issue or full progress bar only establishes issue closure.</dd></dl></section>`;
 }
-function header() {
-  const product = data.projects.find((p) => p.key === r.product);
+function header(products, timeframe) {
+  const product = r.product === 'all' ? null : products[0];
+  const inventory = portfolioInventory(products);
+  const repositories = inventory.repositories.length;
+  const repoLabel = `${repositories} GitHub ${repositories === 1 ? 'repository' : 'repositories'}`;
   const title = {
     overview: product ? product.label : 'Delivery overview',
     sprints: 'Sprints',
@@ -169,8 +175,8 @@ function header() {
   }[r.page];
   const subtitle = {
     overview: product
-      ? `${product.name} · ${product.repos.length} linked ${product.repos.length === 1 ? 'repository' : 'repositories'}`
-      : `${data.projects.length} product boards across ${new Set(data.projects.flatMap((p) => p.repos)).size} GitHub repositories`,
+      ? `${repoLabel} linked to this board`
+      : `${inventory.boards} product ${inventory.boards === 1 ? 'board' : 'boards'} across ${repoLabel}`,
     sprints: 'Work assigned to GitHub sprint and iteration windows.',
     backlog: 'Open work, planning commitments and native board status.',
     roadmap: 'Sprint windows and release targets from the linked repositories.',
@@ -180,13 +186,14 @@ function header() {
   }[r.page];
   document.title = title + ' · Project Atlas';
   const share = preferences.mode === 'personal' ? controls.share : '';
-  const select = `<label class="select-wrap">${icon('layers', 16)}<select id="product-select" aria-label="Product filter"><option value="all">All products</option>${data.projects.map((p) => `<option value="${e(p.key)}"${p.key === r.product ? ' selected' : ''}>${e(p.label)}</option>`).join('')}</select>${icon('down', 14)}</label>`;
   const showProductFilter = r.page !== 'activity' || r.q.get('activity') !== 'developer';
-  const actions = share || showProductFilter
-    ? `<div class="view-actions">${share}${showProductFilter ? select : ''}</div>`
-    : '';
+  const productPicker = showProductFilter ? selectPicker('product-select','Product filter',
+    [['all','All products'],...data.projects.map(p => [p.key,p.label])],r.product,{leading:'layers',kind:'product'}) : '';
+  const periodPicker = timeframe ? selectPicker('overview-window','Timeframe',timeframeOptions,timeframe.key,
+    {leading:'calendar',caption:true,kind:'timeframe'}) : '';
+  const actions = share + productPicker + periodPicker;
   if (r.page !== 'overview' || product)
-    return `<header class="page-title"><div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions}</header>`;
+    return `<header class="page-title"><div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions ? '<div class="view-actions">' + actions + '</div>' : ''}</header>`;
 
   const users = preferences.mode === 'personal' ? preferences.users : data.sourceSettings?.users || [];
   const filters = users.length ? {activity:'developer',metric:'contributions',range:'1y'} : {};
@@ -201,7 +208,7 @@ function header() {
 }
 function render(updating = false) {
   const issueView = updating ? saveIssueView() : null;
-  const focused = updating || document.activeElement?.closest('#personal-owners,.coding-panel') ? document.activeElement : null;
+  const focused = updating || document.activeElement?.closest('#personal-owners,.coding-panel,.atlas-picker') ? document.activeElement : null;
   const focusId = focused?.id;
   const developerDraft = focusId === 'developer-login' ? focused.value : null;
   const selectedRange = ['issue-search','personal-users','personal-orgs','developer-login'].includes(focusId) ? [focused.selectionStart, focused.selectionEnd] : null;
@@ -212,6 +219,9 @@ function render(updating = false) {
   if (menu.open && !updating) menu.close();
   const products =
     r.product === 'all' ? data.projects : data.projects.filter((p) => p.key === r.product);
+  const timeframe = r.page === 'overview'
+    ? deliveryTimeframe(data.asOf,r.q.get('window')) || deliveryTimeframe(data.asOf,defaultTimeframe)
+    : null;
   desktop.innerHTML = navigation();
   menu.innerHTML = navigation(true);
   topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button>${modeControl()}<span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="${e(url('sources'))}" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',15)}</button></div>`;
@@ -221,7 +231,7 @@ function render(updating = false) {
   const content = missingProduct || missingSprint
     ? `<section class="panel source-intro"><h2>Linked ${missingProduct ? 'project' : 'sprint'} unavailable</h2><p>Check coverage in Data sources or open another project in this portfolio.</p></section>`
     : {
-    overview: () => overview(data, products, r),
+    overview: () => overview(data,products,r,timeframe),
     activity: () => codingPanel(data,products,r,preferences.mode === 'personal' ? preferences.users : (data.sourceSettings?.users || [])),
     sprints: () => sprintPage(data, products, r),
     backlog: () => backlogPage(products, r),
@@ -230,7 +240,7 @@ function render(updating = false) {
     sources: () => sourcePage(products),
   }[r.page]();
   const banner = linked ? '<div class="linked-notice"><span>Viewing a linked portfolio</span><button type="button" data-leave-link>Return to my dashboard</button></div>' : '';
-  main.innerHTML = banner + header() + content;
+  main.innerHTML = banner + header(products,timeframe) + content;
   if (issueView || linked) restoreIssueView(issueView || linkedIssueFilter(r.q));
   paintIssues();
   hydrateActivity(data, r, selectedDay);
@@ -338,6 +348,14 @@ document.addEventListener('change', (ev) => {
     keep.status = ev.target.value;
     setView(url('backlog', r.product, keep));
   }
+  if (ev.target.id === 'overview-window' || ev.target.id === 'history-window') {
+    const filters = Object.fromEntries(r.q);
+    delete filters.product;
+    delete filters.find;
+    delete filters.page;
+    filters.window = ev.target.value === 'all' ? null : ev.target.value;
+    setView(url(r.page,r.product,filters));
+  }
   if (ev.target.id === 'date-filter') {
     const keep = Object.fromEntries(r.q);
     delete keep.product;
@@ -348,7 +366,6 @@ document.addEventListener('change', (ev) => {
 window.matchMedia('(max-width:580px)').addEventListener('change', () => {
   if (data && ['overview', 'roadmap'].includes(r?.page)) render();
 });
-let previous = null;
 window.addEventListener('hashchange', () => {
   const nextLink = decodeView(location.hash);
   const changedScope = nextLink?.prefix !== linked?.prefix;
@@ -359,6 +376,7 @@ window.addEventListener('hashchange', () => {
     return;
   }
   if (!data) return;
+  const previous = r;
   const next = currentRoute();
   const move =
     !previous ||
@@ -366,7 +384,6 @@ window.addEventListener('hashchange', () => {
     previous.product !== next.product ||
     previous.q.get('sprint') !== next.q.get('sprint');
   render();
-  previous = r;
   if (move) {
     window.scrollTo(0, 0);
     main.focus({ preventScroll: true });
@@ -412,7 +429,7 @@ function changePortfolio(next, notice = '', persist = true) {
 function activatePortfolio(next, notice = '') {
   if (activeRequest) activeRequest.abort();
   activeRequest = null;
-  data = null; lastContent = null; previous = null; failed = false;
+  data = null; r = null; lastContent = null; failed = false;
   preferences = next; draft = null; inputError = ''; settingsNotice = notice;
   if (!linked && noPersonalOwners()) location.hash = 'sources';
   pendingPage();
@@ -441,10 +458,8 @@ async function refresh() {
     data = prepare(payload);
     lastContent = signature;
     failed = false;
-    if (changed || !hadData) {
-      render(hadData);
-      previous = r;
-    } else hydrateActivity(data, r);
+    if (changed || !hadData) render(hadData);
+    else hydrateActivity(data,r);
   } catch (error) {
     if (activeRequest !== request) return;
     failed = true;

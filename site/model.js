@@ -78,6 +78,13 @@ export function prepare(snapshot) {
     .sort((a, b) => compare(a.label, b.label));
   return { ...snapshot, projects };
 }
+export function portfolioInventory(products) {
+  const repositories = new Map();
+  for (const product of products)
+    for (const slug of product.repos) repositories.set(slug.toLowerCase(), slug);
+  return {boards:products.length, repositories:[...repositories.values()]};
+}
+
 export function targets(data, products) {
   const names = [...new Set(products.flatMap((p) => p.repos))];
   return names
@@ -121,8 +128,8 @@ export function shortSprint(name) {
   return name.split(/\s+[—–]\s+/)[0];
 }
 
-export function recentlyClosed(rows, asOf) {
-  const start = Date.parse(iso(day(asOf) - 6) + 'T00:00:00+05:30');
+export function recentlyClosed(rows, asOf, days = 7) {
+  const start = Date.parse(iso(day(asOf) - days + 1) + 'T00:00:00+05:30');
   const end = Date.parse(asOf + 'T00:00:00+05:30') + DAY;
   return rows.filter(({i}) => {
     const closed = Date.parse(i.closedAt);
@@ -130,15 +137,41 @@ export function recentlyClosed(rows, asOf) {
   });
 }
 
-export function deliveryMetrics(data, products) {
-  const stats = products.flatMap(p => p.current.map(s => sprintStats(p, s)));
-  const total = stats.reduce((sum, s) => sum + s.total, 0);
-  const closed = stats.reduce((sum, s) => sum + s.closed, 0);
+export const timeframeOptions = [
+  ['7d','7 days',7], ['14d','14 days',14], ['30d','30 days',30],
+  ['60d','60 days',60], ['90d','90 days',90], ['365d','365 days',365],
+];
+export const defaultTimeframe = '30d';
+
+export function deliveryTimeframe(asOf, value) {
+  const option = timeframeOptions.find(([key]) => key === value);
+  if (!option) return null;
+  const [key,label,days] = option;
+  const today = day(asOf);
+  return {key,label,days,from:iso(today-days+1),through:asOf,releaseThrough:iso(today+days-1)};
+}
+
+export function sprintOverlaps(sprint, timeframe) {
+  return sprint.start <= timeframe.through && sprint.end >= timeframe.from;
+}
+
+export function upcomingTarget(target, asOf, timeframe) {
+  return Boolean(target.due && target.due >= asOf && (!timeframe || target.due <= timeframe.releaseThrough));
+}
+
+export function deliveryMetrics(data, products, timeframe) {
+  const stats = products.flatMap(p => p.sprints.filter(s => sprintOverlaps(s,timeframe)).map(s => sprintStats(p,s)));
+  const sprintTotal = stats.reduce((sum, s) => sum + s.total, 0);
+  const sprintClosed = stats.reduce((sum, s) => sum + s.closed, 0);
+  const releases = targets(data, products).filter(m => m.version);
   return {
-    recentlyClosed:recentlyClosed(closedIssues(products), data.asOf).length,
-    currentTotal:total, currentClosed:closed,
-    completion:total ? Math.round(100 * closed / total) : null,
-    needsSprint:issueRows(products, i => bucket(i) === 'milestone').length,
-    undated:targets(data, products).filter(m => m.version && m.open > 0 && !m.due).length,
+    recentlyClosed:recentlyClosed(closedIssues(products),data.asOf,timeframe.days).length,
+    sprintTotal,
+    sprintClosed,
+    sprintOpen:sprintTotal - sprintClosed,
+    completion:sprintTotal ? Math.round((100 * sprintClosed) / sprintTotal) : null,
+    needsSprint:issueRows(products,i => bucket(i) === 'milestone').length,
+    upcoming:releases.filter(m => upcomingTarget(m,data.asOf,timeframe)),
+    undated:releases.filter(m => m.open > 0 && !m.due).length,
   };
 }
