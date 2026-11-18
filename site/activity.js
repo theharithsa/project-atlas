@@ -64,20 +64,32 @@ function monthsView(months, selected, route, unit) {
   return `<p class="activity-note">Choose a month for daily counts. Shading shows its daily average.</p><div class="activity-months" aria-label="Months in the selected range">${rows}</div>`;
 }
 
-function chart(view, sources, profileSources, selectedDate) {
+export function lifetimeStat(record, error) {
+  if (!record) return ['Lifetime contributions','—','',error || 'Checking account history…'];
+  const since = 'Since ' + fmt(record.start,{day:'numeric',month:'short',year:'numeric'});
+  const covered = record.yearsChecked + ' of ' + record.yearsTotal + ' years checked';
+  return ['Lifetime contributions', renderValue(record.total,record.status !== 'complete'), '',
+    record.status === 'complete' ? since : since + ' · ' + covered];
+}
+
+function chart(view, sources, profileSources, lifetime, selectedDate) {
   const {range,route,developer,metric,login} = view;
   const commits = streakSummary(range.through,sources,range.start);
   const profile = developer ? streakSummary(range.through,profileSources,range.start) : null;
   const s = metric === 'contributions' ? profile : commits;
   const unit = metric === 'contributions' ? 'contribution' : 'commit';
   const metrics = [
-    ...(profile ? [['Total contributions',renderValue(profile.total,profile.covered < range.length),'']] : []),
+    ...(profile ? [
+      ['Contributions in range',renderValue(profile.total,profile.covered < range.length),''],
+      lifetimeStat(lifetime?.data,lifetime?.error),
+    ] : []),
     ['Total commits',renderValue(commits.total,commits.covered < range.length),''],
     ['Current streak',renderValue(s.current,s.currentUnknown || s.touchesStart),s.current === 1 ? 'day':'days'],
     ['Best in range',renderValue(s.best,s.unknown),s.best === 1 ? 'day':'days'],
     ['Active days',renderValue(s.active,s.unknown),'/ ' + number(range.length)],
   ];
-  const stats = metrics.map(([label,value,unit]) => `<div><span>${label}</span><strong>${value} <small>${unit}</small></strong></div>`).join('');
+  const stats = metrics.map(([label,value,unit,detail]) =>
+    `<div><span>${label}</span><strong>${value} <small>${unit}</small></strong>${detail ? '<small class="stat-detail">' + e(detail) + '</small>' : ''}</div>`).join('');
   const months = monthBuckets(s.days), long = range.key !== '28d';
   const month = months.find(m => m.key === route.q.get('month')) || months.at(-1);
   const days = long ? month.days : s.days;
@@ -88,10 +100,10 @@ function chart(view, sources, profileSources, selectedDate) {
     'GitHub contribution profile for @' + e(login) + ' ' + icon('external',12),'text-link') : '';
   const pending = view.loading ? 'Checking history… · ' : '';
   const coverage = pending + number(s.covered) + ' of ' + number(range.length) + ' ' + unit + ' dates fully checked';
-  const partialTotal = commits.covered < range.length || (profile && profile.covered < range.length);
+  const partialTotal = commits.covered < range.length || (profile && (profile.covered < range.length || lifetime?.data?.status === 'partial'));
   const landing = long ? monthsView(months,month.key,route,unit) + `<h3 class="month-detail">${e(longMonth(month.key+'-01'))} <small>${renderValue(month.total,!month.complete)} ${unit}${month.total === 1 ? '' : 's'}</small></h3>` : '';
   const note = unit === 'commit' ? 'Streaks use committed dates in India time.' : 'Streaks use the dates on the public GitHub contribution calendar.';
-  const profileNote = developer ? ' Total contributions follows GitHub’s profile counting rules.' : '';
+  const profileNote = developer ? ' Both contribution totals follow GitHub’s public profile calendar.' : '';
   return `<div class="streak-stats">${stats}</div>${landing}${scale}${detailDays(days,unit,selected.date)}
     <div class="activity-caption"><output data-day-detail aria-live="polite">${e(dayLabel(selected,unit))}</output><span>${e(coverage)}</span></div>
     <p class="activity-note">${note} Today can extend yesterday’s streak. The current year refreshes hourly.${profileNote}${partialTotal || s.touchesStart ? ' A ≥ value is a confirmed minimum.' : ''}</p>${source ? '<p class="activity-source">'+source+'</p>' : ''}`;
@@ -120,6 +132,7 @@ function readPath(path) {
   const now = Date.now(), existing = cache.get(path);
   if (existing && (existing.pending || existing.expires > now)) return existing.pending || Promise.resolve(existing);
   const entry = existing || {data:null,expires:0};
+  const lifetime = path.endsWith('/contributions/lifetime');
   cache.delete(path); cache.set(path,entry);
   if (cache.size > 384) {
     const idle = [...cache].find(([,v]) => !v.pending && v !== entry);
@@ -128,13 +141,28 @@ function readPath(path) {
   entry.pending = (async () => {
     try {
       const res = await fetch(path,{signal:AbortSignal.timeout(75_000)});
-      if (!res.ok) throw new Error('Activity request unavailable');
+      if (!res.ok) throw Object.assign(new Error('Activity request unavailable'),{status:res.status});
       const data = await res.json();
-      const records = data.activity ? [data.activity] : Object.values(data.repositories || {});
-      if (records.some(r => !r || !['complete','partial','unavailable'].includes(r.status) || !r.days)) throw new Error('Invalid activity');
+      const records = lifetime ? [data.lifetime] : data.activity ? [data.activity] : Object.values(data.repositories || {});
+      if (records.some(r => !r || !['complete','partial','unavailable'].includes(r.status))) throw new Error('Invalid activity');
+      if (lifetime) {
+        const r = data.lifetime;
+        if (data.login !== path.split('/')[4] || !/^\d{4}-\d{2}-\d{2}$/.test(r.start) ||
+            !Number.isFinite(Date.parse(r.start)) || !Number.isSafeInteger(r.yearsChecked) ||
+            !Number.isSafeInteger(r.yearsTotal) || r.yearsChecked < 0 || r.yearsTotal < 1 || r.yearsChecked > r.yearsTotal ||
+            (r.status === 'unavailable' ? r.total !== null : !Number.isSafeInteger(r.total) || r.total < 0))
+          throw new Error('Invalid lifetime summary');
+      } else if (records.some(r => !r.days)) throw new Error('Missing activity dates');
+      entry.error = null;
       const ttl = Math.min(3600,...records.map(r => r.retryAfterSeconds || (r.status === 'complete'?3600:60)));
       entry.data = data; entry.expires = Date.now() + Math.max(2,ttl) * 1000;
-    } catch { entry.expires = Date.now() + 30_000; }
+    } catch (error) {
+      if (lifetime) {
+        entry.data = null;
+        entry.error = error.status === 404 ? 'Public developer profile unavailable' : 'Temporarily unavailable';
+      }
+      entry.expires = Date.now() + (lifetime && error.status === 404 ? 3_600_000 : 30_000);
+    }
     return entry;
   })().finally(() => { entry.pending = null; });
   return entry.pending;
@@ -143,6 +171,7 @@ export function historyPaths(projects, range, login) {
   const paths = [];
   if (login) {
     const base = '/api/v1/developers/' + encodeURIComponent(login) + '/';
+    paths.push({kind:'lifetime',path:base+'contributions/lifetime'});
     for (const year of range.years) paths.push({kind:'profile',year,path:base + 'contributions/' + year});
     if (range.key === '28d') paths.push({kind:'commits',path:base+'activity'});
     else for (const year of range.years) paths.push({kind:'commits',year,path:base+'commits/'+year});
@@ -160,9 +189,10 @@ function recordsFor(view) {
   if (view.developer) {
     const records = kind => [found.filter(([t])=>t.kind===kind).map(([t,d]) =>
       d?.login === view.login && (!t.year || d.year === t.year) ? d.activity : null)];
-    return [records('commits'),records('profile')];
+    const entry = cache.get(view.paths.find(t => t.kind === 'lifetime').path);
+    return [records('commits'),records('profile'),{data:entry?.data?.lifetime,error:entry?.error}];
   }
-  if (view.range.key === '28d') return [repositoryRecords(view.data,view.products),[]];
+  if (view.range.key === '28d') return [repositoryRecords(view.data,view.products),[],null];
   const repos = new Map(view.products.flatMap(p => p.repos.map(n => [n.toLowerCase(),new Map()])));
   for (const [task,data] of found) {
     if (!data || data.project !== task.project || data.year !== task.year) continue;
@@ -173,7 +203,7 @@ function recordsFor(view) {
       if (!prev || record.status === 'complete' || (prev.status !== 'complete' && record.checkedAt >= prev.checkedAt)) years.set(task.year,record);
     }
   }
-  return [[...repos.values()].map(years => [...years.values()]),[]];
+  return [[...repos.values()].map(years => [...years.values()]),[],null];
 }
 
 let active;

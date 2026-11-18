@@ -14,3 +14,5 @@ Run `npm test`, exercise a sprint drilldown and inspect narrow navigation for la
 Version 0.5 adds route serialization in `site/sharing.js` and project and developer streak presentation in `site/activity.js`. Preserve owner settings when entering a linked view. Keep project-scoped delivery measures and global developer search independently labeled. [Guide](../../docs/handbook.md#explore-coding-streaks)
 
 The range model in `site/activity-range.js` clips multiple source years to inclusive calendar windows. Keep daily and month selections accessible and shareable. Missing dates must stay distinguishable from confirmed zeros. [Dashboard guide](../../docs/handbook.md#explore-coding-streaks)
+
+The developer view shows contributions for the selected range and the account lifetime. Keep the lifetime cache scoped to the login and preserve coverage labels as range, month and streak settings change. [Guide](../../docs/handbook.md#explore-coding-streaks)

@@ -1959,10 +1959,11 @@ dialog::backdrop {
 .coding-head p, .activity-note, .activity-caption, .activity-source { font-size: 12px; line-height: 1.5; color: var(--sub); }
 .coding-head p { margin: 4px 0 0; }
 .coding-head .tabs { margin: 0; }
-.streak-stats { display: flex; flex-wrap: wrap; gap: 15px 38px; margin: 18px 0 13px; }
+.streak-stats { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 15px 38px; margin: 18px 0 13px; }
 .streak-stats > div { display: grid; gap: 2px; }
 .streak-stats span, .activity-week > small, .developer-form label { font-size: 12px; color: var(--sub); }
 .streak-stats strong { font-size: 24px; line-height: 1.2; letter-spacing: -.6px; }
+.streak-stats .stat-detail { font-size: 11px; line-height: 1.4; color: var(--sub); }
 .streak-stats strong small { font-size: 12px; color: var(--sub); font-weight: 500; letter-spacing: 0; }
 .activity-weeks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .activity-week > div { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 5px; }

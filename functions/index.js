@@ -28,7 +28,8 @@ export const atlasPublicFeed = onRequest(
     try {
       if (history) {
         const result = await historyPayload(history, publicOwnerFeed);
-        const records = result.activity ? [result.activity] : Object.values(result.repositories);
+        const summary = result.lifetime || result.activity;
+        const records = summary ? [summary] : Object.values(result.repositories);
         const ttl = Math.min(60, ...records.map(item => item.retryAfterSeconds));
         return res.set('Cache-Control', 'public, max-age=0, s-maxage=' + ttl + ', must-revalidate').json(result);
       }

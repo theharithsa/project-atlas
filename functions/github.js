@@ -43,6 +43,10 @@ async function readGitHub(url, accept = 'text/html', method = 'GET', deadline) {
   if (!response.ok) throw new SourceError(response.status);
   return response;
 }
+export async function readPublicUser(login) {
+  const response = await readGitHub('https://api.github.com/users/' + login, 'application/vnd.github+json', 'GET', AbortSignal.timeout(5000));
+  return response.json();
+}
 function embedded(html, id) {
   // Read only named, public application/json script elements from the signed-out board page.
   const match = new RegExp(

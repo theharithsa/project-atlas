@@ -167,7 +167,8 @@
         "functions/owner-settings.js",
         "functions/owner-feed.js",
         "functions/activity.js",
-        "functions/history.js"
+        "functions/history.js",
+        "functions/lifetime.js"
       ],
       "owner": "theharithsa",
       "status": "active",
@@ -181,7 +182,7 @@
         "npm test"
       ],
       "continuation": "skills/service-portfolio-feed/continuation.md",
-      "lastReviewedRevision": "5aa07f23de9e4b60a1d2bfc11bfe5041dbc3598a"
+      "lastReviewedRevision": "65f3fcf679918f2489b30d972af0028e539891f5"
     },
     {
       "id": "dashboard-web",
@@ -212,7 +213,7 @@
         "npm test"
       ],
       "continuation": "skills/service-dashboard-web/continuation.md",
-      "lastReviewedRevision": "5d7c263d294b42ac291a5c939e25bd67e522281b"
+      "lastReviewedRevision": "65f3fcf679918f2489b30d972af0028e539891f5"
     }
   ]
 }

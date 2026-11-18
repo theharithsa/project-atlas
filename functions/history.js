@@ -1,5 +1,7 @@
 import {isGitHubLogin} from './owner-settings.js';
 import {readSearch} from './activity.js';
+import {readPublicUser} from './github.js';
+import {createLifetimeHistory} from './lifetime.js';
 
 const DAY = 86_400_000;
 const dateInIndia = time => new Date(time + 330 * 60_000).toISOString().slice(0,10);
@@ -7,13 +9,15 @@ const iso = time => new Date(time).toISOString();
 const hash = /^[0-9a-f]{40,64}$/i;
 
 export function historyRoute(path, now = Date.now()) {
-  const dev = /^\/api\/v1\/developers\/([^/]+)\/(commits|contributions)\/(\d{4})$/.exec(path);
+  const dev = /^\/api\/v1\/developers\/([^/]+)\/(commits|contributions)\/(\d{4}|lifetime)$/.exec(path);
   const board = /^\/api\/v1\/owners\/(users|orgs)\/([^/]+)\/projects\/([1-9]\d{0,8})\/commits\/(\d{4})$/.exec(path);
   if (!dev && !board) return null;
   const login = (dev ? dev[1] : board[2]).toLowerCase();
+  if (!isGitHubLogin(login)) return null;
+  if (dev?.[3] === 'lifetime') return dev[2] === 'contributions' ? {kind:'lifetime',login} : null;
   const year = Number(dev ? dev[3] : board[4]);
   const current = Number(dateInIndia(now).slice(0,4));
-  if (!isGitHubLogin(login) || year > current || year < current - 5) return null;
+  if (year > current || year < current - 5) return null;
   return dev ? {kind:dev[2], login, year} : {kind:'board', owner:{kind:board[1],account:login}, number:Number(board[3]), year};
 }
 
@@ -169,10 +173,13 @@ export function createYearHistory(reads = sources, clock = Date.now, capacity = 
     let entry = entries.get(key);
     if (entry?.pending) return entry.pending;
     const window = yearWindow(year,now);
-    if (entry && entry.job.window.through === window.through && now < entry.expires)
+    // A snapshot taken on December 31 still needs the rest of that day after New Year.
+    const closedSinceCheck = entry && year < Number(dateInIndia(now).slice(0,4)) &&
+      dateInIndia(Date.parse(entry.job.window.checkedAt)) <= year + '-12-31';
+    if (entry && !closedSinceCheck && entry.job.window.through === window.through && now < entry.expires)
       return snapshot(entry.job,Math.max(1,Math.ceil((entry.expires-now)/1000)));
     if (running >= 6) return {...window, status:'unavailable', days:{}, retryAfterSeconds:5};
-    if (!entry || entry.job.finished || entry.job.window.through !== window.through) {
+    if (!entry || closedSinceCheck || entry.job.finished || entry.job.window.through !== window.through) {
       if (!entry && entries.size >= capacity) {
         const idle = [...entries].find(([,v]) => !v.pending);
         if (!idle) return {...window,status:'unavailable',days:{},retryAfterSeconds:5};
@@ -208,7 +215,9 @@ export function createYearHistory(reads = sources, clock = Date.now, capacity = 
 }
 
 export const yearHistory = createYearHistory();
-export async function historyPayload(route, ownerFeed, get = yearHistory) {
+const lifetimeHistory = createLifetimeHistory(readPublicUser, yearHistory);
+export async function historyPayload(route, ownerFeed, get = yearHistory, getLifetime = lifetimeHistory) {
+  if (route.kind === 'lifetime') return {login:route.login, lifetime:await getLifetime(route.login)};
   if (route.kind !== 'board') return {login:route.login, year:route.year, metric:route.kind, activity:await get(route.kind,route.login,route.year)};
   const snapshot = await ownerFeed(route.owner);
   const project = snapshot.projects.find(p => p.public && p.key === route.owner.account + '-' + route.number);
