@@ -9,3 +9,5 @@ Data sources shows the typed shared owner list and links to the GitHub settings 
 Version 0.4.0 adds a personal portfolio alongside the shared default. Test save, reload, switch, clear and recovery from an unavailable owner. Verify that data returned after a mode switch cannot enter the new view. [Personal portfolios](https://github.com/theharithsa/project-atlas/issues/10)
 
 Version 0.5.0 shares a temporary personal route and adds four delivery tiles and two commit streak scopes. Verify the share, reload and return journey, seven-day History and both calendars against source data. [Sharing](https://github.com/theharithsa/project-atlas/issues/12) · [Metrics and activity](https://github.com/theharithsa/project-atlas/issues/13)
+
+Version 0.6.0 offers four-week through five-year ranges, commit and contribution totals, and a month-to-day drilldown. Check the leap day, range changes and a linked developer view. [History issue](https://github.com/theharithsa/project-atlas/issues/15)

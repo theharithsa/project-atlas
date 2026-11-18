@@ -1,4 +1,4 @@
-import {developerRoute, hydrateDeveloper} from './activity.js';
+import {developerRoute, activityHref, hydrateActivity} from './activity.js';
 import {decodeView, viewLink, linkedIssueFilter} from './sharing.js';
 import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
 import { prepare } from './model.js';
@@ -145,7 +145,7 @@ function sourcePage(products) {
     <dt>Current sprint</dt><dd>The latest board check date in India falls between the native iteration’s first and last day, inclusive. GitHub’s Sprint and Iteration fields are supported. An empty current sprint stays visible.</dd>
     <dt>Open work and sprint closure</dt><dd>Open work counts open, unarchived issues, excluding parent rollups and epics. Sprint closure counts closed issues out of this same issue scope, including issues closed early. Board inventory includes public issues and pull requests visible to signed-out visitors. Draft planning items, restricted content and archived board entries are excluded.</dd>
     <dt>Issue history</dt><dd>History includes closed issues with or without a sprint, including parent issues. An issue on multiple selected boards appears once. The displayed date comes from GitHub.</dd>
-    <dt>Coding streak</dt><dd>Projects counts commits on the public default branches represented by the selected boards. Developer searches GitHub for commits attributed to the chosen username across indexed public default branches. Both use the committed date in India time and include merges. Hatched days have incomplete coverage. A ≥ value is a confirmed minimum.</dd>
+    <dt>Coding streak</dt><dd>Projects counts commits on the public default branches represented by the selected boards. Developer searches GitHub for commits attributed to the chosen username across indexed public default branches. Commit streaks use the committed date in India time and include merges. Developer also shows the GitHub profile contribution total across the selected dates. Choose up to five years and open a month for daily counts. Hatched days have incomplete coverage. A ≥ value is a confirmed minimum.</dd>
     <dt>Unscheduled backlog</dt><dd>Open work with a Backlog or Todo status, or missing status, and no sprint or delivery milestone. Triage and dependency maintenance are intake buckets. Milestone-only work and the native board backlog are available from Backlog.</dd>
     <dt>Planned releases</dt><dd>Versioned milestones supply dates and scope. Other named planning milestones and undated targets have their own filters. Publication evidence comes from GitHub Releases. A closed issue or full progress bar only establishes issue closure.</dd></dl></section>`;
 }
@@ -204,7 +204,7 @@ function render(updating = false) {
   main.innerHTML = banner + header(products) + content;
   if (issueView || linked) restoreIssueView(issueView || linkedIssueFilter(r.q));
   paintIssues();
-  hydrateDeveloper(data.asOf);
+  hydrateActivity(data, r);
   updateSync();
   if (focused) {
     const target = focusId ? document.getElementById(focusId) : focusHref ? [...document.links].find(a => a.getAttribute('href') === focusHref && a.getClientRects().length) : null;
@@ -296,6 +296,8 @@ document.addEventListener('submit', ev => {
 });
 document.addEventListener('change', (ev) => {
   if (ev.target.id === 'portfolio-mode') changePortfolio({...savedPreferences, mode:ev.target.value});
+  if (ev.target.id === 'activity-range') setView(activityHref(r,{range:ev.target.value,month:null}));
+  if (ev.target.id === 'activity-metric') setView(activityHref(r,{metric:ev.target.value}));
   if (ev.target.id === 'product-select') {
     const keep = Object.fromEntries(r.q);
     delete keep.product;
@@ -414,7 +416,7 @@ async function refresh() {
     if (changed || !hadData) {
       render(hadData);
       previous = r;
-    } else hydrateDeveloper(data.asOf);
+    } else hydrateActivity(data, r);
   } catch (error) {
     if (activeRequest !== request) return;
     failed = true;

@@ -1,7 +1,7 @@
 import {ownerLists} from './portfolio.js';
 
 const pages = new Set(['overview','sprints','backlog','history','roadmap','sources']);
-const filters = ['product','sprint','show','period','scope','status','when','kind','offset','weeks','window','activity','developer'];
+const filters = ['product','sprint','show','period','scope','status','when','kind','offset','weeks','window','activity','developer','range','metric','month'];
 const invalidLink = {invalid:true, prefix:'invalid'};
 
 function group(text) {

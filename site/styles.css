@@ -1994,3 +1994,25 @@ dialog::backdrop {
 .heat-legend { display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; margin: 0 0 5px; color: var(--sub); font-size: 11px; }
 .heat-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .heat-legend .heat-day { width: 11px; height: 11px; border-radius: 3px; }
+
+.activity-controls, .activity-controls > label { display: flex; }
+.activity-controls { align-items: flex-end; gap: 12px 16px; flex-wrap: wrap; margin: 16px 0; }
+.activity-controls > label { flex-direction: column; gap: 4px; font-size: 12px; color: var(--sub); }
+.activity-controls select { padding: 7px 26px 7px 10px; font: inherit; font-size: 13px; border: 1px solid var(--border); color: var(--ink); background: var(--paper); border-radius: 7px; }
+.activity-controls .developer-form { margin: 0; }
+.activity-months { margin: 16px 0; display: grid; gap: 6px; }
+.activity-year { display: grid; grid-template-columns: 37px 1fr; gap: 8px; align-items: center; }
+.activity-year > strong, .month-detail small { color: var(--sub); font-size: 12px; font-weight: 500; }
+.year-months { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 4px; }
+.heat-month { padding: 5px 1px; border-radius: 5px; background: #edf2ef; color: #32493c; font-size: 11px; text-align: center; border: 1px solid #d7dfdd; }
+.heat-month.level-1 { background:#c3e4d0; border-color:#a6d0b8; }
+.heat-month.level-2 { background:#79b594; color:#102e20; border-color:#6ba586; }
+.heat-month.level-3 { background:#216247; color:white; border-color:#175539; }
+.heat-month.level-unknown { background:repeating-linear-gradient(135deg,#fbfbfe,#fbfbfe 3px,#e1e2e9 3px,#e1e2e9 5px); }
+.heat-month[aria-current=true] { outline:2px solid var(--violet); outline-offset:1px; }
+.month-detail { display:flex; align-items:baseline; gap:10px; margin:14px 0 0; font-size:15px; }
+@media (max-width: 700px) {
+  .year-months { grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; }
+  .activity-year { border-bottom:1px solid var(--border); padding-bottom:6px; align-items:start; }
+  .activity-year > strong { padding-top:5px; }
+}

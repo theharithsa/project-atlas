@@ -38,3 +38,5 @@ Use the named Hosting site and codebase because this Firebase project also hosts
 ## Recover
 
 For a bad frontend release, restore the previous version of the dedicated Atlas site from Firebase Hosting release history. For a collector or schema regression, redeploy the known-good function source and locked dependencies from its tag. If the response contract changed, restore a compatible frontend and function together. Recheck the feed, the release roadmap and local-file denial. The app has no persisted customer records to migrate.
+
+For a history change, open both project and developer five-year views on the custom domain. Compare totals for the displayed dates with the native GitHub sources and verify a historical month on a shared URL.
