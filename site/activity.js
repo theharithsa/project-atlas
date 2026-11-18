@@ -51,8 +51,8 @@ function chart(asOf, records, coverage) {
   const s = streakSummary(asOf, records);
   const measure = (n, uncertain, extendsPast = false) => uncertain || extendsPast ? n ? '≥' + n : '—' : String(n);
   const measurements = [
-    ['Current streak', measure(s.current, s.currentUnknown, s.touchesStart), 'days'],
-    ['Best in 28 days', measure(s.best, s.unknown), 'days'],
+    ['Current streak', measure(s.current, s.currentUnknown, s.touchesStart), s.current === 1 ? 'day' : 'days'],
+    ['Best in 28 days', measure(s.best, s.unknown), s.best === 1 ? 'day' : 'days'],
     ['Active days', measure(s.active, s.unknown), '/ 28'],
   ];
   const weeks = [0,7,14,21].map(offset => {
@@ -93,7 +93,7 @@ export function codingPanel(data, products, route, users) {
       (validLogin(login) ? '<div data-developer-activity="' + e(login.toLowerCase()) + '"><p class="activity-note" role="status">Checking public commits…</p></div>' : '');
   } else {
     const records = repositoryRecords(data, products);
-    body = records.length ? chart(data.asOf, records, s => s.complete + ' of ' + records.length + ' repositories fully checked') :
+    body = records.length ? chart(data.asOf, records, s => s.complete + ' of ' + records.length + (records.length === 1 ? ' repository fully checked' : ' repositories fully checked')) :
       '<p class="activity-note">No public repositories are linked to this selection.</p>';
   }
   return '<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>' +
