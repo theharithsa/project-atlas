@@ -120,3 +120,25 @@ export function closedIssues(products) {
 export function shortSprint(name) {
   return name.split(/\s+[—–]\s+/)[0];
 }
+
+export function recentlyClosed(rows, asOf) {
+  const start = Date.parse(iso(day(asOf) - 6) + 'T00:00:00+05:30');
+  const end = Date.parse(asOf + 'T00:00:00+05:30') + DAY;
+  return rows.filter(({i}) => {
+    const closed = Date.parse(i.closedAt);
+    return closed >= start && closed < end;
+  });
+}
+
+export function deliveryMetrics(data, products) {
+  const stats = products.flatMap(p => p.current.map(s => sprintStats(p, s)));
+  const total = stats.reduce((sum, s) => sum + s.total, 0);
+  const closed = stats.reduce((sum, s) => sum + s.closed, 0);
+  return {
+    recentlyClosed:recentlyClosed(closedIssues(products), data.asOf).length,
+    currentTotal:total, currentClosed:closed,
+    completion:total ? Math.round(100 * closed / total) : null,
+    needsSprint:issueRows(products, i => bucket(i) === 'milestone').length,
+    undated:targets(data, products).filter(m => m.version && m.open > 0 && !m.due).length,
+  };
+}

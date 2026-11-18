@@ -10,6 +10,7 @@ import {
   nativeBacklog,
   issueRows,
   closedIssues,
+  recentlyClosed,
   targets,
 } from './model.js';
 import { icon, e, external, url, productMark, dot, githubStatus, empty, tabs, progress } from './ui.js';
@@ -153,13 +154,20 @@ function backlogPage(products, r) {
     scope,
   )}${picker}</div><p class="filter-note">${e(buckets.find((t) => t[0] === scope)[2])} <a class="text-link" href="${e(url('history', r.product))}">View closed issues</a></p>${setIssueTable(shown, buckets.find((t) => t[0] === scope)[1])}`;
 }
-export function historyPage(products) {
-  const rows = closedIssues(products);
+export function historyPage(products, asOf, route) {
+  const all = closedIssues(products);
+  const recent = recentlyClosed(all, asOf);
+  const active = route.q.get('window') === '7d' ? '7d' : 'all';
+  const rows = active === '7d' ? recent : all;
+  const windows = tabs('Issue history period', [
+    ['all', 'All time · ' + all.length, url('history', route.product)],
+    ['7d', 'Last 7 days · ' + recent.length, url('history', route.product, {window:'7d'})],
+  ], active);
   const repositories = [...new Set(products.flatMap(p => p.repos))].sort(compare);
   const links = repositories.map(repo => external(
     'https://github.com/' + repo + '/issues?q=is%3Aissue+is%3Aclosed', e(repo), 'text-link',
   )).join('');
-  return setIssueTable(rows, 'Closed issues', true) + (links
+  return windows + setIssueTable(rows, 'Closed issues', true) + (links
     ? `<section class="panel source-intro history-repos"><h2>Repository history</h2><p>GitHub also lists closed issues archived or removed from these boards.</p><div>${links}</div></section>`
     : '');
 }

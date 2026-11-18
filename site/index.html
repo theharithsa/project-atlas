@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="light" />
     <meta
       name="description"
-      content="Live public GitHub project boards, current sprints, backlogs, release roadmaps and closed-issue history."
+      content="Live public GitHub project boards, current sprints, backlogs, release roadmaps, shareable portfolios and project and developer coding streaks."
     />
     <meta
       http-equiv="Content-Security-Policy"
@@ -35,6 +35,13 @@
         Enable JavaScript to view live GitHub projects.
       </p></noscript
     >
+    <dialog id="share-dialog" aria-labelledby="share-title">
+      <h2 id="share-title">Share this view</h2>
+      <p id="share-help">Anyone with this link can open these public owners, this view and its filters using live GitHub data.</p>
+      <label>Portfolio link<input id="share-address" type="url" readonly aria-describedby="share-help" /></label>
+      <div class="share-actions"><button type="button" id="copy-view-link">Copy link</button><button type="button" id="close-share">Close</button></div>
+      <p id="share-result" role="status"></p>
+    </dialog>
     <script type="module" src="app.js"></script>
   </body>
 </html>

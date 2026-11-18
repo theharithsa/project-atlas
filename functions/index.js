@@ -1,3 +1,4 @@
+import {developerFromPath, publicDeveloperActivity} from './activity.js';
 import { onRequest } from 'firebase-functions/v2/https';
 import { currentPortfolio } from './feed.js';
 import {ownerFromPath, publicOwnerFeed, missingOwner} from './owner-feed.js';
@@ -14,14 +15,22 @@ export const atlasPublicFeed = onRequest(
   async (req, res) => {
     res.set('X-Content-Type-Options', 'nosniff');
     const owner = ownerFromPath(req.path);
+    const developer = developerFromPath(req.path);
     if (
-      (!owner && !['/', '/api/v1/portfolio'].includes(req.path)) ||
+      (!owner && !developer && !['/', '/api/v1/portfolio'].includes(req.path)) ||
       Object.keys(req.query).length
     )
       return res.status(404).end();
     if (!['GET', 'HEAD'].includes(req.method))
       return res.set('Allow', 'GET, HEAD').status(405).end();
     try {
+      if (developer) {
+        const activity = await publicDeveloperActivity(developer);
+        const ttl = activity.status === 'complete' ? 3600 : 300;
+        const age = Math.ceil((Date.now() - Date.parse(activity.checkedAt)) / 1000);
+        return res.set('Cache-Control', 'public, max-age=0, s-maxage=' + Math.max(0, Math.min(60, ttl - age)) + ', must-revalidate')
+          .json({login:developer, activity});
+      }
       const data = owner ? await publicOwnerFeed(owner) : await currentPortfolio();
       // Share the remaining cache lifetime across Hosting edges and across visitors.
       const ttl = data.unavailable.length ? 20 : 60;

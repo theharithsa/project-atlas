@@ -10,9 +10,30 @@ Start with the whole portfolio or choose a product in the sidebar. A product sel
 2. Choose **Save and view my portfolio**. Open Overview, Sprints, Backlog, Roadmap or History to use your selection. Public projects are discovered for each account, including owners outside the shared settings. An account with no open public boards contributes zero products.
 3. Change the selector to **Shared portfolio** to see the maintained dashboard again. Your personal list is available when you switch back or reload. To update it, open **Data sources**. To remove every entry, use **Clear list**.
 
-Your browser stores the list and selected mode on this site. Each feed request carries one public GitHub login and its account type. A different browser starts with its own settings. If browser storage is unavailable, selections last for the current tab session. The URL records page and product filters. Other visitors keep their own portfolio selection when they open it.
+Your browser stores the list and selected mode on this site. Each feed request carries one public GitHub login and its account type. A different browser starts with its own settings. If browser storage is unavailable, selections last for the current tab session. An ordinary page URL opens with the recipient’s saved portfolio. Use **Share view** to include your owner selection.
 
 If an owner fails, check the login and its type in **Data sources**. The dashboard can show other available owners and identifies missing coverage. You can edit your list or switch back to shared even during a complete outage.
+
+## Share the current view
+
+In **My portfolio**, open the product, sprint and issue filter you want someone to see. Choose **Share view → Copy link**. You can also select and copy the address directly. The link includes the selected users and organizations, current page, product and filters, including an issue search and its page. Anyone with the link can read these selections. GitHub data stays live, so counts and issue ordering can change.
+
+Recipients see **Linked portfolio**. They can follow links within the portfolio, reload it, or select **Return to my dashboard** to restore their own selection. If a project or sprint has disappeared, Atlas identifies it as unavailable. [Example linked sprint](https://pipeline.theharithsanotes.com/#p/1/theharithsa/-/sprints?product=theharithsa-5&sprint=eb6c9abc&show=closed)
+
+## Read the overview metrics
+
+| Tile | What it measures and where it opens |
+| --- | --- |
+| Closed in 7 days | Unique closed board issues with a GitHub closure timestamp on today’s India calendar date or the six preceding dates. Opens the same period in History. |
+| Sprint completion | Closed leaf issue assignments divided by all leaf issue assignments across active sprints, weighted by issue count. Opens current sprints. |
+| Needs a sprint | Open leaf issues with a delivery or planning milestone and no assigned sprint. Opens the Milestone only backlog. |
+| Undated releases | Open version milestones with outstanding work and no due date, counted once per repository milestone. Opens the matching roadmap filter. |
+
+## Explore coding streaks
+
+Open **Overview → Coding streak**. **Projects** counts default-branch commits in the selected boards’ public repositories. A repository on two boards counts once. **Developer** accepts a GitHub username and uses GitHub’s public commit search across repositories. GitHub must associate the commit author with the chosen account. The product filter continues to apply to the delivery tiles while the developer search follows the username across GitHub. [How GitHub searches commits](https://docs.github.com/en/search-github/searching-on-github/searching-commits)
+
+The calendar shows 28 dates in India time, using the commit’s committed timestamp and including merges. Select a square to read the date and count. The current streak can end yesterday while today is still open. The best streak and active days cover only the displayed period. A hatched day has unknown activity, and **≥** indicates a confirmed minimum. GitHub indexing, rate limits and pagination can affect coverage. Complete activity refreshes hourly on demand. [Developer example](https://pipeline.theharithsanotes.com/#overview?activity=developer&developer=theharithsa)
 
 ## Change the shared portfolio owners
 

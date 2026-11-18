@@ -10,3 +10,5 @@ The product owner is theharithsa. The shared owner lists live in [config/owners.
 Construct upstream paths from the tracked GitHub owner, confirmed project number and verified public repository evidence. Drop restricted and unrecognized content and retain the original capture timestamp on the client during a full outage. Use synthetic data for request, privacy and pagination tests. The deployed service uses Node.js 22 in us-east1 with zero minimum and two maximum instances. It performs anonymous reads and stores no durable application data.
 
 Run `npm ci --prefix functions --ignore-scripts` and `npm test`. Check live coverage when GitHub changes its public presentation. For recovery, redeploy the last known compatible function and lockfile from a checked tag. [Operations](../../docs/delivery.md) · [Continuation](continuation.md)
+
+The activity collector aggregates public default-branch commits for verified repositories and indexed public commits for a developer login. Retain partial counts and the original check time when upstream coverage is incomplete. [Activity contract](../../docs/api.md#read-public-commit-activity)

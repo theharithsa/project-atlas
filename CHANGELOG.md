@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 · 18 November 2026
+
+- Share a personal portfolio with its current product, sprint, issue filters and search. Recipients can browse the live view and return to their saved portfolio. [Shareable views](https://github.com/theharithsa/project-atlas/issues/12)
+- Open seven-day closures, sprint completion, milestone-only issues and undated releases from the overview. Inspect daily commits and streaks for selected projects or a GitHub developer over 28 India calendar dates. [Metrics and activity](https://github.com/theharithsa/project-atlas/issues/13)
+
 ## 0.4.0 · 18 November 2026
 
 - Choose **Shared portfolio** or **My portfolio** for every dashboard view. Visitors can save up to 12 public GitHub users and organizations in their browser, reload or switch back to shared, and clear their list. [Personal portfolios](https://github.com/theharithsa/project-atlas/issues/10)

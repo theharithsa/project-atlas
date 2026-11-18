@@ -58,15 +58,16 @@ test('a fresh local preview serves the frontend and keeps local files outside it
   const page = await fetch(origin);
   assert.equal(page.status,200);
   assert.match(await page.text(), /Project Atlas/);
-  for (const path of ['/app.js','/portfolio.js','/work.js','/assets/dm-sans.ttf','/assets/atlas.svg']) {
+  for (const path of ['/app.js','/portfolio.js','/sharing.js','/activity.js','/work.js','/assets/dm-sans.ttf','/assets/atlas.svg']) {
     assert.equal((await fetch(origin + path, {method:'HEAD'})).status,200);
   }
-  for (const path of ['/snapshot.json','/local-archive/owner-snapshot.json','/firebase.json','/api/v1/portfolio?repo=other','/api/v1/owners/orgs/not%2Fa%2Flogin','/api/v1/owners/users/octo?extra=1']) {
+  for (const path of ['/snapshot.json','/local-archive/owner-snapshot.json','/firebase.json','/api/v1/portfolio?repo=other','/api/v1/owners/orgs/not%2Fa%2Flogin','/api/v1/owners/users/octo?extra=1','/api/v1/developers/bad%2Flogin/activity','/api/v1/developers/octo/activity?extra=1']) {
     assert.equal((await fetch(origin + path)).status,404);
   }
   assert.equal((await fetch(origin + '/api/v1/portfolio',{method:'POST'})).status,405);
   const config = JSON.parse(await readFile(new URL('../firebase.json', import.meta.url),'utf8'));
   assert.equal(config.hosting.public,'site');
+  assert.equal(config.hosting.rewrites.find(r => r.source === '/api/v1/developers/**')?.function.functionId,'atlasPublicFeed');
   assert.equal(config.hosting.rewrites.find(r => r.source === '/api/v1/owners/**')?.function.functionId,'atlasPublicFeed');
   assert.equal(config.hosting.rewrites.find(r => r.source === '/api/v1/portfolio')?.function.functionId,'atlasPublicFeed');
 });

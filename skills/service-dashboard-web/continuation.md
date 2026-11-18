@@ -7,3 +7,5 @@ The selector renders newly discovered boards from the feed. Data sources explain
 Data sources shows the typed shared owner list and links to the GitHub settings editor. History shows closed board issues across all sprints, including unscheduled and parent issues. Check that an issue on two boards has one row with both memberships, that real closure dates sort correctly, and that sprint state filters and History work at narrow widths. [Guide](../../docs/handbook.md)
 
 Version 0.4.0 adds a personal portfolio alongside the shared default. Test save, reload, switch, clear and recovery from an unavailable owner. Verify that data returned after a mode switch cannot enter the new view. [Personal portfolios](https://github.com/theharithsa/project-atlas/issues/10)
+
+Version 0.5.0 shares a temporary personal route and adds four delivery tiles and two commit streak scopes. Verify the share, reload and return journey, seven-day History and both calendars against source data. [Sharing](https://github.com/theharithsa/project-atlas/issues/12) · [Metrics and activity](https://github.com/theharithsa/project-atlas/issues/13)
