@@ -13,3 +13,5 @@ Version 0.5.0 shares a temporary personal route and adds four delivery tiles and
 Version 0.6.0 offers four-week through five-year ranges, commit and contribution totals, and a month-to-day drilldown. Check the leap day, range changes and a linked developer view. [History issue](https://github.com/theharithsa/project-atlas/issues/15)
 
 Exercise lifetime contributions on both a short and a five-year view, then switch developers. Check the join date, partial-year progress, mobile wrapping and shared links. [Lifetime issue](https://github.com/theharithsa/project-atlas/issues/17)
+
+Version 0.8.0 adds the dark Astryx workspace, Atlas logo and motion, and a dedicated Activity route. Legacy Overview activity URLs map to the same range and month. Check keyboard movement, source coverage, the mobile drawer and the typography on all routes. [Redesign issue](https://github.com/theharithsa/project-atlas/issues/19)

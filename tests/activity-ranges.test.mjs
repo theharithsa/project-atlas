@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {activityRange,ranges,streakSummary,monthBuckets} from '../site/activity-range.js';
+import {activityRange,ranges,streakSummary,monthBuckets,calendarCells} from '../site/activity-range.js';
 import {activityHref,historyPaths,lifetimeStat} from '../site/activity.js';
-import {viewLink,decodeView} from '../site/sharing.js';
+import {viewLink,decodeView,dashboardPage} from '../site/sharing.js';
 
 test('selectable inclusive windows span calendar years, leap years and month ends',()=>{
   assert.deepEqual(ranges.map(([key])=>key),['28d','3m','6m','1y','2y','3y','4y','5y']);
@@ -56,4 +56,29 @@ test('lifetime follows the developer independently of chart range, scope or meas
   assert.match(lifetimeStat({...base,status:'partial'})[3],/10 of 11 years checked/);
   assert.equal(lifetimeStat({...base,total:null,status:'unavailable'})[1],'—');
   assert.equal(lifetimeStat(null,'Temporarily unavailable')[3],'Temporarily unavailable');
+});
+
+test('legacy activity links open Activity without losing the owner, date range or selected month',()=>{
+  const legacy=decodeView('#p/1/alice/example/overview?product=alice-1&activity=developer&developer=alice&range=5y&month=2024-02');
+  const [route,query]=legacy.route.slice(1).split('?');
+  const q=new URLSearchParams(query);
+  assert.equal(dashboardPage(route,q),'activity');
+  assert.equal(dashboardPage('overview',new URLSearchParams('product=alice-1&offset=3')),'overview');
+  const shared=viewLink('https://example.test/',legacy.owners,{page:'activity',product:'alice-1',q});
+  const reopened=decodeView(new URL(shared).hash);
+  assert.equal(reopened.route,'#activity?product=alice-1&activity=developer&developer=alice&range=5y&month=2024-02');
+  assert.deepEqual(reopened.owners,legacy.owners);
+  assert.equal(dashboardPage('overview',new URLSearchParams('product=alice-1&range=5y')),'activity');
+});
+
+test('calendar columns place leap dates under the correct weekday and leave out-of-range cells blank',()=>{
+  const entries=Array.from({length:29},(_,i)=>({date:'2024-02-'+String(i+1).padStart(2,'0'),count:i===28 ? 4 : 0}));
+  const cells=calendarCells(entries);
+  assert.equal(cells.length,35);
+  assert.deepEqual(cells.slice(0,3),[null,null,null]);
+  assert.equal(cells[3].date,'2024-02-01');
+  assert.equal(cells[31].date,'2024-02-29');
+  assert.equal(cells[31].count,4);
+  assert.deepEqual(cells.slice(32),[null,null,null]);
+  assert.deepEqual(calendarCells([]),[]);
 });

@@ -28,12 +28,15 @@ The GitHub workflow runs checks. A maintainer with deployment access runs Fireba
 | Custom domain | [pipeline.theharithsanotes.com](https://pipeline.theharithsanotes.com/) |
 
 ```sh
+npm ci --ignore-scripts
 npm ci --prefix functions --ignore-scripts
 npm test
 firebase deploy --project the-harithsa-notes-94 --only functions:project-atlas,hosting:the-harithsa-notes-pipeline
 ```
 
 Use the named Hosting site and codebase because this Firebase project also hosts other products. Check HTTPS, `GET /api/v1/portfolio`, source coverage, a sprint drilldown and closed-issue history against a public GitHub issue. Verify a public single-owner request, then switch between shared and personal in the browser. Open a linked personal sprint in a separate browser tab and verify the return to the recipient’s dashboard. Compare project and developer activity to the corresponding public GitHub commit sources for the reported window. Record the hosting version and function revision separately from the Git commit.
+
+For frontend-only releases, target the named Hosting site with `firebase deploy --project the-harithsa-notes-94 --only hosting:the-harithsa-notes-pipeline`. Hosting builds the pinned Astryx assets before uploading. Verify the compiled assets and the runtime feed independently. The opening runs while the feed loads, dismisses on first input and honors the browser’s reduced-motion setting.
 
 ## Recover
 

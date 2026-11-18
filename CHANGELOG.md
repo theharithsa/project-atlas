@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0 · 18 November 2026
+
+- Use the dark Astryx developer workspace across all pages. It includes a new Atlas mark, a short terminal opening and a rotating globe on Overview.
+- Open **Activity** for selected-range and lifetime totals, monthly history and a Monday-first calendar with keyboard navigation. Earlier shared activity links keep their settings. [Redesign](https://github.com/theharithsa/project-atlas/issues/19)
+
 ## 0.7.0 · 18 November 2026
 
 - Compare a developer’s contributions in the selected range with their lifetime total since joining GitHub. Older accounts show how many calendar years have been checked as the total fills in. [Lifetime contributions](https://github.com/theharithsa/project-atlas/issues/17)

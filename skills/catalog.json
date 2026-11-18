@@ -137,6 +137,7 @@
       "entrypoints": [
         "scripts/check_repository.py",
         "scripts/check.sh",
+        "scripts/build.mjs",
         "scripts/add_service_skill.py",
         "scripts/repository_ruleset.py"
       ],
@@ -152,7 +153,7 @@
         "sh scripts/check.sh"
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
-      "lastReviewedRevision": "4a3c8f2641245f8fd1b76358afbacf54abb2d780"
+      "lastReviewedRevision": "3b11ba25b806983589534b3fcfd370e2e930755b"
     },
     {
       "id": "portfolio-feed",
@@ -182,7 +183,7 @@
         "npm test"
       ],
       "continuation": "skills/service-portfolio-feed/continuation.md",
-      "lastReviewedRevision": "65f3fcf679918f2489b30d972af0028e539891f5"
+      "lastReviewedRevision": "3b11ba25b806983589534b3fcfd370e2e930755b"
     },
     {
       "id": "dashboard-web",
@@ -197,7 +198,9 @@
         "site/portfolio.js",
         "site/sharing.js",
         "site/activity.js",
-        "site/activity-range.js"
+        "site/activity-range.js",
+        "site/atlas-motion.js",
+        "site/console.css"
       ],
       "owner": "theharithsa",
       "status": "active",

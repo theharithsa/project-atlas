@@ -75,3 +75,11 @@ export function monthBuckets(days) {
   }
   return [...groups.values()];
 }
+
+// The calendar starts on Monday. Empty cells are outside the selected dates.
+export function calendarCells(days) {
+  if (!days.length) return [];
+  const offset = (day(days[0].date) + 3) % 7;
+  const size = Math.ceil((offset + days.length) / 7) * 7;
+  return Array.from({length:size},(_,index) => days[index-offset] ?? null);
+}

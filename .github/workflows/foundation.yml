@@ -29,6 +29,8 @@ jobs:
         with:
           node-version: '22'
           package-manager-cache: false
+      - name: Install locked design dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install locked function dependencies
         run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
       - name: Verify repository, services, docs and application

@@ -1,5 +1,7 @@
-import {developerRoute, activityHref, hydrateActivity} from './activity.js';
-import {decodeView, viewLink, linkedIssueFilter} from './sharing.js';
+import {controls} from './generated/controls.js';
+import {playAtlasIntro, drawAtlasGlobe} from './atlas-motion.js';
+import {developerRoute, activityHref, hydrateActivity, codingPanel, selectActivityDay, stepActivityDay} from './activity.js';
+import {decodeView, viewLink, linkedIssueFilter, dashboardPage} from './sharing.js';
 import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
 import { prepare } from './model.js';
 import { icon, e, external, url, productMark, setRoutePrefix } from './ui.js';
@@ -15,6 +17,7 @@ const pageNames = {
   backlog: 'Backlog',
   roadmap: 'Roadmap',
   history: 'History',
+  activity: 'Activity',
   sources: 'Data sources',
 };
 const navIcons = {
@@ -23,9 +26,10 @@ const navIcons = {
   backlog: 'inbox',
   roadmap: 'road',
   history: 'clock',
+  activity: 'code',
   sources: 'database',
 };
-let data, r, lastContent, activeRequest, failed = false;
+let data, r, lastContent, activeRequest, failed = false, heroTyped = false;
 let savedPreferences = readPreferences(), linked = decodeView(location.hash);
 let preferences = linked?.owners ? {mode:'personal', ...linked.owners} : savedPreferences;
 let draft, settingsNotice = '', inputError = '';
@@ -53,8 +57,8 @@ function updateSync() {
 }
 function currentRoute() {
   const [raw = '', query = ''] = (linked?.route || location.hash).slice(1).split(/\?(.*)/s);
-  const page = Object.hasOwn(pageNames, raw) ? raw : 'overview';
   const q = new URLSearchParams(query);
+  const page = dashboardPage(raw,q);
   const product = data.projects.some((p) => p.key === q.get('product')) ? q.get('product') : 'all';
   return { page, product, q };
 }
@@ -67,6 +71,9 @@ function brand() {
 }
 function navigation(mobile = false) {
   const activeProduct = data.projects.find((p) => p.key === r.product);
+  const productPage = ['history','activity'].includes(r.page) ? r.page : 'overview';
+  const productFilters = productPage === 'activity' ? Object.fromEntries(r.q) : {};
+  delete productFilters.product;
   const ownerCount = data.directoryOwners?.length ?? (data.owner ? 1 : 0);
   return `${mobile ? `<button class="menu-close" data-close-menu aria-label="Close navigation">${icon('close')}</button>` : ''}${brand()}
     <div class="rail-body"><p class="nav-heading">Workspace</p><nav class="nav-links" aria-label="Dashboard pages">${Object.entries(
@@ -78,7 +85,7 @@ function navigation(mobile = false) {
           `<a href="${e(url(k, r.product))}" class="${k === r.page ? 'active' : ''}"${k === r.page ? ' aria-current="page"' : ''}>${icon(navIcons[k])}<span>${label}</span></a>`,
       )
       .join('')}</nav>
-    <div class="nav-heading product-heading">Products <span>${data.projects.length}</span></div><nav class="product-links" aria-label="Filter by product">${data.projects.map((p) => `<a href="${e(url(r.page === 'history' ? 'history' : 'overview', p.key))}" class="${activeProduct === p ? 'selected-product' : ''}">${productMark(p, true)}<span>${e(p.label)}</span></a>`).join('')}</nav></div>
+    <div class="nav-heading product-heading">Products <span>${data.projects.length}</span></div><nav class="product-links" aria-label="Filter by product">${data.projects.map((p) => `<a href="${e(url(productPage,p.key,productFilters))}" class="${activeProduct === p ? 'selected-product' : ''}">${productMark(p, true)}<span>${e(p.label)}</span></a>`).join('')}</nav></div>
     <div class="rail-footer"><a class="data-link ${r.page === 'sources' ? 'active' : ''}" href="${e(url('sources'))}">${icon('database', 17)} Data sources</a><div class="owner"><span class="owner-avatar">${icon('layers', 17)}</span><div><strong>${linked ? 'Linked portfolio' : preferences.mode === 'personal' ? 'My portfolio' : 'Shared portfolio'}</strong><small>${ownerCount} tracked ${ownerCount === 1 ? 'owner' : 'owners'}</small></div></div></div>`;
 }
 function sharedOwnerPanel(settings) {
@@ -110,7 +117,7 @@ function personalOwnerPanel() {
       <label>GitHub users<input id="personal-users" type="text" maxlength="2000" value="${e(users)}" placeholder="octocat" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
       <label>GitHub organizations<input id="personal-orgs" type="text" maxlength="2000" value="${e(orgs)}" placeholder="github" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
       <p class="form-feedback" id="owner-error" role="alert">${e(inputError)}</p>
-      <div class="owner-actions"><button class="save-owners" type="submit">Save and view my portfolio</button><button type="button" id="clear-owners">Clear list</button></div>
+      <div class="owner-actions">${controls.saveOwners}<button type="button" id="clear-owners">Clear list</button></div>
       <p class="form-feedback" role="status" id="owner-notice">${e(settingsNotice)}</p>
     </form></section>`;
 }
@@ -145,11 +152,11 @@ function sourcePage(products) {
     <dt>Current sprint</dt><dd>The latest board check date in India falls between the native iteration’s first and last day, inclusive. GitHub’s Sprint and Iteration fields are supported. An empty current sprint stays visible.</dd>
     <dt>Open work and sprint closure</dt><dd>Open work counts open, unarchived issues, excluding parent rollups and epics. Sprint closure counts closed issues out of this same issue scope, including issues closed early. Board inventory includes public issues and pull requests visible to signed-out visitors. Draft planning items, restricted content and archived board entries are excluded.</dd>
     <dt>Issue history</dt><dd>History includes closed issues with or without a sprint, including parent issues. An issue on multiple selected boards appears once. The displayed date comes from GitHub.</dd>
-    <dt>Coding streak</dt><dd>Projects counts commits on the public default branches represented by the selected boards. Developer searches GitHub for commits attributed to the chosen username across indexed public default branches. Commit streaks use the committed date in India time and include merges. Developer also shows the GitHub profile contribution total across the selected dates. Choose up to five years and open a month for daily counts. Hatched days have incomplete coverage. A ≥ value is a confirmed minimum.</dd>
+    <dt>Coding streak</dt><dd>Projects counts commits on the public default branches represented by the selected boards. Developer searches GitHub for commits attributed to the chosen username across indexed public default branches. Commit streaks use the committed date in India time and include merges. Developer shows GitHub profile contributions for the selected dates and the account’s lifetime. In Activity, choose up to five years and open a month for its calendar. Hatched days have incomplete coverage. A ≥ value is a confirmed minimum.</dd>
     <dt>Unscheduled backlog</dt><dd>Open work with a Backlog or Todo status, or missing status, and no sprint or delivery milestone. Triage and dependency maintenance are intake buckets. Milestone-only work and the native board backlog are available from Backlog.</dd>
     <dt>Planned releases</dt><dd>Versioned milestones supply dates and scope. Other named planning milestones and undated targets have their own filters. Publication evidence comes from GitHub Releases. A closed issue or full progress bar only establishes issue closure.</dd></dl></section>`;
 }
-function header(products) {
+function header() {
   const product = data.projects.find((p) => p.key === r.product);
   const title = {
     overview: product ? product.label : 'Delivery overview',
@@ -157,6 +164,7 @@ function header(products) {
     backlog: 'Backlog',
     roadmap: 'Release roadmap',
     history: 'Issue history',
+    activity: 'Activity',
     sources: 'Data sources',
   }[r.page];
   const subtitle = {
@@ -167,18 +175,38 @@ function header(products) {
     backlog: 'Open work, planning commitments and native board status.',
     roadmap: 'Sprint windows and release targets from the linked repositories.',
     history: 'Closed issues on the selected boards, newest first. Dates are shown in India time.',
+    activity: 'Explore public GitHub contributions and commit history.',
     sources: 'Live coverage, refresh times and GitHub source links.',
   }[r.page];
   document.title = title + ' · Project Atlas';
-  const share = preferences.mode === 'personal' ? `<button class="share-view" id="share-view" type="button">${icon('link', 16)} Share view</button>` : '';
-  return `<header class="page-title"><div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div><div class="view-actions">${share}<label class="select-wrap">${icon('layers', 16)}<select id="product-select" aria-label="Product filter"><option value="all">All products</option>${data.projects.map((p) => `<option value="${e(p.key)}"${p.key === r.product ? ' selected' : ''}>${e(p.label)}</option>`).join('')}</select>${icon('down', 14)}</label></div></header>`;
+  const share = preferences.mode === 'personal' ? controls.share : '';
+  const select = `<label class="select-wrap">${icon('layers', 16)}<select id="product-select" aria-label="Product filter"><option value="all">All products</option>${data.projects.map((p) => `<option value="${e(p.key)}"${p.key === r.product ? ' selected' : ''}>${e(p.label)}</option>`).join('')}</select>${icon('down', 14)}</label>`;
+  const showProductFilter = r.page !== 'activity' || r.q.get('activity') !== 'developer';
+  const actions = share || showProductFilter
+    ? `<div class="view-actions">${share}${showProductFilter ? select : ''}</div>`
+    : '';
+  if (r.page !== 'overview' || product)
+    return `<header class="page-title"><div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions}</header>`;
+
+  const users = preferences.mode === 'personal' ? preferences.users : data.sourceSettings?.users || [];
+  const filters = users.length ? {activity:'developer',metric:'contributions',range:'1y'} : {};
+  const typingClass = heroTyped ? '' : ' type-on-entry';
+  heroTyped = true;
+  const cta = controls.activity.replace('#ATLAS_ACTIVITY_HREF',() => e(url('activity','all',filters)));
+  return `<header class="atlas-hero"><div class="hero-copy">
+    <span class="terminal-line hero-command${typingClass}" aria-hidden="true"><span class="prompt">$</span><span class="typed-command">atlas status --source github</span></span>
+    <h1>Delivery overview</h1><p>${e(subtitle)}</p>
+    <div class="hero-actions">${cta}${actions}</div>
+    </div><div class="atlas-art" aria-hidden="true"><canvas data-atlas-orbit width="680" height="440"></canvas></div></header>`;
 }
 function render(updating = false) {
   const issueView = updating ? saveIssueView() : null;
-  const focused = updating || document.activeElement?.closest('#personal-owners') ? document.activeElement : null;
+  const focused = updating || document.activeElement?.closest('#personal-owners,.coding-panel') ? document.activeElement : null;
   const focusId = focused?.id;
   const developerDraft = focusId === 'developer-login' ? focused.value : null;
   const selectedRange = ['issue-search','personal-users','personal-orgs','developer-login'].includes(focusId) ? [focused.selectionStart, focused.selectionEnd] : null;
+  const focusDate = focused?.dataset.activityDay;
+  const selectedDay = updating ? main.querySelector('[data-activity-day][aria-pressed="true"]')?.dataset.activityDay : null;
   const focusHref = focused?.tagName === 'A' ? focused.getAttribute('href') : null;
   r = currentRoute();
   if (menu.open && !updating) menu.close();
@@ -193,7 +221,8 @@ function render(updating = false) {
   const content = missingProduct || missingSprint
     ? `<section class="panel source-intro"><h2>Linked ${missingProduct ? 'project' : 'sprint'} unavailable</h2><p>Check coverage in Data sources or open another project in this portfolio.</p></section>`
     : {
-    overview: () => overview(data, products, r, preferences.mode === 'personal' ? preferences.users : (data.sourceSettings?.users || [])),
+    overview: () => overview(data, products, r),
+    activity: () => codingPanel(data,products,r,preferences.mode === 'personal' ? preferences.users : (data.sourceSettings?.users || [])),
     sprints: () => sprintPage(data, products, r),
     backlog: () => backlogPage(products, r),
     roadmap: () => roadmapPage(data, products, r),
@@ -201,13 +230,14 @@ function render(updating = false) {
     sources: () => sourcePage(products),
   }[r.page]();
   const banner = linked ? '<div class="linked-notice"><span>Viewing a linked portfolio</span><button type="button" data-leave-link>Return to my dashboard</button></div>' : '';
-  main.innerHTML = banner + header(products) + content;
+  main.innerHTML = banner + header() + content;
   if (issueView || linked) restoreIssueView(issueView || linkedIssueFilter(r.q));
   paintIssues();
-  hydrateActivity(data, r);
+  hydrateActivity(data, r, selectedDay);
+  drawAtlasGlobe();
   updateSync();
   if (focused) {
-    const target = focusId ? document.getElementById(focusId) : focusHref ? [...document.links].find(a => a.getAttribute('href') === focusHref && a.getClientRects().length) : null;
+    const target = focusId ? document.getElementById(focusId) : focusDate ? main.querySelector(`[data-activity-day="${focusDate}"]`) : focusHref ? [...document.links].find(a => a.getAttribute('href') === focusHref && a.getClientRects().length) : null;
     if (target) {
       if (developerDraft !== null) target.value = developerDraft;
       target.focus({preventScroll:true});
@@ -256,16 +286,14 @@ document.addEventListener('click', (event) => {
     pageIssues(Number(btn.dataset.pager));
     rememberLinkedSearch();
   }
-  if (btn?.hasAttribute('data-activity-day')) {
-    const panel = btn.closest('.coding-panel');
-    panel.querySelector('[data-activity-day][aria-pressed="true"]')?.setAttribute('aria-pressed','false');
-    btn.setAttribute('aria-pressed', 'true');
-    panel.querySelector('[data-day-detail]').textContent = btn.getAttribute('aria-label');
-  }
+  if (btn?.hasAttribute('data-activity-day')) selectActivityDay(btn);
   if (event.target.closest('a.skip')) {
     event.preventDefault();
     main.focus();
   }
+});
+document.addEventListener('keydown', event => {
+  if (event.target.hasAttribute('data-activity-day')) stepActivityDay(event);
 });
 document.addEventListener('input', (ev) => {
   if (ev.target.closest('#personal-owners')) {
@@ -435,4 +463,5 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) refr
 window.addEventListener('online', refresh);
 setInterval(() => { if (!document.hidden) refresh(); }, pollMs);
 pendingPage();
+playAtlasIntro();
 refresh();

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-astryx-theme="neutral" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f7fa" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#080e15" />
+    <meta name="color-scheme" content="dark" />
     <meta
       name="description"
       content="Live public GitHub project boards, current sprints, backlogs, release roadmaps, shareable portfolios and project and developer coding streaks."
@@ -15,10 +15,19 @@
     />
     <title>Project Atlas · Delivery overview</title>
     <link rel="icon" href="assets/atlas.svg" type="image/svg+xml" />
-    <link rel="preload" href="assets/dm-sans.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="generated/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="generated/astryx.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="console.css" />
   </head>
   <body>
+    <div class="atlas-intro" id="atlas-intro" aria-hidden="true" hidden>
+      <div class="boot-identity">
+        <span class="boot-emblem"><img src="assets/atlas.svg" alt="" width="74" height="74" /></span>
+        <strong>Project Atlas</strong>
+        <span class="terminal-line boot-line"><span class="prompt">$</span><span class="typed-command">atlas open --public</span></span>
+      </div>
+    </div>
     <a class="skip" href="#content">Skip to content</a>
     <div class="shell">
       <aside class="rail" id="desktop-nav" aria-label="Workspace navigation"></aside>

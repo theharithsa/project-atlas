@@ -1,6 +1,7 @@
-import {day, iso, fmt, span} from './model.js';
+import {controls} from './generated/controls.js';
+import {fmt, span} from './model.js';
 import {e, url, icon, tabs, external} from './ui.js';
-import {activityRange, ranges, streakSummary, monthBuckets} from './activity-range.js';
+import {activityRange, ranges, streakSummary, monthBuckets, calendarCells} from './activity-range.js';
 export {streakSummary} from './activity-range.js';
 
 const validLogin = value => typeof value === 'string' && value.length <= 39 && /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/i.test(value);
@@ -18,7 +19,7 @@ export function repositoryRecords(data, products) {
 export function activityHref(route, changes) {
   const params = Object.fromEntries(route.q);
   delete params.product;
-  return url('overview', route.product, {...params,...changes});
+  return url('activity', route.product, {...params,...changes});
 }
 export function developerRoute(route, value) {
   const login = value.trim().replace(/^@/, '').toLowerCase();
@@ -33,17 +34,40 @@ function level(count, complete) {
   return count >= 8 ? 3 : count >= 3 ? 2 : count > 0 ? 1 : complete ? 0 : 'unknown';
 }
 function detailDays(days, unit, selected) {
-  const weeks = [];
-  for (let index = 0; index < days.length; index += 7) {
-    const week = days.slice(index,index+7);
-    const buttons = week.map(d => {
-      const label = e(dayLabel(d,unit));
-      return `<button type="button" class="heat-day level-${level(d.count,d.complete)}" data-activity-day="${d.date}" aria-pressed="${d.date === selected}" title="${label}" aria-label="${label}">${Number(d.date.slice(-2))}</button>`;
-    }).join('');
-    weeks.push(`<div class="activity-week"><small>${e(fmt(week[0].date))}</small><div>${buttons}</div></div>`);
-  }
-  return `<div class="activity-weeks" role="group" aria-label="Daily ${unit} counts">${weeks.join('')}</div>`;
+  const headings = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const buttons = calendarCells(days).map(date => {
+    if (!date) return '<span class="activity-pad" aria-hidden="true"></span>';
+    const label = e(dayLabel(date,unit));
+    const pressed = date.date === selected;
+    const count = date.count ? renderValue(date.count,!date.complete) : date.complete ? '0' : '—';
+    return `<button type="button" class="heat-day level-${level(date.count,date.complete)}" data-activity-day="${date.date}"
+      aria-pressed="${pressed}" tabindex="${pressed ? 0 : -1}" title="${label}" aria-label="${label}"><span>${Number(date.date.slice(-2))}</span><b>${count}</b></button>`;
+  });
+  return `<div class="activity-calendar" role="group" aria-label="Daily ${unit} counts">${headings.map(label =>
+    '<span class="weekday">' + label + '</span>').join('')}${buttons.join('')}</div>`;
 }
+
+export function selectActivityDay(button) {
+  const panel = button.closest('.coding-panel');
+  const previous = panel.querySelector('[data-activity-day][aria-pressed="true"]');
+  if (previous) {
+    previous.setAttribute('aria-pressed','false');
+    previous.tabIndex = -1;
+  }
+  button.setAttribute('aria-pressed','true');
+  button.tabIndex = 0;
+  panel.querySelector('[data-day-detail]').textContent = button.getAttribute('aria-label');
+}
+
+export function stepActivityDay(event) {
+  const offset = {ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7}[event.key];
+  if (!offset) return;
+  const days = Array.from(event.target.closest('.activity-calendar').querySelectorAll('[data-activity-day]'));
+  const next = days[days.indexOf(event.target) + offset];
+  event.preventDefault();
+  if (next) { selectActivityDay(next); next.focus(); }
+}
+
 function monthsView(months, selected, route, unit) {
   const years = new Map();
   for (const month of months) {
@@ -57,11 +81,11 @@ function monthsView(months, selected, route, unit) {
       if (!month) return '<span class="month-spacer" aria-hidden="true"></span>';
       const date = month.key + '-01';
       const label = longMonth(date) + ' · ' + (month.complete || month.total ? renderValue(month.total,!month.complete) + ' ' + unit + (month.total === 1 ? '' : 's') : 'Coverage unknown');
-      return `<a class="heat-month level-${level(month.total / month.days.length, month.complete)}" href="${e(activityHref(route,{month:month.key}))}" title="${e(label)}" aria-label="${e(label)}"${month.key === selected ? ' aria-current="true"' : ''}>${e(shortMonth(date))}</a>`;
+      return `<a class="heat-month level-${level(month.total / month.days.length, month.complete)}" href="${e(activityHref(route,{month:month.key}))}" title="${e(label)}" aria-label="${e(label)}"${month.key === selected ? ' aria-current="true"' : ''}><span>${e(shortMonth(date))}</span><b>${renderValue(month.total,!month.complete)}</b></a>`;
     }).join('');
     return `<div class="activity-year"><strong>${year}</strong><div class="year-months">${cells}</div></div>`;
   }).join('');
-  return `<p class="activity-note">Choose a month for daily counts. Shading shows its daily average.</p><div class="activity-months" aria-label="Months in the selected range">${rows}</div>`;
+  return `<section class="activity-section month-overview"><div class="activity-heading"><h3>History by month</h3><p>Choose a month to inspect its days.</p></div><div class="activity-months" aria-label="Months in the selected range">${rows}</div></section>`;
 }
 
 export function lifetimeStat(record, error) {
@@ -88,8 +112,8 @@ function chart(view, sources, profileSources, lifetime, selectedDate) {
     ['Best in range',renderValue(s.best,s.unknown),s.best === 1 ? 'day':'days'],
     ['Active days',renderValue(s.active,s.unknown),'/ ' + number(range.length)],
   ];
-  const stats = metrics.map(([label,value,unit,detail]) =>
-    `<div><span>${label}</span><strong>${value} <small>${unit}</small></strong>${detail ? '<small class="stat-detail">' + e(detail) + '</small>' : ''}</div>`).join('');
+  const stats = metrics.map(([label,value,unit,detail],index) =>
+    `<div class="activity-stat${index < (profile ? 2 : 1) ? ' stat-featured' : ''}"><span>${label}</span><strong>${value} <small>${unit}</small></strong>${detail ? '<small class="stat-detail">' + e(detail) + '</small>' : ''}</div>`).join('');
   const months = monthBuckets(s.days), long = range.key !== '28d';
   const month = months.find(m => m.key === route.q.get('month')) || months.at(-1);
   const days = long ? month.days : s.days;
@@ -101,11 +125,24 @@ function chart(view, sources, profileSources, lifetime, selectedDate) {
   const pending = view.loading ? 'Checking history… · ' : '';
   const coverage = pending + number(s.covered) + ' of ' + number(range.length) + ' ' + unit + ' dates fully checked';
   const partialTotal = commits.covered < range.length || (profile && (profile.covered < range.length || lifetime?.data?.status === 'partial'));
-  const landing = long ? monthsView(months,month.key,route,unit) + `<h3 class="month-detail">${e(longMonth(month.key+'-01'))} <small>${renderValue(month.total,!month.complete)} ${unit}${month.total === 1 ? '' : 's'}</small></h3>` : '';
+  const landing = long ? monthsView(months,month.key,route,unit) : '';
+  const pos = months.indexOf(month);
+  const monthNav = (neighbor, direction, label) => neighbor
+    ? `<a class="month-step" id="activity-${direction}-month" href="${e(activityHref(route,{month:neighbor.key}))}" aria-label="${label}">${icon(direction,16)}</a>`
+    : `<span class="month-step" aria-hidden="true">${icon(direction,16)}</span>`;
+  const calendarLabel = long ? longMonth(month.key+'-01') : 'Daily activity';
+  const monthTotal = renderValue(month.total,!month.complete);
+  const summary = long && monthTotal !== '—' ? `<p>${monthTotal} ${unit}${month.total === 1 ? '' : 's'} in this month</p>` : '';
+  const dateNavigation = long ? `<div class="month-nav">${monthNav(months[pos-1],'left','Previous month')}${monthNav(months[pos+1],'right','Next month')}</div>` : '';
   const note = unit === 'commit' ? 'Streaks use committed dates in India time.' : 'Streaks use the dates on the public GitHub contribution calendar.';
   const profileNote = developer ? ' Both contribution totals follow GitHub’s public profile calendar.' : '';
-  return `<div class="streak-stats">${stats}</div>${landing}${scale}${detailDays(days,unit,selected.date)}
-    <div class="activity-caption"><output data-day-detail aria-live="polite">${e(dayLabel(selected,unit))}</output><span>${e(coverage)}</span></div>
+  return `<div class="streak-stats">${stats}</div>${landing}
+    <section class="activity-section day-overview">
+      <div class="activity-heading"><div><h3>${e(calendarLabel)}</h3>${summary}</div>${dateNavigation}</div>
+      ${detailDays(days,unit,selected.date)}
+      <div class="activity-caption"><output data-day-detail aria-live="polite">${e(dayLabel(selected,unit))}</output>${scale}</div>
+      <p class="activity-coverage">${e(coverage)}</p>
+    </section>
     <p class="activity-note">${note} Today can extend yesterday’s streak. The current year refreshes hourly.${profileNote}${partialTotal || s.touchesStart ? ' A ≥ value is a confirmed minimum.' : ''}</p>${source ? '<p class="activity-source">'+source+'</p>' : ''}`;
 }
 
@@ -120,7 +157,7 @@ export function codingPanel(data, products, route, users) {
   ],developer ? 'developer':'project');
   const selector = `<label>Time range<select id="activity-range">${ranges.map(([key,label]) => `<option value="${key}"${range.key===key?' selected':''}>${label}</option>`).join('')}</select></label>`;
   const measure = developer ? `<label>Streak based on<select id="activity-metric"><option value="commits">Commits</option><option value="contributions"${metric === 'contributions' ? ' selected':''}>Profile contributions</option></select></label>` : '';
-  const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none"><button>View streak</button></div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
+  const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none">${controls.developer}</div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
   const hasScope = developer ? validLogin(login) : products.some(p => p.repos.length);
   const chartBody = hasScope ? `<div id="activity-chart" data-login="${developer ? e(login.toLowerCase()) : ''}"><p class="activity-note" role="status">Checking activity…</p></div>` :
     (developer ? '' : '<p class="activity-note">No public repositories are linked to this selection.</p>');
@@ -207,7 +244,7 @@ function recordsFor(view) {
 }
 
 let active;
-export function hydrateActivity(data, route) {
+export function hydrateActivity(data, route, rememberedDay) {
   const target = document.getElementById('activity-chart');
   if (active?.target === target) return;
   if (active) clearTimeout(active.timer);
@@ -223,7 +260,7 @@ export function hydrateActivity(data, route) {
   const visible = () => active === view && target.isConnected;
   function paint() {
     if (!visible()) return;
-    const selected = target.querySelector('[data-activity-day][aria-pressed="true"]')?.dataset.activityDay;
+    const selected = target.querySelector('[data-activity-day][aria-pressed="true"]')?.dataset.activityDay || rememberedDay;
     const focused = target.contains(document.activeElement) ? document.activeElement : null;
     const keepDay = focused?.dataset.activityDay, keepLink = focused?.getAttribute('href');
     target.innerHTML = chart(view,...recordsFor(view),selected);

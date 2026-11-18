@@ -14,3 +14,5 @@ Run `sh scripts/check.sh` with Python 3.11+ and Node 22. Keep test commands and 
 The preview server in `scripts/serve.mjs` reads the owner file from the local checkout. It calls the production settings validator and GitHub collector. [Preview guide](../../README.md#run-locally)
 
 Serve the personal portfolio browser module and the same typed owner endpoint as Hosting from local preview. Keep the static allowlist and Firebase rewrites covered by the HTTP suite.
+
+Install the root design dependencies with `npm ci --ignore-scripts` before the foundation check. Build the public Astryx assets with `npm run build`. Hosting runs the same build before publishing. Leave generated assets out of Git.

@@ -16,3 +16,5 @@ Version 0.5 adds route serialization in `site/sharing.js` and project and develo
 The range model in `site/activity-range.js` clips multiple source years to inclusive calendar windows. Keep daily and month selections accessible and shareable. Missing dates must stay distinguishable from confirmed zeros. [Dashboard guide](../../docs/handbook.md#explore-coding-streaks)
 
 The developer view shows contributions for the selected range and the account lifetime. Keep the lifetime cache scoped to the login and preserve coverage labels as range, month and streak settings change. [Guide](../../docs/handbook.md#explore-coding-streaks)
+
+The dark workspace uses Astryx’s Neutral theme, site tokens in `site/console.css` and build-time Button and Badge markup from `scripts/build.mjs`. The boot sequence and globe live in `site/atlas-motion.js`. Keep the opening dismissible, keep data fetches independent of motion and verify the reduced-motion branch.
