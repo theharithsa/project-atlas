@@ -1113,6 +1113,27 @@ h2 {
 .work-plan a:hover {
   text-decoration: underline;
 }
+.history-closure, .history-plans {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+}
+.history-closure small {
+  color: var(--sub);
+}
+.history-repos {
+  margin-top: 16px;
+}
+.history-repos div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.text-link {
+  color: var(--violet);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .pagination {
   display: flex;
   align-items: center;
@@ -1220,6 +1241,28 @@ h2 {
   font-size: 13px;
   margin-top: 10px;
   color: var(--sub);
+}
+.owner-settings .panel-head {
+  padding: 0;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.owner-settings dl {
+  margin: 14px 0 0;
+}
+.owner-settings dl > div {
+  display: grid;
+  grid-template-columns: minmax(80px, 105px) minmax(0, 1fr);
+  gap: 10px;
+  font-size: 13px;
+  margin-top: 7px;
+}
+.owner-settings dt {
+  color: var(--sub);
+}
+.owner-settings dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .coverage-note {
   gap: 8px;

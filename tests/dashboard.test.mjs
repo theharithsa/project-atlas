@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {prepare, sprintStats, targets} from '../site/model.js';
+import {prepare, sprintStats, targets, closedIssues} from '../site/model.js';
 import {samplePortfolio} from './fixtures/portfolio.mjs';
 
 test('current sprint and backlog count leaf issues separately from planned work', () => {
@@ -33,4 +33,24 @@ test('a newly discovered empty board can be selected with any public title', () 
   assert.deepEqual(board.current, []);
   assert.deepEqual(board.backlog, []);
   assert.deepEqual(targets(data, [board]), []);
+});
+
+test('history includes unscheduled and rollup closures, deduplicates shared issues, and keeps missing dates last', () => {
+  const sample = samplePortfolio();
+  const [first, second] = sample.projects;
+  const base = first.items[0];
+  Object.assign(base, {closedAt:'2026-11-01T12:00:00.000Z', sprint:null});
+  const parent = {...base, number:28, url:'https://github.com/' + base.repo + '/issues/28', rollup:true, closedAt:'2026-11-15T18:00:00.000Z'};
+  first.items.push(parent);
+  first.items.push({...base, number:91, url:base.url+'archived', archived:true});
+  first.items.push({...base, number:92, url:base.url+'pull', kind:'PullRequest'});
+  second.items.push({...base, sprint:'s2'});
+  const data = prepare(sample);
+  const both = data.projects.filter(p => [first.key,second.key].includes(p.key));
+  const history = closedIssues(both);
+  assert.deepEqual(history.map(r=>r.i.url), [parent.url,base.url,second.items[0].url]);
+  assert.deepEqual(history[1].memberships.map(m => m.i.sprint), [null,'s2']);
+  assert.equal(closedIssues(both.filter(p => p.key === second.key)).length,2);
+  assert.equal(both.find(p => p.key === first.key).open.length,5);
+  assert.deepEqual(closedIssues([]),[]);
 });

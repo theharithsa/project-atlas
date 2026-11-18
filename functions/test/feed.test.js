@@ -189,3 +189,20 @@ test('failed refreshes retry and do not redate expired data', async () => {
   await assert.rejects(feed());
   assert.equal((await feed()).version, 3);
 });
+
+test('only a closed issue carries a real GitHub closure timestamp', () => {
+  const row = example();
+  const title = row.memexProjectColumnValues[1].value;
+  row.issueClosedAt = '2026-11-18T05:20:54Z';
+  const result = () => boardContents([row], fields).items[0];
+  assert.equal(result().closedAt, null);
+  title.state = 'closed';
+  title.stateReason = 'not_planned';
+  assert.equal(result().closedAt, '2026-11-18T05:20:54.000Z');
+  assert.equal(result().reason, 'NOT_PLANNED');
+  delete row.issueClosedAt;
+  row.memexProjectColumnValues.push({memexProjectColumnId:'Closed',value:{value:'2026-11-01T09:00:00Z'}});
+  assert.equal(result().closedAt, '2026-11-01T09:00:00.000Z');
+  row.memexProjectColumnValues.at(-1).value.value = 'unknown';
+  assert.equal(result().closedAt, null);
+});

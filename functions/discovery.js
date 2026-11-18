@@ -1,9 +1,5 @@
 const api = 'https://api.github.com';
 export const directoryRefreshSeconds = 600;
-export const owners = [
-  { account: 'theharithsa', kind: 'users' },
-  { account: 'ArohaRetreat', kind: 'orgs' },
-];
 
 function nextCursor(link) {
   const next = link?.split(',').find((part) => /;\s*rel="next"/.test(part));
@@ -34,9 +30,10 @@ export function createProjectDirectory(readPage, clock = Date.now) {
         if (row?.public !== true || row.state !== 'open' || row.closed_at || row.deleted_at ||
             row.owner?.login?.toLowerCase() !== account.toLowerCase() ||
             !Number.isSafeInteger(row.number) || row.number < 1) continue;
+        const login = row.owner.login;
         found.set(row.number, {
-          account, number: row.number,
-          url: 'https://github.com/' + kind + '/' + account + '/projects/' + row.number,
+          account: login, number: row.number,
+          url: 'https://github.com/' + kind + '/' + login + '/projects/' + row.number,
         });
       }
       const cursor = nextCursor(response.headers.get('link'));

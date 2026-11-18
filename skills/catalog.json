@@ -163,14 +163,16 @@
       "entrypoints": [
         "functions/index.js",
         "functions/github.js",
-        "functions/feed.js"
+        "functions/feed.js",
+        "functions/owner-settings.js"
       ],
       "owner": "theharithsa",
       "status": "active",
       "dependsOn": [],
       "contracts": [
         "docs/api.md",
-        "firebase.json"
+        "firebase.json",
+        "config/owners.json"
       ],
       "testCommands": [
         "npm test"
