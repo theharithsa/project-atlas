@@ -2,6 +2,7 @@
   "hosting": {
     "site": "the-harithsa-notes-pipeline",
     "public": "site",
+    "predeploy": ["npm run build"],
     "ignore": [
       "**/.*",
       "**/node_modules/**",

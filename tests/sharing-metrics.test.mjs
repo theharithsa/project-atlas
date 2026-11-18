@@ -38,9 +38,9 @@ test('oversized, ambiguous and malformed links stay out of personal settings',()
 test('developer view and delivery drilldown filters survive sharing',()=>{
   const r=route('overview','acme-1','offset=4');
   const userRoute=developerRoute(r,' @Example ');
-  assert.equal(userRoute,'#overview?product=acme-1&offset=4&activity=developer&developer=example');
+  assert.equal(userRoute,'#activity?product=acme-1&offset=4&activity=developer&developer=example');
   assert.equal(developerRoute(r,'org/other'),null);
-  for(const [page,query] of [['overview','activity=developer&developer=example'],['history','window=7d'],
+  for(const [page,query] of [['activity','activity=developer&developer=example'],['history','window=7d'],
     ['backlog','scope=milestone'],['roadmap','kind=releases&when=undated']]){
     const link=viewLink('https://atlas.example/',settings,route(page,'acme-1',query));
     const parsed=decodeView(new URL(link).hash);

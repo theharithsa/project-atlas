@@ -15,14 +15,15 @@ const currentPortfolio = createFeed(() => collectPortfolio(localSettings));
 const site = new URL('../site/', import.meta.url);
 const mime = new Map([
   ['index.html', 'text/html; charset=utf-8'],
-  ['styles.css', 'text/css; charset=utf-8'],
-  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity', 'activity-range'].map((f) => [
+  ...['styles.css','console.css','generated/astryx.css'].map(f => [f,'text/css; charset=utf-8']),
+  ...['app', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity', 'activity-range', 'atlas-motion', 'generated/controls'].map((f) => [
     f + '.js',
     'text/javascript; charset=utf-8',
   ]),
   ['assets/atlas.svg', 'image/svg+xml'],
-  ['assets/dm-sans.ttf', 'font/ttf'],
-  ['assets/dm-sans-license.txt', 'text/plain; charset=utf-8'],
+  ['generated/space-grotesk.woff2', 'font/woff2'],
+  ['generated/jetbrains-mono.woff2', 'font/woff2'],
+  ['generated/licenses.txt', 'text/plain; charset=utf-8'],
 ]);
 const server = createServer(async (req, res) => {
   const path = req.url === '/' ? 'index.html' : req.url.slice(1);

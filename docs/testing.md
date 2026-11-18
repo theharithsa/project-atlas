@@ -3,6 +3,7 @@
 Use Node.js 22. The repository checks require Python 3.11 or newer and a POSIX shell. Git for Windows provides Bash for the Windows CI job.
 
 ```sh
+npm ci --ignore-scripts
 npm ci --prefix functions --ignore-scripts
 npm test
 sh scripts/check.sh
@@ -26,3 +27,5 @@ For shared links, copy a filtered personal sprint, open it while another portfol
 For activity ranges, compare the selected dates and totals across 28 days and five years. Open an older month containing a leap day, switch streak measure and reload a shared link. Check enrolled repository history against default-branch commits and the developer total against the individual dates on the signed-out GitHub profile calendar. Offline coverage includes multi-year aggregation, date clipping, pagination, retry after rate limits and incomplete calendars.
 
 For lifetime contributions, use a developer with history predating the five-year chart. Compare all public calendar dates starting at account creation. Verify that four weeks and five years change only the range-dependent figures, that switching developers drops earlier results, and that empty and interrupted years have distinct states. Inspect both totals at phone width.
+
+For the dark developer workspace, inspect every page at desktop and phone widths. Check the opening on a fresh load and with reduced motion, confirm that the calendar supports arrow keys, and open a legacy Overview activity link. Verify the generated Astryx assets, local font files, primary button contrast and the share dialog.

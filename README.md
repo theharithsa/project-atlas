@@ -2,9 +2,9 @@
 
 Project Atlas gives product owners and maintainers one place to see what each team has scheduled, which issues still need a plan, what has closed, and which releases have a target date. It reads public GitHub Projects and links each result back to its source. Anyone can use the shared dashboard or build a personal portfolio of public GitHub accounts in their browser, without signing in.
 
-**[Open Project Atlas](https://pipeline.theharithsanotes.com/)** · [Current sprints](https://pipeline.theharithsanotes.com/#sprints) · [Backlog](https://pipeline.theharithsanotes.com/#backlog) · [Issue history](https://pipeline.theharithsanotes.com/#history) · [Release roadmap](https://pipeline.theharithsanotes.com/#roadmap)
+**[Open Project Atlas](https://pipeline.theharithsanotes.com/)** · [Current sprints](https://pipeline.theharithsanotes.com/#sprints) · [Backlog](https://pipeline.theharithsanotes.com/#backlog) · [Issue history](https://pipeline.theharithsanotes.com/#history) · [Release roadmap](https://pipeline.theharithsanotes.com/#roadmap) · [Activity](https://pipeline.theharithsanotes.com/#activity)
 
-![Project Atlas overview with three example products, a sprint calendar and upcoming milestones](docs/images/overview.jpg)
+![Dark Project Atlas overview with the Atlas globe, delivery metrics and three fictional products](docs/images/overview.jpg)
 
 *The screenshots use fictional products and issues. The live dashboard reads the configured GitHub boards.*
 
@@ -17,7 +17,7 @@ Project Atlas gives product owners and maintainers one place to see what each te
 | Which issues closed recently? | **History** lists closed issues newest first. Select a product or search by issue number, title or repository. |
 | How do I build my own dashboard? | Choose **My portfolio** at the top, enter GitHub users and organizations, then select **Save and view my portfolio**. Switch back to **Shared portfolio** at any time. |
 | How do I share the sprint I’m looking at? | In **My portfolio**, open a product and sprint, apply your filters, then choose **Share view → Copy link**. Anyone who opens it sees that live selection. Both dashboards keep their saved settings. |
-| Where can I see coding activity? | In **Overview → Coding streak**, choose **Projects** for the selected repositories or **Developer** for a GitHub username. Select a time range from four weeks through five years. Open a month for daily counts. Compare **Contributions in range** with **Lifetime contributions** since the developer joined GitHub. |
+| Where can I see coding activity? | Open **Activity** and choose **Projects** for the selected repositories or **Developer** for a GitHub username. Select a time range from four weeks through five years. Select a month or use the calendar arrows to see daily counts. Compare **Contributions in range** with **Lifetime contributions** since the developer joined GitHub. |
 | How do I change the shared accounts? | **Data sources → Edit owners on GitHub** opens the shared user and organization list for a pull request. |
 | What is expected to ship next? | **Roadmap** shows versioned milestone targets. **Data sources** links to the latest published release for each repository. |
 | Which work closed or still needs scheduling? | The overview tiles open seven-day issue history, current sprint completion, milestone-only work and release targets awaiting a date. |
@@ -32,6 +32,7 @@ Use Node.js 22 and a network connection to GitHub. The local server uses the sam
 ```sh
 git clone https://github.com/theharithsa/project-atlas.git
 cd project-atlas
+npm ci --ignore-scripts
 npm start
 ```
 
@@ -44,12 +45,13 @@ npm test
 
 ## How it works
 
-The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
+The frontend uses Astryx’s Neutral dark theme, CSS tokens and build-time Button and Badge components. It ships static HTML, CSS and JavaScript with self-hosted Space Grotesk and JetBrains Mono fonts. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
 
 | Source | Responsibility |
 | --- | --- |
 | [config/owners.json](config/owners.json) | Shared GitHub users and organizations, applied after merge without a Firebase deployment |
-| [site/](site/) | Product filter, sprint calendar, issue search, closed history, backlog and roadmap |
+| [site/](site/) | Dark workspace, Atlas motion, contribution calendar, planning and release views |
+| [scripts/build.mjs](scripts/build.mjs) | Build the pinned Astryx CSS, control markup and fonts for Hosting |
 | [functions/](functions/) | GitHub collection, visibility filtering, caching and the public HTTPS handler |
 | [firebase.json](firebase.json) | Dedicated Hosting site, function rewrite and cache headers |
 | [docs/api.md](docs/api.md) | API contract, data scope, timestamps and failure behavior |
@@ -59,4 +61,4 @@ To report a mismatch, include the public board or milestone link, the active das
 
 ## License
 
-Project Atlas and the inherited App Launchpad foundation are MIT licensed. The bundled DM Sans font is distributed under the SIL Open Font License 1.1. [MIT license](LICENSE) · [Font license](site/assets/dm-sans-license.txt) · [Template provenance](docs/versioning.md)
+Project Atlas and the inherited App Launchpad foundation are MIT licensed. Astryx is MIT licensed. Space Grotesk and JetBrains Mono are distributed under the SIL Open Font License 1.1. [MIT license](LICENSE) · [Bundled notices](https://pipeline.theharithsanotes.com/generated/licenses.txt) · [Template provenance](docs/versioning.md)

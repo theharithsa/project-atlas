@@ -7,3 +7,5 @@ Use the issue, pull request, Actions run and tag as the authoritative source for
 For 0.3.0, try settings variations in an isolated preview checkout. Verify an organization-only file and two empty arrays, then run the integrated check. [Settings file](../../config/owners.json)
 
 Version 0.4.0 adds the public owner route and browser module to local preview. Compare the shared route and one external owner route on both preview and the live domain. [Testing](../../docs/testing.md)
+
+The foundation workflow installs the pinned root design dependencies before the app test. The public site serves generated assets from a fixed allowlist in the local preview. [Operations](../../docs/delivery.md)

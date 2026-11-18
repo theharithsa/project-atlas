@@ -24,3 +24,6 @@ site/snapshot.json
 firebase-debug.log*
 *-firebase-adminsdk-*.json
 *.service-account.json
+
+# Generated public Astryx styles, components and local fonts
+site/generated/

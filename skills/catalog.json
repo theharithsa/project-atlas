@@ -137,6 +137,7 @@
       "entrypoints": [
         "scripts/check_repository.py",
         "scripts/check.sh",
+        "scripts/build.mjs",
         "scripts/add_service_skill.py",
         "scripts/repository_ruleset.py"
       ],
@@ -197,7 +198,9 @@
         "site/portfolio.js",
         "site/sharing.js",
         "site/activity.js",
-        "site/activity-range.js"
+        "site/activity-range.js",
+        "site/atlas-motion.js",
+        "site/console.css"
       ],
       "owner": "theharithsa",
       "status": "active",
