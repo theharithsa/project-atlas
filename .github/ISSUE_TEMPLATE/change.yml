@@ -1,0 +1,23 @@
+name: Task
+description: Maintenance, research, documentation or infrastructure work
+title: "[Task] "
+type: Task
+labels: ["type: task"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and scope
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Tests, observability and release impact
+      description: Record unknown decisions; never include secrets or customer data.
