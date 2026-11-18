@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 · 18 November 2026
+
+- Choose **Shared portfolio** or **My portfolio** for every dashboard view. Visitors can save up to 12 public GitHub users and organizations in their browser, reload or switch back to shared, and clear their list. [Personal portfolios](https://github.com/theharithsa/project-atlas/issues/10)
+- Read individual public owners through the versioned API. Independent owner caches, bounded work and visible partial results support live personal sprints, backlog, roadmaps and closed history.
+
 ## 0.3.0 · 18 November 2026
 
 - Maintainers can add or remove shared GitHub users and organizations from Data sources through a checked settings PR. Owner changes take effect without a Firebase deployment. [Owner settings issue](https://github.com/theharithsa/project-atlas/issues/7)

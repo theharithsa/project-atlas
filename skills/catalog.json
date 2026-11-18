@@ -164,7 +164,8 @@
         "functions/index.js",
         "functions/github.js",
         "functions/feed.js",
-        "functions/owner-settings.js"
+        "functions/owner-settings.js",
+        "functions/owner-feed.js"
       ],
       "owner": "theharithsa",
       "status": "active",
@@ -189,7 +190,8 @@
       "entrypoints": [
         "site/index.html",
         "site/app.js",
-        "site/model.js"
+        "site/model.js",
+        "site/portfolio.js"
       ],
       "owner": "theharithsa",
       "status": "active",
