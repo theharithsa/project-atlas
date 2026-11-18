@@ -22,12 +22,19 @@ Recipients see **Linked portfolio**. They can follow links within the portfolio,
 
 ## Read the overview metrics
 
+Use **Timeframe** at the top of Overview to choose 7, 14, 30, 60, 90 or 365 days. The default is 30 days. Closure and sprint periods end on the dashboard’s date in India. The release period starts on that date and extends forward by the same number of calendar dates. Clicking a tile carries the timeframe to its detail page.
+
 | Tile | What it measures and where it opens |
 | --- | --- |
-| Closed in 7 days | Unique closed board issues with a GitHub closure timestamp on today’s India calendar date or the six preceding dates. Opens the same period in History. |
-| Sprint completion | Closed leaf issue assignments divided by all leaf issue assignments across active sprints, weighted by issue count. Opens current sprints. |
+| Closed in the selected timeframe | Unique board issues with a GitHub closure timestamp in the selected calendar dates. Opens those issues in History. |
+| Open in sprint windows | Open leaf issue assignments in sprints that overlap the selected dates. Opens those windows in Sprints. |
+| Sprint completion | Closed leaf issue assignments divided by all leaf issue assignments in the matching sprint windows. |
+| Dated releases | Versioned GitHub targets due in the forward window. Opens the same dates on Roadmap. |
+| Open work and unscheduled backlog | Live counts for the selected boards. The tiles open the matching backlog filters. |
 | Needs a sprint | Open leaf issues with a delivery or planning milestone and no assigned sprint. Opens the Milestone only backlog. |
 | Undated releases | Open version milestones with outstanding work and no due date, counted once per repository milestone. Opens the matching roadmap filter. |
+
+The header counts currently discovered open public boards and unique linked repositories. Atlas checks tracked GitHub owner directories every ten minutes. New empty boards contribute to the board count. A repository counts after the feed can verify a linked public issue or pull request.
 
 ## Explore coding streaks
 

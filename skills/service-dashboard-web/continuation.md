@@ -17,3 +17,5 @@ Exercise lifetime contributions on both a short and a five-year view, then switc
 Version 0.8.0 adds the dark Astryx workspace, Atlas logo and motion, and a dedicated Activity route. Legacy Overview activity URLs map to the same range and month. Check keyboard movement, source coverage, the mobile drawer and the typography on all routes. [Redesign issue](https://github.com/theharithsa/project-atlas/issues/19)
 
 When replacing brand artwork, change the asset URL in the page shell, opening and sidebar together. Check a returning browser as well as a fresh tab. [Logo release fix](https://github.com/theharithsa/project-atlas/issues/21)
+
+Version 0.9.0 adds the overview timeframe, darker dropdown menus and a 3.1-second opening. Verify the same closure and release dates on the detail pages. Check newly discovered boards and deduplicated repositories against the counts in the heading. [Timeframe issue](https://github.com/theharithsa/project-atlas/issues/23)

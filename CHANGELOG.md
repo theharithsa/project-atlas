@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0 · 18 November 2026
+
+- Select 7–365 days on Overview to compare issue closures, sprint windows and upcoming release targets. The linked views use the same dates.
+- Match dropdown triggers and supported popups to the dark palette, and give the typed opening 3.1 seconds to play. [Overview controls](https://github.com/theharithsa/project-atlas/issues/23)
+
 ## 0.8.1 · 18 November 2026
 
 - Serve the new Atlas mark at a dedicated URL for returning visitors. Match the navigation scrollbar to the dark theme. [Asset fix](https://github.com/theharithsa/project-atlas/issues/21)

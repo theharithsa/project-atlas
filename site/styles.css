@@ -303,7 +303,6 @@ button:not(.astryx-button) {
 .crumb,
 .workspace-name,
 .snapshot-link,
-.select-wrap,
 .release-text > span,
 .section-link,
 .date-link,
@@ -383,34 +382,6 @@ button:not(.astryx-button) {
   font-size: 13px;
   line-height: 1.5;
   color: var(--sub);
-}
-.select-wrap {
-  position: relative;
-  gap: 8px;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 0 11px;
-  color: var(--sub);
-  flex-shrink: 0;
-  box-shadow: 0 1px 2px #00000022;
-}
-.select-wrap select {
-  background: transparent;
-  border: 0;
-  appearance: none;
-  outline-offset: 2px;
-  padding: 9px 3px;
-  color: var(--ink);
-  font-weight: 580;
-  font-size: 12px;
-  max-width: 175px;
-}
-.select-wrap > svg:last-child {
-  pointer-events: none;
-}
-.select-wrap.mini select {
-  font-size: 12px;
 }
 .metric-heading {
   display: flex;
@@ -1551,18 +1522,6 @@ dialog::backdrop {
     font-size: 12px;
     margin-top: 5px;
   }
-  .select-wrap {
-    gap: 2px;
-    padding: 0 6px;
-  }
-  .select-wrap > svg:first-child {
-    display: none;
-  }
-  .select-wrap select {
-    max-width: 112px;
-    font-size: 11px;
-    padding: 8px 2px;
-  }
   .metric small {
     font-size: 10px;
   }
@@ -1830,16 +1789,6 @@ dialog::backdrop {
   .page-title p {
     max-width: 100%;
   }
-  .page-title .select-wrap {
-    padding: 0 9px;
-    gap: 5px;
-  }
-  .page-title .select-wrap > svg:first-child {
-    display: block;
-  }
-  .page-title .select-wrap select {
-    max-width: 170px;
-  }
   .timeline.compact {
     min-width: 0;
     --lane: clamp(78px, 24vw, 112px);
@@ -1879,22 +1828,6 @@ dialog::backdrop {
   .sync-refresh { width: 38px; height: 38px; }
 }
 
-.portfolio-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  position: relative;
-  color: var(--sub);
-}
-.portfolio-switch select {
-  appearance: none;
-  padding: 6px 17px 6px 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font-weight: 600;
-}
-.portfolio-switch > svg:last-child { position: absolute; right: 2px; pointer-events: none; }
 .personal-settings form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1920,11 +1853,11 @@ dialog::backdrop {
 #owner-error { color: #ffadad; }
 @media (max-width: 560px) {
   .personal-settings form { grid-template-columns: 1fr; }
-  .topbar .crumb > strong, .portfolio-switch > svg:first-child { display: none; }
+  .topbar .crumb > strong { display: none; }
 }
 
 .view-actions, .share-actions, .linked-notice { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.view-actions { flex-shrink: 0; }
+.view-actions { min-width: 0; }
 .share-view, .share-actions button, .linked-notice button {
   border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--violet);
 }

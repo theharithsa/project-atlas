@@ -12,8 +12,13 @@ import {
   closedIssues,
   recentlyClosed,
   targets,
+  deliveryTimeframe,
+  timeframeOptions,
+  sprintOverlaps,
+  upcomingTarget,
+  portfolioInventory,
 } from './model.js';
-import { icon, e, external, url, productMark, dot, githubStatus, empty, tabs, progress } from './ui.js';
+import { icon, e, external, url, productMark, dot, githubStatus, empty, tabs, progress, selectPicker } from './ui.js';
 import { calendar } from './overview.js';
 let tableRows = [],
   term = '',
@@ -74,7 +79,7 @@ function paintIssues() {
       const s = p.sprints.find((s) => s.id === i.sprint);
       const reference = `${i.repo}#${i.number}`;
       const assignment = s
-        ? `<a href="${e(url('sprints', p.key, { sprint: s.id }))}">${e(s.name)}</a>`
+        ? `<a href="${e(url('sprints',p.key,{sprint:s.id,period:mode,window:timeframe?.key}))}">${e(s.name)}</a>`
         : i.milestoneTitle && hasTarget(i)
           ? external(i.milestone, e(i.milestoneTitle))
           : '<span class="muted">Unscheduled</span>';
@@ -143,7 +148,7 @@ function backlogPage(products, r) {
   const shown = active
     ? sets[scope].filter(({ i }) => (i.status || 'No status').toLowerCase() === active)
     : sets[scope];
-  const picker = `<label class="select-wrap mini">${icon('filter', 15)}<select id="status-filter" aria-label="Filter by GitHub status"><option value="">All statuses</option>${statuses.map(([key, label]) => `<option value="${e(key)}"${key === active ? ' selected' : ''}>${e(label)}</option>`).join('')}</select>${icon('down', 13)}</label>`;
+  const picker = selectPicker('status-filter','Filter by GitHub status',[['','All statuses'],...statuses],active,{leading:'filter'});
   return `<div class="backlog-controls">${tabs(
     'Backlog filters',
     buckets.map(([key, label]) => [
@@ -156,22 +161,23 @@ function backlogPage(products, r) {
 }
 export function historyPage(products, asOf, route) {
   const all = closedIssues(products);
-  const recent = recentlyClosed(all, asOf);
-  const active = route.q.get('window') === '7d' ? '7d' : 'all';
-  const rows = active === '7d' ? recent : all;
-  const windows = tabs('Issue history period', [
-    ['all', 'All time · ' + all.length, url('history', route.product)],
-    ['7d', 'Last 7 days · ' + recent.length, url('history', route.product, {window:'7d'})],
-  ], active);
-  const repositories = [...new Set(products.flatMap(p => p.repos))].sort(compare);
+  const timeframe = deliveryTimeframe(asOf,route.q.get('window'));
+  const rows = timeframe ? recentlyClosed(all,asOf,timeframe.days) : all;
+  const options = [['all','All time'],...timeframeOptions.map(([key,label]) => [key,'Last ' + label])];
+  const picker = selectPicker('history-window','History timeframe',options,timeframe?.key || 'all',{leading:'calendar'});
+  const context = timeframe ? 'Closed ' + span(timeframe.from,timeframe.through,true) : 'All closed issues';
+  const heading = `<div class="history-controls">${picker}<p class="filter-note">${e(context)} · ${rows.length} ${rows.length === 1 ? 'issue' : 'issues'}</p></div>`;
+  const repositories = portfolioInventory(products).repositories.sort(compare);
   const links = repositories.map(repo => external(
     'https://github.com/' + repo + '/issues?q=is%3Aissue+is%3Aclosed', e(repo), 'text-link',
   )).join('');
-  return windows + setIssueTable(rows, 'Closed issues', true) + (links
+  return heading + setIssueTable(rows, 'Closed issues', true) + (links
     ? `<section class="panel source-intro history-repos"><h2>Repository history</h2><p>GitHub also lists closed issues archived or removed from these boards.</p><div>${links}</div></section>`
     : '');
 }
 function sprintPage(data, products, r) {
+  const timeframe = deliveryTimeframe(data.asOf,r.q.get('window'));
+  const windowMode = timeframe && r.q.get('period') === 'window';
   const id = r.q.get('sprint');
   const detail =
     id && products.length === 1
@@ -180,29 +186,29 @@ function sprintPage(data, products, r) {
   if (detail) {
     const { p, s } = detail,
       stats = sprintStats(p, s);
+    const period = {period:windowMode ? 'window' : phase(s,data.asOf),window:timeframe?.key};
     const which = ['open', 'closed', 'all'].includes(r.q.get('show')) ? r.q.get('show') : 'all';
     const scoped = stats.work.filter((i) => which === 'all' || i.state.toLowerCase() === which);
-    return `<a class="back-link" href="${e(url('sprints', r.product, { period: phase(s, data.asOf) }))}">${icon('left', 14)} Sprint list</a><section class="panel sprint-detail tone-${p.color}"><div class="detail-name">${productMark(p)}<span>${e(p.label)}</span>${githubStatus(phase(s, data.asOf) === 'current' ? 'Current' : phase(s, data.asOf) === 'upcoming' ? 'Upcoming' : 'Past')}</div><h2>${e(s.name)}</h2><p>${e(span(s.start, s.end, true))}</p><div class="detail-progress">${progress(stats.closed, stats.total)}<span>${stats.closed} of ${stats.total} issues closed</span></div></section>
+    return `<a class="back-link" href="${e(url('sprints',r.product,period))}">${icon('left', 14)} Sprint list</a><section class="panel sprint-detail tone-${p.color}"><div class="detail-name">${productMark(p)}<span>${e(p.label)}</span>${githubStatus(phase(s, data.asOf) === 'current' ? 'Current' : phase(s, data.asOf) === 'upcoming' ? 'Upcoming' : 'Past')}</div><h2>${e(s.name)}</h2><p>${e(span(s.start, s.end, true))}</p><div class="detail-progress">${progress(stats.closed, stats.total)}<span>${stats.closed} of ${stats.total} issues closed</span></div></section>
     ${tabs(
       'Sprint issue state',
       [
         ['all', `All · ${stats.total}`],
         ['open', `Open · ${stats.open}`],
         ['closed', `Closed · ${stats.closed}`],
-      ].map(([k, l]) => [k, l, url('sprints', p.key, { sprint: id, show: k })]),
+      ].map(([k, l]) => [k, l, url('sprints',p.key,{...period,sprint:id,show:k})]),
       which,
     )}${setIssueTable(
       scoped.map((i) => ({ p, i })),
       'Sprint issues',
     )}`;
   }
-  const mode = ['current', 'upcoming', 'past'].includes(r.q.get('period'))
-    ? r.q.get('period')
-    : 'current';
+  const mode = windowMode ? 'window' : ['upcoming','past'].includes(r.q.get('period')) ? r.q.get('period') : 'current';
   const rows = products
     .flatMap((p) => p.sprints.map((s) => ({ p, s, when: phase(s, data.asOf) })))
     .sort((a, b) => compare(a.s.start, b.s.start) || compare(a.p.label, b.p.label));
-  const filtered = rows.filter((t) => t.when === mode);
+  const overlapping = timeframe ? rows.filter(({s}) => sprintOverlaps(s,timeframe)) : [];
+  const filtered = windowMode ? overlapping : rows.filter(t => t.when === mode);
   const groups = filtered
     .map(({ p, s }) => {
       const st = sprintStats(p, s);
@@ -213,26 +219,26 @@ function sprintPage(data, products, r) {
       return `<article class="sprint-card panel tone-${p.color}"><div class="detail-name">${productMark(p, true)}<strong>${e(p.label)}</strong></div><h2><a href="${e(url('sprints', p.key, { sprint: s.id }))}">${e(s.name)} ${icon('arrow', 17)}</a></h2><p class="sprint-dates">${icon('calendar', 15)} ${e(span(s.start, s.end, true))}</p>${progress(st.closed, st.total)}<div class="sprint-count"><span>${st.open} open</span><span>${st.closed}/${st.total} closed</span></div>${next ? `<a class="next-sprint" href="${e(url('sprints', p.key, { sprint: next.id }))}">Next with open work <strong>${e(shortSprint(next.name))} ${icon('right', 12)}</strong></a>` : ''}</article>`;
     })
     .join('');
-  return `${tabs(
-    'Sprint windows',
-    [
-      ['current', 'Current'],
-      ['upcoming', 'Upcoming'],
-      ['past', 'Past'],
-    ].map(([k, l]) => [
-      k,
-      l + ' · ' + rows.filter((t) => t.when === k).length,
-      url('sprints', r.product, { period: k }),
-    ]),
-    mode,
-  )}${groups ? `<div class="sprint-grid">${groups}</div>` : empty('No ' + mode + ' sprint windows', 'GitHub has no configured windows in this period for the selected products.')}`;
+  const periods = [
+    ['current','Current'], ['upcoming','Upcoming'], ['past','Past'],
+    ...(timeframe ? [['window','Last ' + timeframe.label]] : []),
+  ];
+  const bar = tabs('Sprint windows',periods.map(([key,label]) => [
+    key,label + ' · ' + (key === 'window' ? overlapping.length : rows.filter(t => t.when === key).length),
+    url('sprints',r.product,{period:key,window:timeframe?.key}),
+  ]),mode);
+  const dates = windowMode ? `<p class="filter-note">Sprint windows overlapping ${e(span(timeframe.from,timeframe.through,true))}</p>` : '';
+  return bar + dates + (groups
+    ? `<div class="sprint-grid">${groups}</div>`
+    : empty('No matching sprint windows','GitHub has no configured windows in this period for the selected products.'));
 }
 function roadmapPage(data, products, r) {
   const which = ['releases', 'plans', 'all'].includes(r.q.get('kind')) ? r.q.get('kind') : 'releases';
   const when = ['upcoming', 'dated', 'undated', 'all'].includes(r.q.get('when'))
     ? r.q.get('when')
     : 'all';
-  const all = targets(data, products);
+  const timeframe = deliveryTimeframe(data.asOf,r.q.get('window'));
+  const all = targets(data,products);
   // An undated version with no outstanding items may be historical. Keep it available in the full inventory.
   const m = all
     .filter(
@@ -245,7 +251,7 @@ function roadmapPage(data, products, r) {
     .filter(
       (x) =>
         when === 'all' ||
-        (when === 'upcoming' ? x.due && x.due >= data.asOf : when === 'dated' ? Boolean(x.due) : !x.due),
+        (when === 'upcoming' ? upcomingTarget(x,data.asOf,timeframe) : when === 'dated' ? Boolean(x.due) : !x.due),
     );
   const options = [
     ['releases', 'Release targets'],
@@ -270,19 +276,17 @@ function roadmapPage(data, products, r) {
           .join('')}</div></section>`,
     )
     .join('');
-  return `${calendar(data, products, r)}<div class="roadmap-controls">${tabs(
+  const dates = [
+    ['all','Any date'], ['upcoming',timeframe ? 'Next ' + timeframe.label : 'Upcoming dates'],
+    ['dated','Dated'], ['undated','Undated'],
+  ];
+  const picker = selectPicker('date-filter','Filter milestone dates',dates,when,{leading:'filter'});
+  const fromTo = when === 'upcoming' && timeframe ? 'Targets ' + span(data.asOf,timeframe.releaseThrough,true) + '. ' : '';
+  return `${calendar(data,products,r)}<div class="roadmap-controls">${tabs(
     'Milestone kind',
-    options.map(([k, l]) => [k, l, url('roadmap', r.product, { kind: k, when })]),
+    options.map(([key,label]) => [key,label,url('roadmap',r.product,{kind:key,when,window:timeframe?.key})]),
     which,
-  )}
-    <label class="select-wrap mini">${icon('filter', 15)}<select id="date-filter" aria-label="Filter milestone dates">${[
-      ['all', 'Any date'],
-      ['upcoming', 'Upcoming dates'],
-      ['dated', 'Dated'],
-      ['undated', 'Undated'],
-    ]
-      .map(([k, l]) => `<option value="${k}"${when === k ? ' selected' : ''}>${l}</option>`)
-      .join('')}</select>${icon('down', 13)}</label></div>
-    <p class="filter-note">${which === 'releases' ? 'Versioned GitHub milestones with a target date or outstanding work. Dates are release targets.' : which === 'plans' ? 'Delivery outcomes and queues from open repository milestones.' : 'All open GitHub milestones, including triage, maintenance and milestones with zero outstanding items.'} Progress counts issues and pull requests.</p>${list || empty('No matching milestones', 'Choose another date filter or view all open milestones.')}`;
+  )}${picker}</div>
+    <p class="filter-note">${e(fromTo)}${which === 'releases' ? 'Versioned GitHub milestones with a target date or outstanding work. Dates are release targets.' : which === 'plans' ? 'Delivery outcomes and queues from open repository milestones.' : 'All open GitHub milestones, including triage, maintenance and milestones with zero outstanding items.'} Progress counts issues and pull requests.</p>${list || empty('No matching milestones', 'Choose another date filter or view all open milestones.')}`;
 }
 export { backlogPage, sprintPage, roadmapPage, paintIssues, searchIssues, pageIssues };

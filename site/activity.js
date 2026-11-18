@@ -1,6 +1,6 @@
 import {controls} from './generated/controls.js';
 import {fmt, span} from './model.js';
-import {e, url, icon, tabs, external} from './ui.js';
+import {e, url, icon, tabs, external, selectPicker} from './ui.js';
 import {activityRange, ranges, streakSummary, monthBuckets, calendarCells} from './activity-range.js';
 export {streakSummary} from './activity-range.js';
 
@@ -155,8 +155,9 @@ export function codingPanel(data, products, route, users) {
     ['project','Projects',activityHref(route,{activity:null,developer:null,metric:null})],
     ['developer','Developer',activityHref(route,{activity:'developer',developer:login || null})],
   ],developer ? 'developer':'project');
-  const selector = `<label>Time range<select id="activity-range">${ranges.map(([key,label]) => `<option value="${key}"${range.key===key?' selected':''}>${label}</option>`).join('')}</select></label>`;
-  const measure = developer ? `<label>Streak based on<select id="activity-metric"><option value="commits">Commits</option><option value="contributions"${metric === 'contributions' ? ' selected':''}>Profile contributions</option></select></label>` : '';
+  const selector = selectPicker('activity-range','Time range',ranges,range.key,{caption:true});
+  const measure = developer ? selectPicker('activity-metric','Streak based on',
+    [['commits','Commits'],['contributions','Profile contributions']],metric,{caption:true}) : '';
   const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none">${controls.developer}</div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
   const hasScope = developer ? validLogin(login) : products.some(p => p.repos.length);
   const chartBody = hasScope ? `<div id="activity-chart" data-login="${developer ? e(login.toLowerCase()) : ''}"><p class="activity-note" role="status">Checking activity…</p></div>` :
