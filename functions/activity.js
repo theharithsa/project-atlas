@@ -112,8 +112,12 @@ export async function readSearch(url, accept, method, signal) {
   }});
   const remaining = response.headers.get('x-ratelimit-remaining');
   if (remaining === '0' || response.status === 429 || response.status === 403) {
+    const now = Date.now();
     const reset = Number(response.headers.get('x-ratelimit-reset')) * 1000;
-    searchPausedUntil = Math.max(Date.now() + 30_000, Math.min(reset, Date.now() + 600_000));
+    const retry = response.headers.get('retry-after') || '';
+    const requested = /^\d+$/.test(retry) ? now + Number(retry) * 1000 : Date.parse(retry);
+    const fallback = remaining === '0' && reset > now ? reset + 1000 : now + 60_000;
+    searchPausedUntil = Math.max(fallback, Number.isFinite(requested) ? requested : 0);
   }
   if (!response.ok) throw Object.assign(new Error('Commit search unavailable'), {retryAt:searchPausedUntil});
   return response;

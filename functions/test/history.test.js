@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readSearch} from '../activity.js';
 import {createYearHistory, historyPayload, historyRoute, profileDays} from '../history.js';
 
 const now=Date.parse('2026-11-18T10:00:00Z');
@@ -103,4 +104,14 @@ test('concurrent lookups share a calendar read and the current window advances a
   assert.deepEqual(first,second);assert.deepEqual(first.days,{'2024-01-01':2});assert.equal(calls,1);
   time+=60_000; const next=await get('contributions','example',2024);
   assert.equal(next.through,'2024-01-02');assert.deepEqual(next.days,{'2024-01-01':2,'2024-01-02':3});assert.equal(calls,2);
+});
+
+
+test('anonymous history respects GitHub’s secondary rate-limit retry interval',async t=>{
+  const fetch=t.mock.method(globalThis,'fetch',async()=>new Response(null,{status:403,headers:{'retry-after':'120','x-ratelimit-remaining':'9'}}));
+  const before=Date.now();
+  const read=()=>readSearch('https://api.github.com/search/commits','application/vnd.github+json','GET',AbortSignal.timeout(100));
+  await assert.rejects(read(),error=>error.retryAt>=before+120_000);
+  await assert.rejects(read(),error=>error.retryAt>=before+120_000);
+  assert.equal(fetch.mock.callCount(),1);
 });
