@@ -67,7 +67,7 @@ function setView(href) {
   else render();
 }
 function brand() {
-  return `<a class="brand" href="${e(url('overview'))}" aria-label="Project Atlas overview"><img src="assets/atlas.svg" width="34" height="34" alt=""><span>Project Atlas</span></a>`;
+  return `<a class="brand" href="${e(url('overview'))}" aria-label="Project Atlas overview"><img src="assets/atlas-mark.svg" width="34" height="34" alt=""><span>Project Atlas</span></a>`;
 }
 function navigation(mobile = false) {
   const activeProduct = data.projects.find((p) => p.key === r.product);
