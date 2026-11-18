@@ -1,3 +1,4 @@
+import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
 import { prepare } from './model.js';
 import { icon, e, external, url, productMark } from './ui.js';
 import { overview } from './overview.js';
@@ -22,7 +23,9 @@ const navIcons = {
   history: 'clock',
   sources: 'database',
 };
-let data, r, lastContent, busy = false, failed = false;
+let data, r, lastContent, activeRequest, failed = false;
+let preferences = readPreferences(), draft, settingsNotice = '', inputError = '';
+const noPersonalOwners = () => preferences.mode === 'personal' && !preferences.users.length && !preferences.organizations.length;
 const pollMs = 60_000;
 const editOwnersUrl = 'https://github.com/theharithsa/project-atlas/edit/main/config/owners.json';
 function checkedTime(value) {
@@ -32,14 +35,14 @@ function updateSync() {
   const status = document.getElementById('sync-label');
   if (!status || !data) return;
   const delayed = failed || Date.now() - Date.parse(data.capturedAt) > pollMs * 3;
-  const state = delayed ? 'Updates delayed' : data.unavailable.length ? 'Partial coverage' : 'GitHub live';
+  const state = noPersonalOwners() ? 'No owners selected' : delayed ? 'Updates delayed' : data.unavailable.length ? 'Partial coverage' : 'GitHub live';
   status.textContent = state;
   status.parentElement.dataset.state = delayed || data.unavailable.length ? 'warning' : 'live';
-  status.parentElement.title = state + ' · Boards checked ' + checkedTime(data.capturedAt) + ' · View data sources';
-  document.getElementById('sync-time').textContent = '· ' + checkedTime(data.capturedAt);
+  status.parentElement.title = noPersonalOwners() ? 'Choose owners in Data sources' : state + ' · Boards checked ' + checkedTime(data.capturedAt) + ' · View data sources';
+  document.getElementById('sync-time').textContent = noPersonalOwners() ? '' : '· ' + checkedTime(data.capturedAt);
   const refresh = document.getElementById('sync-refresh');
-  refresh.disabled = busy;
-  refresh.setAttribute('aria-busy', String(busy));
+  refresh.disabled = Boolean(activeRequest);
+  refresh.setAttribute('aria-busy', String(Boolean(activeRequest)));
   const checked = document.querySelector('[data-source-time]');
   if (checked) checked.textContent = checkedTime(data.capturedAt);
 }
@@ -71,7 +74,7 @@ function navigation(mobile = false) {
       )
       .join('')}</nav>
     <div class="nav-heading product-heading">Products <span>${data.projects.length}</span></div><nav class="product-links" aria-label="Filter by product">${data.projects.map((p) => `<a href="${e(url(r.page === 'history' ? 'history' : 'overview', p.key))}" class="${activeProduct === p ? 'selected-product' : ''}">${productMark(p, true)}<span>${e(p.label)}</span></a>`).join('')}</nav></div>
-    <div class="rail-footer"><a class="data-link ${r.page === 'sources' ? 'active' : ''}" href="${e(url('sources'))}">${icon('database', 17)} Data sources</a><div class="owner"><span class="owner-avatar">${icon('layers', 17)}</span><div><strong>GitHub portfolio</strong><small>${ownerCount} tracked ${ownerCount === 1 ? 'owner' : 'owners'}</small></div></div></div>`;
+    <div class="rail-footer"><a class="data-link ${r.page === 'sources' ? 'active' : ''}" href="${e(url('sources'))}">${icon('database', 17)} Data sources</a><div class="owner"><span class="owner-avatar">${icon('layers', 17)}</span><div><strong>${preferences.mode === 'personal' ? 'My portfolio' : 'Shared portfolio'}</strong><small>${ownerCount} tracked ${ownerCount === 1 ? 'owner' : 'owners'}</small></div></div></div>`;
 }
 function sharedOwnerPanel(settings) {
   if (!settings) return '';
@@ -86,11 +89,32 @@ function sharedOwnerPanel(settings) {
   }).join('');
   return `<section class="panel source-intro owner-settings"><div class="panel-head"><h2>Shared portfolio owners</h2>${external(editOwnersUrl, 'Edit owners on GitHub ' + icon('external', 13), 'text-link')}</div><dl>${groups}</dl><p>Maintainers update the shared list through a pull request. Atlas checks for merged changes every ${e(settings.refreshSeconds / 60)} minutes.</p></section>`;
 }
+function modeControl() {
+  return `<label class="portfolio-switch">${icon('layers', 16)}<select id="portfolio-mode" aria-label="Portfolio"><option value="shared">Shared portfolio</option><option value="personal"${preferences.mode === 'personal' ? ' selected' : ''}>My portfolio</option></select>${icon('down', 12)}</label>`;
+}
+function personalOwnerPanel() {
+  const users = draft?.users ?? preferences.users.join(', ');
+  const orgs = draft?.organizations ?? preferences.organizations.join(', ');
+  return `<section class="panel source-intro personal-settings"><h2>My portfolio owners</h2><p id="owner-help">Enter up to ${maxPersonalOwners} public GitHub users and organizations, separated by commas. This browser remembers your list.</p>
+    <form id="personal-owners" aria-describedby="owner-help">
+      <label>GitHub users<input id="personal-users" type="text" maxlength="2000" value="${e(users)}" placeholder="octocat" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
+      <label>GitHub organizations<input id="personal-orgs" type="text" maxlength="2000" value="${e(orgs)}" placeholder="github" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
+      <p class="form-feedback" id="owner-error" role="alert">${e(inputError)}</p>
+      <div class="owner-actions"><button class="save-owners" type="submit">Save and view my portfolio</button><button type="button" id="clear-owners">Clear list</button></div>
+      <p class="form-feedback" role="status" id="owner-notice">${e(settingsNotice)}</p>
+    </form></section>`;
+}
+function coverageNotes(notes) {
+  return notes.map(s => `<p class="coverage-note">${icon('info', 15)}<span><b>${e(s.owner)}</b> · ${e(s.reason)}.</span></p>`).join('');
+}
 function sourcePage(products) {
   const selectedCount = products.reduce((n, p) => n + p.items.length, 0),
     repoNames = [...new Set(products.flatMap((p) => p.repos))];
-  return `<section class="panel source-intro"><div class="detail-name"><span class="product-mark tone-violet">${icon('database')}</span><strong>Public GitHub feed</strong></div><p>Boards checked <b data-source-time>${e(checkedTime(data.capturedAt))}</b> on ${e(data.asOf)}. This selection covers <b>${products.length} ${products.length === 1 ? 'board' : 'boards'}</b>, <b>${repoNames.length} ${repoNames.length === 1 ? 'repository' : 'repositories'}</b> and <b>${selectedCount.toLocaleString('en-GB')} public board ${selectedCount === 1 ? 'item' : 'items'}</b>.</p><p>Atlas checks each tracked owner for new public projects every ${e((data.directoryRefreshSeconds || 600) / 60)} minutes. Add a public issue or pull request from each repository to track its releases. This tab checks boards every minute and release data refreshes on demand every three minutes. Each link opens the underlying GitHub source.</p>${data.unavailable.map((s) => `<p class="coverage-note">${icon('info', 15)}<span><b>${e(s.owner)}</b> · ${e(s.reason)}.</span></p>`).join('')}</section>
-    ${sharedOwnerPanel(data.sourceSettings)}
+  const personal = preferences.mode === 'personal';
+  const statusPanel = `<section class="panel source-intro"><div class="detail-name"><span class="product-mark tone-violet">${icon('database')}</span><strong>Public GitHub feed</strong></div><p>Boards checked <b data-source-time>${e(checkedTime(data.capturedAt))}</b> on ${e(data.asOf)}. This selection covers <b>${products.length} ${products.length === 1 ? 'board' : 'boards'}</b>, <b>${repoNames.length} ${repoNames.length === 1 ? 'repository' : 'repositories'}</b> and <b>${selectedCount.toLocaleString('en-GB')} public board ${selectedCount === 1 ? 'item' : 'items'}</b>.</p><p>Atlas checks each tracked owner for new public projects every ${e((data.directoryRefreshSeconds || 600) / 60)} minutes. Add a public issue or pull request from each repository to track its releases. This tab checks boards every minute and release data refreshes on demand every three minutes. Each link opens the underlying GitHub source.</p>${coverageNotes(data.unavailable)}</section>`;
+  return `${personal ? personalOwnerPanel() : sharedOwnerPanel(data.sourceSettings)}
+    ${noPersonalOwners() ? '' : statusPanel}
+    ${personal ? '' : personalOwnerPanel()}
     <section class="panel source-list"><div class="panel-head"><h2>Board inventory</h2></div>${products
       .map((p) => {
         const issue = p.items.filter((i) => i.kind === 'Issue').length,
@@ -139,9 +163,9 @@ function header(products) {
 }
 function render(updating = false) {
   const issueView = updating ? saveIssueView() : null;
-  const focused = updating ? document.activeElement : null;
+  const focused = updating || document.activeElement?.closest('#personal-owners') ? document.activeElement : null;
   const focusId = focused?.id;
-  const selectedRange = focusId === 'issue-search' ? [focused.selectionStart, focused.selectionEnd] : null;
+  const selectedRange = ['issue-search','personal-users','personal-orgs'].includes(focusId) ? [focused.selectionStart, focused.selectionEnd] : null;
   const focusHref = focused?.tagName === 'A' ? focused.getAttribute('href') : null;
   r = currentRoute();
   if (menu.open && !updating) menu.close();
@@ -149,7 +173,7 @@ function render(updating = false) {
     r.product === 'all' ? data.projects : data.projects.filter((p) => p.key === r.product);
   desktop.innerHTML = navigation();
   menu.innerHTML = navigation(true);
-  topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button><span class="workspace-name">${icon('layers', 16)} Workspace</span><span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="#sources" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',15)}</button></div>`;
+  topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button>${modeControl()}<span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="#sources" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',15)}</button></div>`;
   const content = {
     overview: () => overview(data, products, r),
     sprints: () => sprintPage(data, products, r),
@@ -162,7 +186,7 @@ function render(updating = false) {
   if (issueView) restoreIssueView(issueView);
   paintIssues();
   updateSync();
-  if (updating) {
+  if (focused) {
     const target = focusId ? document.getElementById(focusId) : focusHref ? [...document.links].find(a => a.getAttribute('href') === focusHref && a.getClientRects().length) : null;
     if (target) {
       target.focus({preventScroll:true});
@@ -172,6 +196,10 @@ function render(updating = false) {
 }
 document.addEventListener('click', (event) => {
   const btn = event.target.closest('button');
+  if (btn?.id === 'clear-owners') {
+    draft = {users:'', organizations:''};
+    changePortfolio({mode:'personal', users:[], organizations:[]}, 'Personal list cleared.');
+  }
   if (btn?.id === 'sync-refresh' || btn?.id === 'retry-feed') refresh();
   if (btn?.hasAttribute('data-menu')) {
     menu.showModal();
@@ -187,9 +215,27 @@ document.addEventListener('click', (event) => {
   }
 });
 document.addEventListener('input', (ev) => {
+  if (ev.target.closest('#personal-owners')) {
+    draft = {users:document.getElementById('personal-users').value, organizations:document.getElementById('personal-orgs').value};
+    inputError = ''; settingsNotice = '';
+    document.getElementById('owner-error').textContent = '';
+    document.getElementById('owner-notice').textContent = '';
+  }
   if (ev.target.id === 'issue-search') searchIssues(ev.target.value);
 });
+document.addEventListener('submit', ev => {
+  if (ev.target.id !== 'personal-owners') return;
+  ev.preventDefault();
+  try {
+    const owners = ownerLists(document.getElementById('personal-users').value, document.getElementById('personal-orgs').value);
+    changePortfolio({mode:'personal', ...owners}, 'Personal portfolio saved.');
+  } catch (error) {
+    inputError = error.message;
+    document.getElementById('owner-error').textContent = inputError;
+  }
+});
 document.addEventListener('change', (ev) => {
+  if (ev.target.id === 'portfolio-mode') changePortfolio({...preferences, mode:ev.target.value});
   if (ev.target.id === 'product-select') {
     const keep = Object.fromEntries(r.q);
     delete keep.product;
@@ -228,14 +274,43 @@ window.addEventListener('hashchange', () => {
     main.focus({ preventScroll: true });
   }
 });
+function pendingPage(error) {
+  if (menu.open) menu.close();
+  desktop.innerHTML = brand();
+  menu.replaceChildren();
+  topbar.innerHTML = `<div class="crumb">${modeControl()}</div>`;
+  const personal = preferences.mode === 'personal';
+  const title = error ? 'GitHub feed unavailable' : 'Checking public GitHub projects…';
+  document.title = (personal ? 'My portfolio' : 'Shared portfolio') + ' · Project Atlas';
+  main.innerHTML = `<section class="panel error-state"><h1>${title}</h1>${error ? `<p>We’ll retry automatically.</p>${coverageNotes(error.unavailable || [])}<button id="retry-feed">Try again</button>` : ''}</section>` +
+    (personal || error ? personalOwnerPanel() : '') +
+    (error && !personal ? `<p>${external(editOwnersUrl, 'Check shared owner settings on GitHub', 'text-link')}</p>` : '');
+}
+function changePortfolio(next, notice = '', persist = true) {
+  if (activeRequest) activeRequest.abort();
+  activeRequest = null;
+  data = null; lastContent = null; previous = null; failed = false;
+  preferences = next; draft = null; inputError = ''; settingsNotice = notice;
+  if (persist && !writePreferences(next)) settingsNotice = 'In use for this tab. Browser storage is unavailable.';
+  if (noPersonalOwners()) location.hash = 'sources';
+  pendingPage();
+  refresh();
+}
+window.addEventListener('storage', event => {
+  if (event.key !== preferencesKey && event.key !== null) return;
+  const next = readPreferences();
+  if (JSON.stringify(next) !== JSON.stringify(preferences)) changePortfolio(next, '', false);
+});
 async function refresh() {
-  if (busy) return;
-  busy = true;
+  if (activeRequest) return;
+  const request = new AbortController();
+  activeRequest = request;
   updateSync();
   try {
-    const res = await fetch('/api/v1/portfolio', {cache:'no-cache', signal:AbortSignal.timeout(55000)});
-    if (!res.ok) throw Error('Feed unavailable');
-    const payload = await res.json();
+    const payload = preferences.mode === 'personal'
+      ? await personalPortfolio(preferences, request.signal)
+      : await fetchSnapshot('/api/v1/portfolio', request.signal);
+    if (activeRequest !== request) return;
     const {capturedAt, ...rest} = payload;
     const signature = JSON.stringify({...rest, repositories:Object.fromEntries(Object.entries(rest.repositories).map(([name, {capturedAt:checked, ...repo}]) => [name, repo]))});
     const changed = signature !== lastContent, hadData = Boolean(data);
@@ -246,22 +321,22 @@ async function refresh() {
       render(hadData);
       previous = r;
     }
-  } catch {
+  } catch (error) {
+    if (activeRequest !== request) return;
     failed = true;
     if (!data || Date.now() - Date.parse(data.capturedAt) > 10 * pollMs) {
       data = null;
-      desktop.replaceChildren();
-      topbar.replaceChildren();
-      menu.replaceChildren();
-      if (menu.open) menu.close();
-      main.innerHTML = `<section class="panel error-state"><h1>GitHub feed unavailable</h1><p>We’ll retry automatically. Maintainers can also ${external(editOwnersUrl, 'check the shared owner settings', 'text-link')}.</p><button id="retry-feed">Try again</button></section>`;
+      pendingPage(error);
     }
   } finally {
-    busy = false;
-    updateSync();
+    if (activeRequest === request) {
+      activeRequest = null;
+      updateSync();
+    }
   }
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 window.addEventListener('online', refresh);
 setInterval(() => { if (!document.hidden) refresh(); }, pollMs);
+pendingPage();
 refresh();

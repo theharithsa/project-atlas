@@ -15,7 +15,11 @@ class SourceError extends Error {
     this.status = code;
   }
 }
-async function read(url, accept = 'text/html', method = 'GET') {
+let personalRestPauseUntil = 0;
+async function readGitHub(url, accept = 'text/html', method = 'GET', deadline) {
+  const rest = accept === 'application/vnd.github+json';
+  if (deadline && rest && Date.now() < personalRestPauseUntil)
+    throw new Error('GitHub REST capacity reserved for the shared feed');
   const response = await fetch(url, {
     headers: {
       ...headers,
@@ -24,8 +28,14 @@ async function read(url, accept = 'text/html', method = 'GET') {
     },
     method,
     redirect: 'manual',
-    signal: AbortSignal.timeout(12000),
+    signal: deadline ? AbortSignal.any([deadline, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000),
   });
+  if (rest) {
+    const remaining = response.headers.get('x-ratelimit-remaining');
+    const reset = Number(response.headers.get('x-ratelimit-reset')) * 1000;
+    if (remaining !== null && Number(remaining) <= 10 && Number.isFinite(reset))
+      personalRestPauseUntil = Math.max(personalRestPauseUntil, Math.min(reset, Date.now() + 3_600_000));
+  }
   if (method === 'HEAD' && response.status >= 300 && response.status < 400)
     return response;
   if (!response.ok) throw new SourceError(response.status);
@@ -209,7 +219,7 @@ export function flatBoardPage(path, cursor) {
   if (cursor) endpoint.searchParams.set('after', cursor);
   return endpoint;
 }
-async function publicHealth(html, id) {
+async function publicHealth(html, id, read) {
   try {
     const path = embedded(html, 'memex-status-update-api-data').url;
     if (path !== '/memexes/' + id + '/statuses') return null;
@@ -230,7 +240,7 @@ async function publicHealth(html, id) {
     return null;
   }
 }
-async function collectBoard(board) {
+async function collectBoard(board, read) {
   const html = await (await read(board.url + '?filterQuery=')).text();
   const meta = embedded(html, 'memex-data');
   if (
@@ -251,7 +261,7 @@ async function collectBoard(board) {
     publicPages(async (cursor) =>
       (await read(flatBoardPage(path, cursor), 'application/json')).json(),
     ),
-    publicHealth(html, meta.id),
+    publicHealth(html, meta.id, read),
   ]);
   return {
     key: board.account.toLowerCase() + '-' + board.number,
@@ -268,7 +278,7 @@ async function collectBoard(board) {
     ...boardContents(rows, fields),
   };
 }
-async function milestonesFromApi(slug) {
+async function milestonesFromApi(slug, read) {
   const list = [];
   for (let page = 1; page <= 100; page++) {
     const res = await read(
@@ -293,7 +303,7 @@ async function milestonesFromApi(slug) {
   }
   throw new Error('Too many milestone pages');
 }
-async function milestones(slug) {
+async function milestones(slug, read) {
   try {
     const data = await (
       await read(
@@ -328,10 +338,10 @@ async function milestones(slug) {
     });
   } catch (error) {
     if (hidden.has(error.status)) throw error;
-    return milestonesFromApi(slug);
+    return milestonesFromApi(slug, read);
   }
 }
-async function latestRelease(slug, previous) {
+async function latestRelease(slug, previous, read) {
   const base = SITE + '/' + slug + '/releases';
   const response = await read(base + '/latest', 'text/html', 'HEAD');
   const location = response.headers.get('location');
@@ -358,15 +368,14 @@ async function latestRelease(slug, previous) {
     publishedAt,
   };
 }
-const repoCache = new Map();
 const REPO_TTL = 3 * 60_000;
-async function collectRepo(slug) {
+async function collectRepo(slug, repoCache, read) {
   const cached = repoCache.get(slug);
   if (cached && Date.now() - Date.parse(cached.capturedAt) < REPO_TTL)
     return cached;
   const [targets, published] = await Promise.all([
-    milestones(slug),
-    latestRelease(slug, cached?.published),
+    milestones(slug, read),
+    latestRelease(slug, cached?.published, read),
   ]);
   const value = {
     name: slug,
@@ -393,10 +402,16 @@ async function boundedResults(values, load) {
   await Promise.all(Array.from({length: Math.min(4, values.length)}, worker));
   return results;
 }
-const discover = createProjectDirectory((url) => read(url, 'application/vnd.github+json'));
-export async function collectPortfolio(loadSettings = publishedOwnerSettings) {
+function collectorState() {
+  return {discover: createProjectDirectory(), repoCache: new Map()};
+}
+const sharedState = collectorState();
+
+export async function collectPortfolio(loadSettings = publishedOwnerSettings, state = sharedState, read = readGitHub) {
+  const {discover, repoCache} = state;
   const {owners, stale} = await loadSettings();
-  const directories = await boundedResults(owners, discover);
+  const directories = await boundedResults(owners, owner =>
+    discover(owner, url => read(url, 'application/vnd.github+json')));
   const unavailable = [], boards = [], projects = [];
   if (stale) unavailable.push({owner: 'Portfolio settings', reason: 'Using the last verified owner list'});
   for (const [i, result] of directories.entries()) {
@@ -404,8 +419,8 @@ export async function collectPortfolio(loadSettings = publishedOwnerSettings) {
     else unavailable.push({owner: owners[i].account, reason: 'Public project directory unavailable'});
   }
   if (directories.length && directories.every((r) => r.status === 'rejected'))
-    throw new Error('Public project directories temporarily unavailable');
-  const boardsFound = await boundedResults(boards, collectBoard);
+    throw directories.length === 1 ? directories[0].reason : new Error('Public project directories temporarily unavailable');
+  const boardsFound = await boundedResults(boards, board => collectBoard(board, read));
   for (const [i, result] of boardsFound.entries()) {
     if (result.status === 'fulfilled') projects.push(result.value);
     else if (!removedBoard.has(result.reason?.status))
@@ -420,7 +435,7 @@ export async function collectPortfolio(loadSettings = publishedOwnerSettings) {
   )
     throw new Error('Public boards temporarily unavailable');
   const names = [...new Set(projects.flatMap((p) => p.repos))];
-  const fetched = await boundedResults(names, collectRepo);
+  const fetched = await boundedResults(names, slug => collectRepo(slug, repoCache, read));
   const repositories = {};
   for (const [i, result] of fetched.entries()) {
     const name = names[i];
@@ -459,5 +474,25 @@ export async function collectPortfolio(loadSettings = publishedOwnerSettings) {
     directoryRefreshSeconds,
     boardRefreshSeconds: 60,
     repositoryRefreshSeconds: 180,
+  };
+}
+
+export function createPersonalCollector(owner) {
+  const state = collectorState();
+  const settings = async () => ({owners: [owner], stale: false});
+  return async () => {
+    // The public owner route has its own work budget and never consumes the shared cache.
+    const deadline = AbortSignal.timeout(45_000);
+    let remaining = 160;
+    const read = (url, accept, method) => {
+      deadline.throwIfAborted();
+      if (--remaining < 0) throw new Error('Owner exceeds the refresh budget');
+      return readGitHub(url, accept, method, deadline);
+    };
+    const data = await collectPortfolio(settings, state, read);
+    if (deadline.aborted || remaining < 0)
+      data.unavailable.push({owner:owner.account, reason:'Owner refresh limit reached. Some boards or releases may be missing'});
+    const {sourceSettings, ...snapshot} = data;
+    return snapshot;
   };
 }

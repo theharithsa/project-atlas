@@ -152,7 +152,7 @@
         "sh scripts/check.sh"
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
-      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
+      "lastReviewedRevision": "fcf8815d133604f65a842e217915a40c7c939ae8"
     },
     {
       "id": "portfolio-feed",
@@ -164,7 +164,8 @@
         "functions/index.js",
         "functions/github.js",
         "functions/feed.js",
-        "functions/owner-settings.js"
+        "functions/owner-settings.js",
+        "functions/owner-feed.js"
       ],
       "owner": "theharithsa",
       "status": "active",
@@ -178,7 +179,7 @@
         "npm test"
       ],
       "continuation": "skills/service-portfolio-feed/continuation.md",
-      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
+      "lastReviewedRevision": "fcf8815d133604f65a842e217915a40c7c939ae8"
     },
     {
       "id": "dashboard-web",
@@ -189,7 +190,8 @@
       "entrypoints": [
         "site/index.html",
         "site/app.js",
-        "site/model.js"
+        "site/model.js",
+        "site/portfolio.js"
       ],
       "owner": "theharithsa",
       "status": "active",
@@ -205,7 +207,7 @@
         "npm test"
       ],
       "continuation": "skills/service-dashboard-web/continuation.md",
-      "lastReviewedRevision": "4b7d0f7b06ec43d96e09c6d566d174db61d39e03"
+      "lastReviewedRevision": "fcf8815d133604f65a842e217915a40c7c939ae8"
     }
   ]
 }

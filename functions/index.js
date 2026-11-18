@@ -1,5 +1,6 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { currentPortfolio } from './feed.js';
+import {ownerFromPath, publicOwnerFeed, missingOwner} from './owner-feed.js';
 
 export const atlasPublicFeed = onRequest(
   {
@@ -12,15 +13,16 @@ export const atlasPublicFeed = onRequest(
   },
   async (req, res) => {
     res.set('X-Content-Type-Options', 'nosniff');
+    const owner = ownerFromPath(req.path);
     if (
-      !['/', '/api/v1/portfolio'].includes(req.path) ||
+      (!owner && !['/', '/api/v1/portfolio'].includes(req.path)) ||
       Object.keys(req.query).length
     )
       return res.status(404).end();
     if (!['GET', 'HEAD'].includes(req.method))
       return res.set('Allow', 'GET, HEAD').status(405).end();
     try {
-      const data = await currentPortfolio();
+      const data = owner ? await publicOwnerFeed(owner) : await currentPortfolio();
       // Share the remaining cache lifetime across Hosting edges and across visitors.
       const ttl = data.unavailable.length ? 20 : 60;
       const remaining = Math.max(
@@ -33,7 +35,9 @@ export const atlasPublicFeed = onRequest(
           'public, max-age=0, s-maxage=' + remaining + ', must-revalidate',
         )
         .json(data);
-    } catch {
+    } catch (error) {
+      if (owner && missingOwner(error))
+        return res.status(404).set('Cache-Control', 'no-store').json({error: 'public_owner_unavailable'});
       return res
         .status(503)
         .set('Cache-Control', 'no-store')

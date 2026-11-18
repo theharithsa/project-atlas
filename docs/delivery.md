@@ -33,7 +33,7 @@ npm test
 firebase deploy --project the-harithsa-notes-94 --only functions:project-atlas,hosting:the-harithsa-notes-pipeline
 ```
 
-Use the named Hosting site and codebase because this Firebase project also hosts other products. Check HTTPS, `GET /api/v1/portfolio`, source coverage, a sprint drilldown and closed-issue history against a public GitHub issue. Record the hosting version and function revision separately from the Git commit.
+Use the named Hosting site and codebase because this Firebase project also hosts other products. Check HTTPS, `GET /api/v1/portfolio`, source coverage, a sprint drilldown and closed-issue history against a public GitHub issue. Verify a public single-owner request, then switch between shared and personal in the browser. Record the hosting version and function revision separately from the Git commit.
 
 ## Recover
 

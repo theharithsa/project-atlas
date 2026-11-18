@@ -14,7 +14,7 @@ function nextCursor(link) {
 // Cache membership only. Every feed refresh still verifies each board while signed out.
 export function createProjectDirectory(readPage, clock = Date.now) {
   const cache = new Map();
-  return async function discover({account, kind}) {
+  return async function discover({account, kind}, loadPage = readPage) {
     const endpoint = new URL(api + '/' + kind + '/' + account + '/projectsV2');
     const key = endpoint.href;
     const cached = cache.get(key);
@@ -23,7 +23,7 @@ export function createProjectDirectory(readPage, clock = Date.now) {
     endpoint.searchParams.set('per_page', '100');
     const found = new Map(), seenCursors = new Set();
     for (let page = 0; page < 100; page++) {
-      const response = await readPage(endpoint.href);
+      const response = await loadPage(endpoint.href);
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('Invalid project directory');
       for (const row of rows) {

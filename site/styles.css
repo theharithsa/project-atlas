@@ -1886,3 +1886,48 @@ dialog::backdrop {
   #sync-time { display: none; }
   .sync-refresh { width: 38px; height: 38px; }
 }
+
+.portfolio-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  color: var(--sub);
+}
+.portfolio-switch select {
+  appearance: none;
+  padding: 6px 17px 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 600;
+}
+.portfolio-switch > svg:last-child { position: absolute; right: 2px; pointer-events: none; }
+.personal-settings form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-top: 16px;
+}
+.personal-settings label { display: grid; gap: 6px; font-weight: 600; }
+.personal-settings input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  font-weight: 400;
+}
+.owner-actions, .personal-settings .form-feedback { grid-column: 1 / -1; }
+.owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.owner-actions button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
+.owner-actions .save-owners { background: var(--violet); border-color: var(--violet); color: white; }
+.personal-settings .form-feedback { margin: 0; }
+.form-feedback:empty { display: none; }
+#owner-error { color: #9d312c; }
+@media (max-width: 560px) {
+  .personal-settings form { grid-template-columns: 1fr; }
+  .topbar .crumb > strong, .portfolio-switch > svg:first-child { display: none; }
+}

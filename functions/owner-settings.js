@@ -1,6 +1,10 @@
 const configUrl = 'https://raw.githubusercontent.com/theharithsa/project-atlas/main/config/owners.json';
 export const settingsRefreshSeconds = 300;
 
+export function isGitHubLogin(value) {
+  return typeof value === 'string' && value.length <= 39 && /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/i.test(value);
+}
+
 export function parseOwners(config) {
   const kinds = {users: 'users', organizations: 'orgs'};
   if (!config || typeof config !== 'object' || Array.isArray(config) ||
@@ -10,8 +14,7 @@ export function parseOwners(config) {
   for (const [key, kind] of Object.entries(kinds)) {
     if (!Array.isArray(config[key])) throw new Error(key + ' must be an array of GitHub logins');
     for (const account of config[key]) {
-      if (typeof account !== 'string' || account.length > 39 ||
-          !/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/i.test(account))
+      if (!isGitHubLogin(account))
         throw new Error('Invalid GitHub login in ' + key);
       const id = account.toLowerCase();
       if (owners.has(id)) {

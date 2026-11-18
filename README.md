@@ -1,6 +1,6 @@
 # Project Atlas
 
-Project Atlas gives product owners and maintainers one place to see what each team has scheduled, which issues still need a plan, what has closed, and which releases have a target date. It reads public GitHub Projects and links each result back to its source. Anyone can use the dashboard without signing in.
+Project Atlas gives product owners and maintainers one place to see what each team has scheduled, which issues still need a plan, what has closed, and which releases have a target date. It reads public GitHub Projects and links each result back to its source. Anyone can use the shared dashboard or build a personal portfolio of public GitHub accounts in their browser, without signing in.
 
 **[Open Project Atlas](https://pipeline.theharithsanotes.com/)** · [Current sprints](https://pipeline.theharithsanotes.com/#sprints) · [Backlog](https://pipeline.theharithsanotes.com/#backlog) · [Issue history](https://pipeline.theharithsanotes.com/#history) · [Release roadmap](https://pipeline.theharithsanotes.com/#roadmap)
 
@@ -15,7 +15,8 @@ Project Atlas gives product owners and maintainers one place to see what each te
 | What is in flight for one product? | Choose the product in **Overview**, then open a sprint in the calendar to see its issues. |
 | Which issues still need planning? | **Backlog → Unscheduled** shows open work without a sprint or delivery milestone. **Board backlog** shows the source board’s Backlog and Todo statuses, including scheduled issues. |
 | Which issues closed recently? | **History** lists closed issues newest first. Select a product or search by issue number, title or repository. |
-| How do I change the tracked accounts? | **Data sources → Edit owners on GitHub** opens the shared user and organization list for a pull request. |
+| How do I build my own dashboard? | Choose **My portfolio** at the top, enter GitHub users and organizations, then select **Save and view my portfolio**. Switch back to **Shared portfolio** at any time. |
+| How do I change the shared accounts? | **Data sources → Edit owners on GitHub** opens the shared user and organization list for a pull request. |
 | What is expected to ship next? | **Roadmap** shows versioned milestone targets. **Data sources** links to the latest published release for each repository. |
 | How fresh are the numbers? | The status at the top shows the last board check in India time. Open **Data sources** for coverage or use the refresh button. |
 
@@ -40,7 +41,7 @@ npm test
 
 ## How it works
 
-The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Concurrent visitors share the same refresh. The browser never needs a GitHub token.
+The frontend is plain HTML, CSS and JavaScript. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
 
 | Source | Responsibility |
 | --- | --- |
