@@ -167,7 +167,8 @@
         "functions/owner-settings.js",
         "functions/owner-feed.js",
         "functions/activity.js",
-        "functions/history.js"
+        "functions/history.js",
+        "functions/lifetime.js"
       ],
       "owner": "theharithsa",
       "status": "active",

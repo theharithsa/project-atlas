@@ -14,3 +14,5 @@ Run `npm ci --prefix functions --ignore-scripts` and `npm test`. Check live cove
 The activity collector aggregates public default-branch commits for verified repositories and indexed public commits for a developer login. Retain partial counts and the original check time when upstream coverage is incomplete. [Activity contract](../../docs/api.md#read-public-commit-activity)
 
 Annual history in `functions/history.js` verifies board membership, pinned repository revisions, search pagination and exact profile day counts. Retain coverage and retry intervals when a year cannot be completed in a single read. [Calendar-year API](../../docs/api.md#calendar-year-history)
+
+The lifetime collector in `functions/lifetime.js` uses a validated public account creation date and cached annual contribution calendars. Preserve bounded batches, creation-day clipping and coverage counts. [Lifetime contract](../../docs/api.md#lifetime-profile-contributions)

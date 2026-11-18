@@ -64,3 +64,9 @@ The collector derives repository membership from public issues and pull requests
 | `503` | The feed could not read the public boards. The error code is `github_unavailable` and the function sends `Retry-After: 30` and disables response caching. |
 
 Cloud and local previews share the settings validator and collector. The local preview reads the owner file in its checkout. The local server exposes the same single-owner paths using a lightweight HTTP adapter and reports `source_unavailable` for an upstream failure. There is no durable application database or user write endpoint.
+
+### Lifetime profile contributions
+
+`GET /api/v1/developers/{login}/contributions/lifetime` returns the developer login and a `lifetime` summary. It also accepts HEAD and requires an empty query string. For example, the [live lifetime total for theharithsa](https://pipeline.theharithsanotes.com/api/v1/developers/theharithsa/contributions/lifetime) includes every published calendar date from GitHub’s UTC account creation date through the dashboard’s current date. The selected chart range is independent.
+
+The summary includes inclusive `start` and `through` dates, `total`, `status`, `yearsChecked`, `yearsTotal` and `retryAfterSeconds`. A `complete` total includes verified empty years. `partial` reports a confirmed minimum and `unavailable` has a null total. Follow the retry interval for an unfinished history. The function reads public account metadata and reuses the same signed-out year calendars as the chart. It returns only the aggregate and coverage. A missing developer or organization login returns 404. A temporary account lookup failure or a busy collector returns 503. [GitHub user lookup](https://docs.github.com/en/rest/users/users#get-a-user) · [Contribution visibility](https://docs.github.com/en/account-and-profile/reference/profile-contributions-reference)

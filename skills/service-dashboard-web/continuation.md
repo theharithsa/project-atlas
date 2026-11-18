@@ -11,3 +11,5 @@ Version 0.4.0 adds a personal portfolio alongside the shared default. Test save,
 Version 0.5.0 shares a temporary personal route and adds four delivery tiles and two commit streak scopes. Verify the share, reload and return journey, seven-day History and both calendars against source data. [Sharing](https://github.com/theharithsa/project-atlas/issues/12) · [Metrics and activity](https://github.com/theharithsa/project-atlas/issues/13)
 
 Version 0.6.0 offers four-week through five-year ranges, commit and contribution totals, and a month-to-day drilldown. Check the leap day, range changes and a linked developer view. [History issue](https://github.com/theharithsa/project-atlas/issues/15)
+
+Exercise lifetime contributions on both a short and a five-year view, then switch developers. Check the join date, partial-year progress, mobile wrapping and shared links. [Lifetime issue](https://github.com/theharithsa/project-atlas/issues/17)

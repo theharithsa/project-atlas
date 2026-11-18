@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {activityRange,ranges,streakSummary,monthBuckets} from '../site/activity-range.js';
-import {activityHref,historyPaths} from '../site/activity.js';
+import {activityHref,historyPaths,lifetimeStat} from '../site/activity.js';
 import {viewLink,decodeView} from '../site/sharing.js';
 
 test('selectable inclusive windows span calendar years, leap years and month ends',()=>{
@@ -37,6 +37,23 @@ test('long history uses public board paths and independent profile and commit ye
     {url:'https://example.org/invalid',key:'none',repos:['unrelated/repo']}];
   assert.equal(historyPaths(projects,r,'').length,6);
   assert.ok(historyPaths(projects,r,'').every(t=>t.path.startsWith('/api/v1/owners/orgs/team/projects/2/commits/')));
-  const dev=historyPaths([],r,'alice');assert.equal(dev.length,12);assert.equal(dev.filter(t=>t.kind==='profile').length,6);
+  const dev=historyPaths([],r,'alice');assert.equal(dev.length,13);assert.equal(dev.filter(t=>t.kind==='profile').length,6);
   assert.ok(dev.some(t=>t.path.endsWith('/commits/2021')));
+});
+
+test('lifetime follows the developer independently of chart range, scope or measure',()=>{
+  for(const key of ['28d','3m','5y']) {
+    const r=activityRange('2026-11-18',key);
+    for(const login of ['alice','bob']) {
+      const tasks=historyPaths([],r,login).filter(t=>t.kind==='lifetime');
+      assert.deepEqual(tasks,[{kind:'lifetime',path:'/api/v1/developers/'+login+'/contributions/lifetime'}]);
+    }
+    assert.equal(historyPaths([],r,'').some(t=>t.kind==='lifetime'),false);
+  }
+  const base={start:'2016-02-29',total:0,yearsChecked:10,yearsTotal:11};
+  assert.deepEqual(lifetimeStat({...base,status:'complete'}),['Lifetime contributions','0','','Since 29 Feb 2016']);
+  assert.equal(lifetimeStat({...base,status:'partial',total:15})[1],'≥15');
+  assert.match(lifetimeStat({...base,status:'partial'})[3],/10 of 11 years checked/);
+  assert.equal(lifetimeStat({...base,total:null,status:'unavailable'})[1],'—');
+  assert.equal(lifetimeStat(null,'Temporarily unavailable')[3],'Temporarily unavailable');
 });

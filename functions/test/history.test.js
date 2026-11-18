@@ -115,3 +115,15 @@ test('anonymous history respects GitHub’s secondary rate-limit retry interval'
   await assert.rejects(read(),error=>error.retryAt>=before+120_000);
   assert.equal(fetch.mock.callCount(),1);
 });
+
+test('a December 31 calendar is rechecked after India New Year even while its hourly cache is fresh',async()=>{
+  let time=Date.parse('2025-12-31T18:29:50Z'),calls=0;
+  const get=createYearHistory({web:async()=>{
+    const days=Array(365).fill(0);days[364]=++calls;
+    return new Response(htmlFor('2025-01-01',days));
+  }},()=>time);
+  assert.equal((await get('contributions','alice',2025)).days['2025-12-31'],1);
+  time+=20_000;
+  assert.equal((await get('contributions','alice',2025)).days['2025-12-31'],2);
+  assert.equal(calls,2);
+});

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0 · 18 November 2026
+
+- Compare a developer’s contributions in the selected range with their lifetime total since joining GitHub. Older accounts show how many calendar years have been checked as the total fills in. [Lifetime contributions](https://github.com/theharithsa/project-atlas/issues/17)
+
 ## 0.6.0 · 18 November 2026
 
 - Choose activity ranges from four weeks to five years for projects and developers. Inspect monthly and daily counts and share the same range and month. [Activity history](https://github.com/theharithsa/project-atlas/issues/15)
