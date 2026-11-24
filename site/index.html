@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#080e15" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b1519" />
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
       content="Live public GitHub project boards, current sprints, backlogs, release roadmaps, shareable portfolios and project and developer coding streaks."
@@ -14,6 +14,7 @@
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <title>Project Atlas · Delivery overview</title>
+    <script src="appearance.js"></script>
     <link rel="icon" href="assets/atlas-mark.svg" type="image/svg+xml" />
     <link rel="preload" href="generated/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="generated/astryx.css" />
@@ -23,7 +24,7 @@
   <body>
     <div class="atlas-intro" id="atlas-intro" aria-hidden="true" hidden>
       <div class="boot-identity">
-        <span class="boot-emblem"><img src="assets/atlas-mark.svg" alt="" width="74" height="74" /></span>
+        <span class="boot-emblem"><span class="boot-sight"></span><img src="assets/atlas-mark.svg" alt="" width="70" height="70" /></span>
         <strong>Project Atlas</strong>
         <span class="terminal-line boot-line"><span class="prompt">$</span><span class="typed-command">atlas open --public</span></span>
       </div>
@@ -32,7 +33,15 @@
     <div class="shell">
       <aside class="rail" id="desktop-nav" aria-label="Workspace navigation"></aside>
       <div class="workspace">
-        <header id="topbar" class="topbar"></header>
+        <header class="topbar">
+          <div id="topbar"></div>
+          <fieldset class="appearance">
+            <legend class="sr-only">Appearance</legend>
+            <label title="Use device appearance"><input type="radio" name="atlas-appearance" value="system" aria-label="System theme" checked /><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg></span></label>
+            <label title="Use light appearance"><input type="radio" name="atlas-appearance" value="light" aria-label="Light theme" /><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></label>
+            <label title="Use dark appearance"><input type="radio" name="atlas-appearance" value="dark" aria-label="Dark theme" /><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 14.4A8.6 8.6 0 0 1 9.6 3.8a8.7 8.7 0 1 0 10.6 10.6Z"/></svg></span></label>
+          </fieldset>
+        </header>
         <main id="content" tabindex="-1" class="main">
           <p class="initial">Checking public GitHub projects…</p>
         </main>

@@ -1,6 +1,6 @@
 {
   "name": "project-atlas",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "description": "A read-only portfolio of public GitHub Projects, sprints, backlogs and releases.",

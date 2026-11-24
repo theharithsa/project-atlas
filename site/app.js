@@ -1,5 +1,6 @@
 import {controls} from './generated/controls.js';
-import {playAtlasIntro, drawAtlasGlobe} from './atlas-motion.js';
+import {playAtlasIntro, enterWorkspacePage} from './atlas-motion.js';
+import {terrainPanel, mountTerrain} from './terrain.js';
 import {developerRoute, activityHref, hydrateActivity, codingPanel, selectActivityDay, stepActivityDay} from './activity.js';
 import {decodeView, viewLink, linkedIssueFilter, dashboardPage} from './sharing.js';
 import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
@@ -29,7 +30,7 @@ const navIcons = {
   activity: 'code',
   sources: 'database',
 };
-let data, r, lastContent, activeRequest, failed = false, heroTyped = false;
+let data, r, lastContent, activeRequest, terrain, pointerDestination, failed = false, heroTyped = false;
 let savedPreferences = readPreferences(), linked = decodeView(location.hash);
 let preferences = linked?.owners ? {mode:'personal', ...linked.owners} : savedPreferences;
 let draft, settingsNotice = '', inputError = '';
@@ -193,18 +194,17 @@ function header(products, timeframe) {
     {leading:'calendar',caption:true,kind:'timeframe'}) : '';
   const actions = share + productPicker + periodPicker;
   if (r.page !== 'overview' || product)
-    return `<header class="page-title"><div><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions ? '<div class="view-actions">' + actions + '</div>' : ''}</header>`;
+    return `<header class="page-title"><div><span class="terminal-line route-command" aria-hidden="true"><span class="prompt">$</span>atlas ${e(r.page)}</span><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions ? '<div class="view-actions">' + actions + '</div>' : ''}</header>`;
 
   const users = preferences.mode === 'personal' ? preferences.users : data.sourceSettings?.users || [];
   const filters = users.length ? {activity:'developer',metric:'contributions',range:'1y'} : {};
   const typingClass = heroTyped ? '' : ' type-on-entry';
   heroTyped = true;
   const cta = controls.activity.replace('#ATLAS_ACTIVITY_HREF',() => e(url('activity','all',filters)));
-  return `<header class="atlas-hero"><div class="hero-copy">
+  return `<header class="atlas-hero${typingClass}"><div class="hero-copy">
     <span class="terminal-line hero-command${typingClass}" aria-hidden="true"><span class="prompt">$</span><span class="typed-command">atlas status --source github</span></span>
-    <h1>Delivery overview</h1><p>${e(subtitle)}</p>
-    <div class="hero-actions">${cta}${actions}</div>
-    </div><div class="atlas-art" aria-hidden="true"><canvas data-atlas-orbit width="680" height="440"></canvas></div></header>`;
+    <h1>Delivery <em>overview</em></h1><p>${e(subtitle)}</p>
+    </div>${terrainPanel()}<div class="hero-actions"><div class="hero-filters">${productPicker}${periodPicker}</div><div class="hero-links">${share}${cta}</div></div></header>`;
 }
 function render(updating = false) {
   const issueView = updating ? saveIssueView() : null;
@@ -244,7 +244,7 @@ function render(updating = false) {
   if (issueView || linked) restoreIssueView(issueView || linkedIssueFilter(r.q));
   paintIssues();
   hydrateActivity(data, r, selectedDay);
-  drawAtlasGlobe();
+  terrain = mountTerrain(main.querySelector('.terrain'),products,timeframe?.key,terrain);
   updateSync();
   if (focused) {
     const target = focusId ? document.getElementById(focusId) : focusDate ? main.querySelector(`[data-activity-day="${focusDate}"]`) : focusHref ? [...document.links].find(a => a.getAttribute('href') === focusHref && a.getClientRects().length) : null;
@@ -255,7 +255,10 @@ function render(updating = false) {
     }
   }
 }
+document.addEventListener('atlas:appearance', () => terrain?.repaint());
 document.addEventListener('click', (event) => {
+  const link = event.target.closest('a[href^="#"]');
+  pointerDestination = link && event.detail > 0 ? link.hash : null;
   const btn = event.target.closest('button');
   const dialog = document.getElementById('share-dialog');
   if (btn?.id === 'share-view') {
@@ -387,9 +390,12 @@ window.addEventListener('hashchange', () => {
   if (move) {
     window.scrollTo(0, 0);
     main.focus({ preventScroll: true });
+    if (pointerDestination === location.hash) enterWorkspacePage(main);
   }
+  pointerDestination = null;
 });
 function pendingPage(error) {
+  terrain = null;
   if (menu.open) menu.close();
   desktop.innerHTML = brand();
   menu.replaceChildren();

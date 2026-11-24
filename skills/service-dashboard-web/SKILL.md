@@ -17,6 +17,6 @@ The range model in `site/activity-range.js` clips multiple source years to inclu
 
 The developer view shows contributions for the selected range and the account lifetime. Keep the lifetime cache scoped to the login and preserve coverage labels as range, month and streak settings change. [Guide](../../docs/handbook.md#explore-coding-streaks)
 
-The dark workspace uses Astryx’s Neutral theme, site tokens in `site/console.css` and build-time Button and Badge markup from `scripts/build.mjs`. The boot sequence and globe live in `site/atlas-motion.js`. Keep the opening dismissible, keep data fetches independent of motion and verify the reduced-motion branch.
+The workspace uses Astryx’s Neutral theme, site tokens in `site/console.css` and build-time Button and Badge markup from `scripts/build.mjs`. The boot and route transitions live in `site/atlas-motion.js`. `site/appearance.js` resolves the browser-local appearance before CSS loads. `site/terrain.js` maps prepared open issues to rotatable, keyboard-accessible terrain. Keep the opening dismissible, keep data fetches independent of motion and verify the reduced-motion branch.
 
 Use `deliveryTimeframe` for Overview and its date-sensitive drilldowns. The visible menus share `selectPicker` and Astryx tokens. Keep the native select semantics, date inclusivity and filter state across links.

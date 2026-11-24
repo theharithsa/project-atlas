@@ -16,3 +16,5 @@ The preview server in `scripts/serve.mjs` reads the owner file from the local ch
 Serve the personal portfolio browser module and the same typed owner endpoint as Hosting from local preview. Keep the static allowlist and Firebase rewrites covered by the HTTP suite.
 
 Install the root design dependencies with `npm ci --ignore-scripts` before the foundation check. Build the public Astryx assets with `npm run build`. Hosting runs the same build before publishing. Leave generated assets out of Git.
+
+Load the appearance script from the preview allowlist before styles and app modules. Its control must work while the feed is pending.

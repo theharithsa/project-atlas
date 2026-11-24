@@ -19,3 +19,5 @@ Version 0.8.0 adds the dark Astryx workspace, Atlas logo and motion, and a dedic
 When replacing brand artwork, change the asset URL in the page shell, opening and sidebar together. Check a returning browser as well as a fresh tab. [Logo release fix](https://github.com/theharithsa/project-atlas/issues/21)
 
 Version 0.9.0 adds the overview timeframe, darker dropdown menus and a 3.1-second opening. Verify the same closure and release dates on the detail pages. Check newly discovered boards and deduplicated repositories against the counts in the heading. [Timeframe issue](https://github.com/theharithsa/project-atlas/issues/23)
+
+Version 0.10.0 adds System, Light and Dark and a workload terrain derived from each board’s open leaf issues. Check both appearances during loading and on every route, navigate beyond the first six boards, rotate the map, and follow its board link with the selected timeframe. [Design issue](https://github.com/theharithsa/project-atlas/issues/25)

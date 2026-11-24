@@ -28,6 +28,8 @@ For activity ranges, compare the selected dates and totals across 28 days and fi
 
 For lifetime contributions, use a developer with history predating the five-year chart. Compare all public calendar dates starting at account creation. Verify that four weeks and five years change only the range-dependent figures, that switching developers drops earlier results, and that empty and interrupted years have distinct states. Inspect both totals at phone width.
 
-For the dark developer workspace, inspect every page at desktop and phone widths. Check the opening on a fresh load and with reduced motion, confirm that the calendar supports arrow keys, and open a legacy Overview activity link. Verify the generated Astryx assets, local font files, primary button contrast and the share dialog.
+Inspect every dashboard page at desktop and phone widths. Check the opening on a fresh load and with reduced motion, confirm that the calendar supports arrow keys, and open a legacy Overview activity link. Verify the generated Astryx assets, local font files, primary button contrast and the share dialog.
 
 Change the Overview timeframe from 7 to 30 days and compare closures, sprint totals and release targets with their linked detail pages. Check the opened menu, selection and focus at desktop and phone widths. Check the slower opening on a fresh load and verify immediate dismissal on input.
+
+Exercise System, Light and Dark before the feed resolves, after reload and on each route. In Overview, inspect a board, rotate the workload terrain and open its filtered overview. Check keyboard input, reduced motion and a portfolio with more than six boards. A board with no open leaf issues should sit at ground level.

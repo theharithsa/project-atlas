@@ -200,6 +200,8 @@
         "site/activity.js",
         "site/activity-range.js",
         "site/atlas-motion.js",
+        "site/appearance.js",
+        "site/terrain.js",
         "site/console.css"
       ],
       "owner": "theharithsa",

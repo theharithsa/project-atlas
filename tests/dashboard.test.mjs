@@ -54,3 +54,23 @@ test('history includes unscheduled and rollup closures, deduplicates shared issu
   assert.equal(both.find(p => p.key === first.key).open.length,5);
   assert.deepEqual(closedIssues([]),[]);
 });
+
+test('assigned rows render from Backlog and retain the selected sprint window in drilldowns',async t=>{
+  const {backlogPage,sprintPage,paintIssues} = await import('../site/work.js');
+  const data = prepare(samplePortfolio()), product = data.projects[0];
+  const target = {innerHTML:''};
+  globalThis.document = {querySelector:selector => selector === '#issue-results' ? target : null};
+  t.after(()=>{ delete globalThis.document; });
+  backlogPage([product],{product:product.key,q:new URLSearchParams('scope=all')});
+  paintIssues();
+  assert.match(target.innerHTML,/sprint=s1"/);
+  assert.doesNotMatch(target.innerHTML,/ATLAS_LABEL/);
+  assert.match(target.innerHTML,/>In progress</);
+  const q = new URLSearchParams('period=window&window=90d');
+  const list = sprintPage(data,[product],{product:product.key,q});
+  assert.match(list,/sprint=s1&amp;period=window&amp;window=90d/);
+  q.set('sprint','s1'); q.set('show','open');
+  sprintPage(data,[product],{product:product.key,q});
+  paintIssues();
+  assert.match(target.innerHTML,/sprint=s1&amp;period=window&amp;window=90d&amp;show=open/);
+});

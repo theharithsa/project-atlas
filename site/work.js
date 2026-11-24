@@ -79,7 +79,7 @@ function paintIssues() {
       const s = p.sprints.find((s) => s.id === i.sprint);
       const reference = `${i.repo}#${i.number}`;
       const assignment = s
-        ? `<a href="${e(url('sprints',p.key,{sprint:s.id,period:mode,window:timeframe?.key}))}">${e(s.name)}</a>`
+        ? `<a href="${e(url('sprints',p.key,{sprint:s.id,...row.sprintFilters}))}">${e(s.name)}</a>`
         : i.milestoneTitle && hasTarget(i)
           ? external(i.milestone, e(i.milestoneTitle))
           : '<span class="muted">Unscheduled</span>';
@@ -199,7 +199,7 @@ function sprintPage(data, products, r) {
       ].map(([k, l]) => [k, l, url('sprints',p.key,{...period,sprint:id,show:k})]),
       which,
     )}${setIssueTable(
-      scoped.map((i) => ({ p, i })),
+      scoped.map((i) => ({ p, i, sprintFilters:{...period,show:which} })),
       'Sprint issues',
     )}`;
   }
@@ -216,7 +216,7 @@ function sprintPage(data, products, r) {
         mode === 'current'
           ? p.sprints.find((l) => phase(l, data.asOf) === 'upcoming' && sprintStats(p, l).open > 0)
           : null;
-      return `<article class="sprint-card panel tone-${p.color}"><div class="detail-name">${productMark(p, true)}<strong>${e(p.label)}</strong></div><h2><a href="${e(url('sprints', p.key, { sprint: s.id }))}">${e(s.name)} ${icon('arrow', 17)}</a></h2><p class="sprint-dates">${icon('calendar', 15)} ${e(span(s.start, s.end, true))}</p>${progress(st.closed, st.total)}<div class="sprint-count"><span>${st.open} open</span><span>${st.closed}/${st.total} closed</span></div>${next ? `<a class="next-sprint" href="${e(url('sprints', p.key, { sprint: next.id }))}">Next with open work <strong>${e(shortSprint(next.name))} ${icon('right', 12)}</strong></a>` : ''}</article>`;
+      return `<article class="sprint-card panel tone-${p.color}"><div class="detail-name">${productMark(p, true)}<strong>${e(p.label)}</strong></div><h2><a href="${e(url('sprints', p.key, { sprint: s.id, period:mode, window:timeframe?.key }))}">${e(s.name)} ${icon('arrow', 17)}</a></h2><p class="sprint-dates">${icon('calendar', 15)} ${e(span(s.start, s.end, true))}</p>${progress(st.closed, st.total)}<div class="sprint-count"><span>${st.open} open</span><span>${st.closed}/${st.total} closed</span></div>${next ? `<a class="next-sprint" href="${e(url('sprints', p.key, { sprint: next.id }))}">Next with open work <strong>${e(shortSprint(next.name))} ${icon('right', 12)}</strong></a>` : ''}</article>`;
     })
     .join('');
   const periods = [
