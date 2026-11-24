@@ -36,7 +36,7 @@ function setIssueTable(rows, title, history = false) {
   );
   term = '';
   page = 0;
-  return `<section class="panel issue-panel"><div class="panel-head list-head"><h2>${e(title)}</h2><label class="search-box">${icon('search', 16)}<input id="issue-search" type="search" placeholder="Find an issue…" aria-label="Search issues by title, number or repository" autocomplete="off"></label></div><div id="issue-results"></div></section>`;
+  return `<section class="panel issue-panel"><div class="panel-head list-head"><h2>${e(title)}</h2><label class="search-box text-field">${icon('search', 18)}<input id="issue-search" type="search" placeholder="Find an issue…" aria-label="Search issues by title, number or repository" autocomplete="off"></label></div><div id="issue-results"></div></section>`;
 }
 const closureDate = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric',

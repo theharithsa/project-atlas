@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.2 · 24 November 2026
+
+- Switch Light to a pure white workspace. Refresh navigation, metrics and actions with Phosphor icons and identify products by their board initials.
+- Align native dropdown values, carets, text fields and action buttons. Keep the full option titles available on narrow screens. [Controls issue](https://github.com/theharithsa/project-atlas/issues/29)
+
 ## 0.10.1 · 24 November 2026
 
 - Show an empty survey grid while the first GitHub board request is pending. The loading view uses the selected appearance and hands over to the real terrain when the feed arrives. [Loading view](https://github.com/theharithsa/project-atlas/issues/27)

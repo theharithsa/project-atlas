@@ -16,7 +16,7 @@ Project Atlas gives product owners and maintainers one place to see what each te
 | To answer this question | Open |
 | --- | --- |
 | Which boards have the most open work? | On **Overview**, the tallest terrain peak has the most open issues. Select a marker or use the arrows to inspect a board, then open its name. |
-| Where do I change appearance? | Use the monitor, sun and moon in the top bar for **System**, **Light** and **Dark**. Atlas remembers your choice on this browser. |
+| Where do I change appearance? | Use the monitor, sun and moon in the top bar for **System**, **Light** and **Dark**. Light uses a pure white workspace. Atlas remembers your choice in this browser. |
 | What is in flight for one product? | Choose the product in **Overview**, then open a sprint in the calendar to see its issues. |
 | Which issues still need planning? | **Backlog → Unscheduled** shows open work without a sprint or delivery milestone. **Board backlog** shows the source board’s Backlog and Todo statuses, including scheduled issues. |
 | Which issues closed recently? | **History** lists closed issues newest first. Select a product or search by issue number, title or repository. |
@@ -50,13 +50,13 @@ npm test
 
 ## How it works
 
-The frontend uses Astryx’s Neutral theme in light and dark, CSS tokens and build-time Button and Badge components. It ships static HTML, CSS and JavaScript with self-hosted Space Grotesk and JetBrains Mono fonts. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
+The frontend uses Astryx’s Neutral theme in light and dark, CSS tokens and build-time Button and Badge components. It ships static HTML, CSS and JavaScript with self-hosted Phosphor icons and the Space Grotesk and JetBrains Mono fonts. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
 
 | Source | Responsibility |
 | --- | --- |
 | [config/owners.json](config/owners.json) | Shared GitHub users and organizations, applied after merge without a Firebase deployment |
 | [site/](site/) | Themed workspace, interactive workload terrain, contribution calendar, planning and release views |
-| [scripts/build.mjs](scripts/build.mjs) | Build the pinned Astryx CSS, control markup and fonts for Hosting |
+| [scripts/build.mjs](scripts/build.mjs) | Build the pinned Astryx CSS, control markup, icon sprite and fonts for Hosting |
 | [functions/](functions/) | GitHub collection, visibility filtering, caching and the public HTTPS handler |
 | [firebase.json](firebase.json) | Dedicated Hosting site, function rewrite and cache headers |
 | [docs/api.md](docs/api.md) | API contract, data scope, timestamps and failure behavior |
@@ -66,4 +66,4 @@ To report a mismatch, include the public board or milestone link, the active das
 
 ## License
 
-Project Atlas and the inherited App Launchpad foundation are MIT licensed. Astryx is MIT licensed. Space Grotesk and JetBrains Mono are distributed under the SIL Open Font License 1.1. [MIT license](LICENSE) · [Bundled notices](https://pipeline.theharithsanotes.com/generated/licenses.txt) · [Template provenance](docs/versioning.md)
+Project Atlas and the inherited App Launchpad foundation are MIT licensed. Astryx and Phosphor Icons are MIT licensed. Space Grotesk and JetBrains Mono are distributed under the SIL Open Font License 1.1. [MIT license](LICENSE) · [Bundled notices](https://pipeline.theharithsanotes.com/generated/licenses.txt) · [Template provenance](docs/versioning.md)

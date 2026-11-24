@@ -11,3 +11,5 @@ Version 0.4.0 adds the public owner route and browser module to local preview. C
 The foundation workflow installs the pinned root design dependencies before the app test. The public site serves generated assets from a fixed allowlist in the local preview. [Operations](../../docs/delivery.md)
 
 The preview allowlist includes the pre-paint appearance script and terrain module. Check both paths in the HTTP suite after changing the dashboard entry points.
+
+For 0.10.2, verify that the same-origin icon sprite is served as SVG and the generated notices include Phosphor. [Controls issue](https://github.com/theharithsa/project-atlas/issues/29)

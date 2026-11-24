@@ -18,3 +18,5 @@ Serve the personal portfolio browser module and the same typed owner endpoint as
 Install the root design dependencies with `npm ci --ignore-scripts` before the foundation check. Build the public Astryx assets with `npm run build`. Hosting runs the same build before publishing. Leave generated assets out of Git.
 
 Load the appearance script from the preview allowlist before styles and app modules. Its control must work while the feed is pending.
+
+The build also extracts the selected Phosphor SVG symbols and includes their MIT notice with the font and Astryx licenses. Serve the sprite at `generated/icons.svg` in preview and Hosting.

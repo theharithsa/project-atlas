@@ -67,7 +67,6 @@ export function prepare(snapshot) {
       return {
         ...p,
         label: p.name,
-        icon: 'box',
         color: productColor(p.key),
         work,
         open,
