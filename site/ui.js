@@ -1,6 +1,7 @@
 import {controls} from './generated/controls.js';
 
 const icons = {
+  rotate: '<path d="M20 10a8 8 0 1 0-2 8m2-14v6h-6"/><path d="m8 13 4-2 4 2-4 2z"/>',
   refresh: '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.3 7a7 7 0 0 1 11.9-1L20 9M4 15l1.8 3A7 7 0 0 0 17.7 17"/>',
   grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   sprint:
@@ -94,7 +95,7 @@ function githubStatus(value) {
       : /planned|ready|review/i.test(value || '')
         ? 'planned'
         : 'unassigned';
-  return controls[tone].replace('ATLAS_LABEL', () => e(value || 'No status'));
+  return controls[tone].replaceAll('ATLAS_LABEL', () => e(value || 'No status'));
 }
 function empty(title, body = '') {
   return `<div class="empty"><span class="empty-icon">${icon('inbox', 21)}</span><strong>${e(title)}</strong>${body ? `<p>${e(body)}</p>` : ''}</div>`;

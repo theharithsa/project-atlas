@@ -4,7 +4,10 @@ Project Atlas gives product owners and maintainers one place to see what each te
 
 **[Open Project Atlas](https://pipeline.theharithsanotes.com/)** · [Current sprints](https://pipeline.theharithsanotes.com/#sprints) · [Backlog](https://pipeline.theharithsanotes.com/#backlog) · [Issue history](https://pipeline.theharithsanotes.com/#history) · [Release roadmap](https://pipeline.theharithsanotes.com/#roadmap) · [Activity](https://pipeline.theharithsanotes.com/#activity)
 
-![Dark Project Atlas overview with the Atlas globe, delivery metrics and three fictional products](docs/images/overview.jpg)
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/overview-light.jpg">
+  <img src="docs/images/overview.jpg" alt="Project Atlas workload terrain and delivery metrics for three fictional boards">
+</picture>
 
 *The screenshots use fictional products and issues. The live dashboard reads the configured GitHub boards.*
 
@@ -12,6 +15,8 @@ Project Atlas gives product owners and maintainers one place to see what each te
 
 | To answer this question | Open |
 | --- | --- |
+| Which boards have the most open work? | On **Overview**, the tallest terrain peak has the most open issues. Select a marker or use the arrows to inspect a board, then open its name. |
+| Where do I change appearance? | Use the monitor, sun and moon in the top bar for **System**, **Light** and **Dark**. Atlas remembers your choice on this browser. |
 | What is in flight for one product? | Choose the product in **Overview**, then open a sprint in the calendar to see its issues. |
 | Which issues still need planning? | **Backlog → Unscheduled** shows open work without a sprint or delivery milestone. **Board backlog** shows the source board’s Backlog and Todo statuses, including scheduled issues. |
 | Which issues closed recently? | **History** lists closed issues newest first. Select a product or search by issue number, title or repository. |
@@ -45,12 +50,12 @@ npm test
 
 ## How it works
 
-The frontend uses Astryx’s Neutral dark theme, CSS tokens and build-time Button and Badge components. It ships static HTML, CSS and JavaScript with self-hosted Space Grotesk and JetBrains Mono fonts. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
+The frontend uses Astryx’s Neutral theme in light and dark, CSS tokens and build-time Button and Badge components. It ships static HTML, CSS and JavaScript with self-hosted Space Grotesk and JetBrains Mono fonts. Firebase Hosting routes `GET /api/v1/portfolio` to a Node.js function. The function lists public projects by owner, reads each open board as a signed-out visitor and discovers repositories from verified public issues and pull requests. An empty board can appear as soon as GitHub lists it. Add a public issue or PR from each repository to include its milestones and latest release. Personal mode reads individual public owners through the same collector and combines their boards and releases in the browser. The shared feed and each personal owner have independent caches. The browser never needs a GitHub token.
 
 | Source | Responsibility |
 | --- | --- |
 | [config/owners.json](config/owners.json) | Shared GitHub users and organizations, applied after merge without a Firebase deployment |
-| [site/](site/) | Dark workspace, Atlas motion, contribution calendar, planning and release views |
+| [site/](site/) | Themed workspace, interactive workload terrain, contribution calendar, planning and release views |
 | [scripts/build.mjs](scripts/build.mjs) | Build the pinned Astryx CSS, control markup and fonts for Hosting |
 | [functions/](functions/) | GitHub collection, visibility filtering, caching and the public HTTPS handler |
 | [firebase.json](firebase.json) | Dedicated Hosting site, function rewrite and cache headers |

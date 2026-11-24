@@ -13,7 +13,8 @@ test('the opening shows briefly, dismisses on input and respects reduced motion'
     return {matches:reduced};
   };
   browser.setTimeout = (callback,delay) => { assert.ok(delay >= 3100 && delay <= 3500); dismiss = callback; };
-  globalThis.document = {getElementById:id => id === 'atlas-intro' ? intro : null};
+  const classes = new Set();
+  globalThis.document = {documentElement:{classList:{add:name=>classes.add(name),remove:name=>classes.delete(name)}},getElementById:id => id === 'atlas-intro' ? intro : null};
   globalThis.window = browser;
   t.after(()=>{ delete globalThis.document; delete globalThis.window; });
   playAtlasIntro();
@@ -22,8 +23,10 @@ test('the opening shows briefly, dismisses on input and respects reduced motion'
   reduced = false;
   playAtlasIntro();
   assert.equal(intro.hidden,false);
+  assert.ok(classes.has('atlas-booting'));
   browser.dispatchEvent(new Event('keydown'));
   assert.equal(intro.hidden,true);
+  assert.equal(classes.size,0);
   playAtlasIntro();
   dismiss();
   assert.equal(intro.hidden,true);

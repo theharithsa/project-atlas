@@ -116,7 +116,7 @@ function overview(data, products, route, timeframe) {
       url('roadmap',route.product,{kind:'releases',when:'undated'})],
   ];
   return `<section class="metrics" aria-label="Delivery metrics">${metrics.map(([ic,c,label,n,help,href]) =>
-    `<a href="${e(href)}" class="metric"><span class="metric-heading"><span class="metric-icon tone-${c}">${icon(ic,17)}</span>${e(label)}</span><b>${n}</b><small>${e(help)}</small></a>`).join('')}</section>
+    `<a href="${e(href)}" class="metric tone-${c}"><span class="metric-heading"><span class="metric-icon tone-${c}">${icon(ic,17)}</span>${e(label)}<span class="metric-jump">${icon('arrow',14)}</span></span><b>${n}</b><small>${e(help)}</small></a>`).join('')}</section>
     <div class="overview-panels">${calendar(data,products,route)}${upcomingCard(delivery.upcoming,route,timeframe)}</div>${productTable(data,products,timeframe)}${distribution(products,route)}`;
 }
 export { overview, calendar };

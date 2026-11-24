@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0 · 24 November 2026
+
+- Explore open work as a rotatable terrain. Select a board’s peak, read its exact workload and open the filtered overview.
+- Choose System, Light or Dark across the workspace, including planning views and the contribution calendar. The opening, theme change and page transitions honor reduced motion. [Design issue](https://github.com/theharithsa/project-atlas/issues/25)
+- Restore assigned issue rows and their visible GitHub status labels in sprint and backlog views.
+
 ## 0.9.0 · 18 November 2026
 
 - Select 7–365 days on Overview to compare issue closures, sprint windows and upcoming release targets. The linked views use the same dates.

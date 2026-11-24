@@ -2,6 +2,16 @@
 
 Start with the whole portfolio or choose a product in the sidebar. A product selection follows you to Sprints, Backlog, History and Roadmap. A link in the browser’s address bar preserves the selected view and filters. [Open the live dashboard](https://pipeline.theharithsanotes.com/)
 
+## Choose an appearance
+
+The three controls at the right of the top bar are **System** (monitor), **Light** (sun) and **Dark** (moon). System follows the device and updates when its appearance changes. Choosing the sun or moon saves an override in this browser. Choose the monitor to follow the device again. A shared link leaves the recipient’s appearance choice to them. With reduced motion enabled, Atlas opens directly into the dashboard and map rotation changes the view immediately.
+
+## Explore the workload terrain
+
+Open **Overview** and choose **All products**. Each marker represents a discovered board. The tallest peak has the most open leaf issues. Heights use a square-root scale across the whole portfolio so smaller workloads remain visible. The selected marker shows the exact count. A board with zero open issues has a marker at ground level.
+
+Select a marker or use **Inspect previous board** and **Inspect next board** beneath the map. Each sheet holds six boards, and the arrows reach the entire portfolio, starting with the busiest. **Rotate terrain 90 degrees** lets you see peaks that overlap from one angle. Select the board name beneath the map to open its delivery overview with the current timeframe.
+
 ## Use a personal portfolio
 
 **Shared portfolio** is the default on a new browser. Open the portfolio selector in the top bar and choose **My portfolio**. An empty personal list opens **Data sources**. [Open settings](https://pipeline.theharithsanotes.com/#sources)

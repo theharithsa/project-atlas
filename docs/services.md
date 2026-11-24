@@ -2,7 +2,7 @@
 
 | Service | Owner | Entry and boundary | Maintainer notes |
 | --- | --- | --- | --- |
-| Dashboard web | theharithsa | Static assets in `site/` and Astryx outputs from `scripts/build.mjs`; dark workspace, timeframed delivery metrics, linked views and public activity | [Skill](../skills/service-dashboard-web/SKILL.md) · [Continuation](../skills/service-dashboard-web/continuation.md) |
+| Dashboard web | theharithsa | Static assets in `site/` and Astryx outputs from `scripts/build.mjs`; light and dark workspace, interactive board terrain, timeframed delivery metrics, linked views and public activity | [Skill](../skills/service-dashboard-web/SKILL.md) · [Continuation](../skills/service-dashboard-web/continuation.md) |
 | Portfolio feed | theharithsa | Firebase HTTPS function in `functions/`; shared users and organizations in [config/owners.json](../config/owners.json), anonymous portfolio, repository history, developer commit search and public profile calendar reads from account creation with bounded in-memory caches | [Skill](../skills/service-portfolio-feed/SKILL.md) · [Continuation](../skills/service-portfolio-feed/continuation.md) |
 | Repository tooling | theharithsa | Local and CI checks, service registration, issue intake and opt-in branch rules | [Skill](../skills/service-foundation-tooling/SKILL.md) · [Continuation](../skills/service-foundation-tooling/continuation.md) |
 
