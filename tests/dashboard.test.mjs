@@ -90,7 +90,55 @@ test('assigned rows render from Backlog and retain the selected sprint window in
   const list = sprintPage(data,[product],{product:product.key,q});
   assert.match(list,/sprint=s1&amp;period=window&amp;window=90d/);
   q.set('sprint','s1'); q.set('show','open');
-  sprintPage(data,[product],{product:product.key,q});
+  const detail = sprintPage(data,[product],{product:product.key,q});
+  assert.match(detail,/sprint=s1&amp;period=window&amp;window=90d&amp;show=open/);
   paintIssues();
-  assert.match(target.innerHTML,/sprint=s1&amp;period=window&amp;window=90d&amp;show=open/);
+  assert.match(target.innerHTML,/field-notes\/issues\/2/);
+  assert.doesNotMatch(target.innerHTML,/field-notes\/issues\/1"/);
+});
+
+test('all-product sprint detail isolates identical board-local IDs and keeps the window on return',async () => {
+  const {sprintPage} = await import('../site/work.js');
+  const data = prepare(samplePortfolio());
+  const route = {product:'all',q:new URLSearchParams('board=atlas-example-2&sprint=s1&period=window&window=90d')};
+  const view = sprintPage(data,data.projects,route);
+  assert.match(view,/class="sprint-inspector"[^>]*data-board="atlas-example-2" data-sprint="s1"/);
+  assert.match(view,/href="#sprints\?period=window&amp;window=90d">[^<]*(?:<[^>]+>)*[^<]*Back to sprints/);
+  assert.doesNotMatch(view,/product=atlas-example-2/);
+  route.q.set('board','missing');
+  assert.match(sprintPage(data,data.projects,route),/class="missing-sprint"/);
+});
+
+test('sprint preview prioritizes open work and opens closed issues when a sprint is finished',async () => {
+  const {sprintPage} = await import('../site/work.js');
+  const fixture = samplePortfolio();
+  for (const i of fixture.projects[0].items) i.state = 'CLOSED';
+  const data = prepare(fixture);
+  const view = sprintPage(data,data.projects,{product:'all',q:new URLSearchParams()});
+  assert.match(view,/class="sprint-inspector"[^>]*data-board="atlas-example-2"/);
+  const completed = sprintPage(data,[data.projects[0]],{product:'atlas-example-1',q:new URLSearchParams('sprint=s1')});
+  assert.match(completed,/show=closed" selected>Closed · 3/);
+});
+
+test('product changes keep the destination and valid route filters while dropping issue-specific state',async () => {
+  const {changeProduct} = await import('../site/workspace.js');
+  const route = {page:'sprints',product:'all',q:new URLSearchParams('board=one&sprint=s1&show=closed&find=plan&page=2&period=past&window=90d')};
+  assert.equal(changeProduct(route,'two'),'#sprints?product=two&period=past&window=90d');
+  assert.equal(changeProduct({page:'roadmap',q:new URLSearchParams('product=one&view=published')},'all'),'#roadmap?view=published');
+});
+
+test('published releases use repository evidence, deduplicate boards and keep unknown dates and coverage visible',async () => {
+  const {roadmapPage} = await import('../site/work.js');
+  const data = prepare(samplePortfolio());
+  const [a,b,c] = Object.keys(data.repositories);
+  data.projects[1].repos.push(a);
+  for (const [idx,key] of [a,b].entries()) data.repositories[key].published =
+    {tagName:'tag-'+idx,url:'https://github.com/'+key+'/releases/tag/tag-'+idx,publishedAt:idx ? '2026-11-20T15:00:00Z' : null};
+  delete data.repositories[c];
+  const view = roadmapPage(data,data.projects,{q:new URLSearchParams('view=published')});
+  assert.equal((view.match(/class="published-row"/g)||[]).length,2);
+  assert.ok(view.indexOf('tag-1') < view.indexOf('tag-0'));
+  assert.match(view,/Date unavailable/);
+  assert.match(view,/1 repository is temporarily unavailable/);
+  assert.doesNotMatch(view,/\/milestone\//);
 });

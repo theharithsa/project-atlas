@@ -4,7 +4,6 @@ import {
   span,
   phase,
   sprintStats,
-  shortSprint,
   hasTarget,
   bucket,
   nativeBacklog,
@@ -19,13 +18,18 @@ import {
   portfolioInventory,
 } from './model.js';
 import { icon, e, external, url, productMark, dot, githubStatus, empty, tabs, progress, selectPicker } from './ui.js';
+import {sprintHref} from './workspace.js';
 import { calendar } from './overview.js';
 let tableRows = [],
   term = '',
   page = 0,
-  showingHistory = false;
+  showingHistory = false,
+  compactIssues = false,
+  tableProduct;
 const PAGE_SIZE = 12;
-function setIssueTable(rows, title, history = false) {
+function setIssueTable(rows, title, {product, history = false, compact = false}) {
+  tableProduct = product;
+  compactIssues = compact;
   showingHistory = history;
   tableRows = history ? rows : [...rows].sort(
     (a, b) =>
@@ -36,7 +40,7 @@ function setIssueTable(rows, title, history = false) {
   );
   term = '';
   page = 0;
-  return `<section class="panel issue-panel"><div class="panel-head list-head"><h2>${e(title)}</h2><label class="search-box text-field">${icon('search', 18)}<input id="issue-search" type="search" placeholder="Find an issue…" aria-label="Search issues by title, number or repository" autocomplete="off"></label></div><div id="issue-results"></div></section>`;
+  return `<section class="panel issue-panel"><div class="panel-head list-head">${compact ? '' : '<h2>' + e(title) + '</h2>'}<label class="search-box text-field">${icon('search', 18)}<input id="issue-search" type="search" placeholder="Find an issue…" aria-label="Search issues by title, number or repository" autocomplete="off"></label></div><div id="issue-results"></div></section>`;
 }
 const closureDate = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric',
@@ -51,7 +55,7 @@ function historyRow({p, i, memberships}) {
   const plans = memberships.map(({p: product, i: item}) => {
     const sprint = product.sprints.find(s => s.id === item.sprint);
     const name = sprint ? product.label + ' · ' + sprint.name : product.label;
-    const href = sprint ? url('sprints', product.key, {sprint:sprint.id, show:'closed'}) : url('overview', product.key);
+    const href = sprint ? sprintHref(tableProduct, product.key, sprint.id, {show:'closed'}) : url('overview', product.key);
     return `<a href="${e(href)}">${e(name)}</a>`;
   }).join('');
   return `<article class="work-row history-row"><div class="work-main">${productMark(p, true)}<div><strong>${external(i.url, e(i.title), 'issue-title', i.title + ' on GitHub')}</strong><small>${e(i.repo)}#${e(i.number)}</small></div></div><div class="history-closure">${date}<small>${e(closureReason(i.reason))}</small></div><div class="work-plan history-plans">${plans}</div></article>`;
@@ -78,15 +82,20 @@ function paintIssues() {
       const {p, i} = row;
       const s = p.sprints.find((s) => s.id === i.sprint);
       const reference = `${i.repo}#${i.number}`;
+      if (compactIssues) {
+        return `<article class="inspector-issue"><span class="issue-glyph">${icon(i.state === 'CLOSED' ? 'check' : 'issue',15)}</span><div><strong>${external(i.url,e(i.title),'issue-title',i.title + ' on GitHub')}</strong><small>${e(reference)}</small></div>${githubStatus(i.status)}</article>`;
+      }
       const assignment = s
-        ? `<a href="${e(url('sprints',p.key,{sprint:s.id,...row.sprintFilters}))}">${e(s.name)}</a>`
+        ? `<a href="${e(sprintHref(tableProduct,p.key,s.id))}">${e(s.name)}</a>`
         : i.milestoneTitle && hasTarget(i)
           ? external(i.milestone, e(i.milestoneTitle))
           : '<span class="muted">Unscheduled</span>';
       return `<article class="work-row"><div class="work-main">${productMark(p, true)}<div><strong>${external(i.url, e(i.title), 'issue-title', i.title + ' on GitHub')}</strong><small>${e(reference)}${i.state === 'CLOSED' ? ' · Closed' : ''}</small></div></div><div class="work-status">${githubStatus(i.status)}${i.priority ? `<span class="priority">${e(i.priority)}</span>` : ''}</div><div class="work-plan">${assignment}</div></article>`;
     })
     .join('');
-  target.innerHTML = `${rows ? `<div class="work-head"><span>Issue</span><span>${showingHistory ? 'Closed on' : 'GitHub status'}</span><span>${showingHistory ? 'Product / sprint' : 'Sprint or milestone'}</span></div>${rows}` : empty(needle ? 'No matching issues' : (showingHistory ? 'No closed issues in this selection' : 'No issues in this selection'), needle ? 'Try another title, number or repository.' : 'No public issues match this filter.')}<div class="pagination"><span aria-live="polite">${matches.length ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, matches.length)} of ${matches.length}` : '0'} ${matches.length === 1 ? 'issue' : 'issues'}</span><div><button data-pager="-1" aria-label="Previous issue page" ${page === 0 ? 'disabled' : ''}>${icon('left', 15)}</button><button data-pager="1" aria-label="Next issue page" ${page >= max ? 'disabled' : ''}>${icon('right', 15)}</button></div></div>`;
+  const headings = compactIssues ? '' : `<div class="work-head"><span>Issue</span><span>${showingHistory ? 'Closed on' : 'GitHub status'}</span><span>${showingHistory ? 'Product / sprint' : 'Sprint or milestone'}</span></div>`;
+  const results = rows ? headings + rows : empty(needle ? 'No matching issues' : (showingHistory ? 'No closed issues in this selection' : 'No issues in this selection'), needle ? 'Try another title, number or repository.' : 'No public issues match this filter.');
+  target.innerHTML = `${results}<div class="pagination"><span aria-live="polite">${matches.length ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, matches.length)} of ${matches.length}` : '0'} ${matches.length === 1 ? 'issue' : 'issues'}</span><div><button data-pager="-1" aria-label="Previous issue page" ${page === 0 ? 'disabled' : ''}>${icon('left', 15)}</button><button data-pager="1" aria-label="Next issue page" ${page >= max ? 'disabled' : ''}>${icon('right', 15)}</button></div></div>`;
 }
 export function saveIssueView() {
   return {term, page};
@@ -157,7 +166,7 @@ function backlogPage(products, r) {
       url('backlog', r.product, { scope: key }),
     ]),
     scope,
-  )}${picker}</div><p class="filter-note">${e(buckets.find((t) => t[0] === scope)[2])} <a class="text-link" href="${e(url('history', r.product))}">View closed issues</a></p>${setIssueTable(shown, buckets.find((t) => t[0] === scope)[1])}`;
+  )}${picker}</div><p class="filter-note">${e(buckets.find((t) => t[0] === scope)[2])} <a class="text-link" href="${e(url('history', r.product))}">View closed issues</a></p>${setIssueTable(shown, buckets.find((t) => t[0] === scope)[1], {product:r.product})}`;
 }
 export function historyPage(products, asOf, route) {
   const all = closedIssues(products);
@@ -171,68 +180,83 @@ export function historyPage(products, asOf, route) {
   const links = repositories.map(repo => external(
     'https://github.com/' + repo + '/issues?q=is%3Aissue+is%3Aclosed', e(repo), 'text-link',
   )).join('');
-  return heading + setIssueTable(rows, 'Closed issues', true) + (links
+  return heading + setIssueTable(rows, 'Closed issues', {product:route.product,history:true}) + (links
     ? `<section class="panel source-intro history-repos"><h2>Repository history</h2><p>GitHub also lists closed issues archived or removed from these boards.</p><div>${links}</div></section>`
     : '');
 }
+function sprintInspector(r, entry, period) {
+  const {p, s, stats} = entry;
+  const defaultState = stats.open || !stats.closed ? 'open' : 'closed';
+  const which = ['open','closed','all'].includes(r.q.get('show')) ? r.q.get('show') : defaultState;
+  const scoped = stats.work.filter(i => which === 'all' || i.state.toLowerCase() === which);
+  const options = [['open','Open',stats.open],['closed','Closed',stats.closed],['all','All',stats.total]]
+    .map(([key,label,count]) => [sprintHref(r.product,p.key,s.id,{...period,show:key}),label + ' · ' + count]);
+  const state = selectPicker('sprint-show','Sprint issue state',options,
+    sprintHref(r.product,p.key,s.id,{...period,show:which}),{});
+  return `<section class="sprint-inspector" aria-labelledby="sprint-detail-title" data-board="${e(p.key)}" data-sprint="${e(s.id)}">
+    <a class="list-return" href="${e(url('sprints',r.product,period))}">${icon('left',16)}Back to sprints</a>
+    <div class="sprint-summary"><span class="board-name">${icon('sprint',15)}${e(p.label)}</span>
+    <h2 id="sprint-detail-title" tabindex="-1">${e(s.name)}</h2><p>${e(span(s.start,s.end,true))}</p>
+    <div class="sprint-completion"><span>${stats.closed} of ${stats.total} closed</span>${progress(stats.closed,stats.total)}</div></div>
+    <div class="inspector-controls"><h3>Sprint issues</h3>${state}</div>
+    ${setIssueTable(scoped.map(i => ({p,i})), 'Sprint issues', {product:r.product,compact:true})}</section>`;
+}
 function sprintPage(data, products, r) {
   const timeframe = deliveryTimeframe(data.asOf,r.q.get('window'));
-  const windowMode = timeframe && r.q.get('period') === 'window';
   const id = r.q.get('sprint');
-  const detail =
-    id && products.length === 1
-      ? products.flatMap((p) => p.sprints.filter((s) => s.id === id).map((s) => ({ p, s })))[0]
-      : null;
-  if (detail) {
-    const { p, s } = detail,
-      stats = sprintStats(p, s);
-    const period = {period:windowMode ? 'window' : phase(s,data.asOf),window:timeframe?.key};
-    const which = ['open', 'closed', 'all'].includes(r.q.get('show')) ? r.q.get('show') : 'all';
-    const scoped = stats.work.filter((i) => which === 'all' || i.state.toLowerCase() === which);
-    return `<a class="back-link" href="${e(url('sprints',r.product,period))}">${icon('left', 14)} Sprint list</a><section class="panel sprint-detail tone-${p.color}"><div class="detail-name">${productMark(p)}<span>${e(p.label)}</span>${githubStatus(phase(s, data.asOf) === 'current' ? 'Current' : phase(s, data.asOf) === 'upcoming' ? 'Upcoming' : 'Past')}</div><h2>${e(s.name)}</h2><p>${e(span(s.start, s.end, true))}</p><div class="detail-progress">${progress(stats.closed, stats.total)}<span>${stats.closed} of ${stats.total} issues closed</span></div></section>
-    ${tabs(
-      'Sprint issue state',
-      [
-        ['all', `All · ${stats.total}`],
-        ['open', `Open · ${stats.open}`],
-        ['closed', `Closed · ${stats.closed}`],
-      ].map(([k, l]) => [k, l, url('sprints',p.key,{...period,sprint:id,show:k})]),
-      which,
-    )}${setIssueTable(
-      scoped.map((i) => ({ p, i, sprintFilters:{...period,show:which} })),
-      'Sprint issues',
-    )}`;
-  }
-  const mode = windowMode ? 'window' : ['upcoming','past'].includes(r.q.get('period')) ? r.q.get('period') : 'current';
-  const rows = products
-    .flatMap((p) => p.sprints.map((s) => ({ p, s, when: phase(s, data.asOf) })))
-    .sort((a, b) => compare(a.s.start, b.s.start) || compare(a.p.label, b.p.label));
-  const overlapping = timeframe ? rows.filter(({s}) => sprintOverlaps(s,timeframe)) : [];
-  const filtered = windowMode ? overlapping : rows.filter(t => t.when === mode);
-  const groups = filtered
-    .map(({ p, s }) => {
-      const st = sprintStats(p, s);
-      const next =
-        mode === 'current'
-          ? p.sprints.find((l) => phase(l, data.asOf) === 'upcoming' && sprintStats(p, l).open > 0)
-          : null;
-      return `<article class="sprint-card panel tone-${p.color}"><div class="detail-name">${productMark(p, true)}<strong>${e(p.label)}</strong></div><h2><a href="${e(url('sprints', p.key, { sprint: s.id, period:mode, window:timeframe?.key }))}">${e(s.name)} ${icon('arrow', 17)}</a></h2><p class="sprint-dates">${icon('calendar', 15)} ${e(span(s.start, s.end, true))}</p>${progress(st.closed, st.total)}<div class="sprint-count"><span>${st.open} open</span><span>${st.closed}/${st.total} closed</span></div>${next ? `<a class="next-sprint" href="${e(url('sprints', p.key, { sprint: next.id }))}">Next with open work <strong>${e(shortSprint(next.name))} ${icon('right', 12)}</strong></a>` : ''}</article>`;
-    })
-    .join('');
-  const periods = [
-    ['current','Current'], ['upcoming','Upcoming'], ['past','Past'],
-    ...(timeframe ? [['window','Last ' + timeframe.label]] : []),
-  ];
-  const bar = tabs('Sprint windows',periods.map(([key,label]) => [
-    key,label + ' · ' + (key === 'window' ? overlapping.length : rows.filter(t => t.when === key).length),
-    url('sprints',r.product,{period:key,window:timeframe?.key}),
-  ]),mode);
-  const dates = windowMode ? `<p class="filter-note">Sprint windows overlapping ${e(span(timeframe.from,timeframe.through,true))}</p>` : '';
-  return bar + dates + (groups
-    ? `<div class="sprint-grid">${groups}</div>`
-    : empty('No matching sprint windows','GitHub has no configured windows in this period for the selected products.'));
+  const board = r.product === 'all' ? r.q.get('board') : r.product;
+  const rows = products.flatMap(p => p.sprints.map(s => ({p,s,when:phase(s,data.asOf)})));
+  const detail = id && rows.find(({p,s}) => p.key === board && s.id === id);
+  const modes = [['current','Current'],['upcoming','Upcoming'],['past','Past']];
+  if (timeframe) modes.push(['window','Last ' + timeframe.label]);
+  const requested = r.q.get('period');
+  const mode = modes.some(([key]) => key === requested) ? requested : detail?.when || 'current';
+  const period = {period:mode,window:timeframe?.key};
+  const matches = rows.filter(({s,when}) => mode === 'window' ? sprintOverlaps(s,timeframe) : when === mode)
+    .map(row => ({...row,stats:sprintStats(row.p,row.s)}));
+  matches.sort((a,b) => {
+    if (mode === 'current') return Number(b.stats.open > 0) - Number(a.stats.open > 0) ||
+      compare(a.s.end,b.s.end) || compare(a.p.label,b.p.label);
+    return (mode === 'upcoming' ? 1 : -1) * compare(a.s.start,b.s.start) || compare(a.p.label,b.p.label);
+  });
+  const selected = detail ? matches.find(row => row.p === detail.p && row.s === detail.s) ||
+    {...detail,stats:sprintStats(detail.p,detail.s)} : id ? null : matches[0];
+  const picker = selectPicker('sprint-period','Sprint window',modes.map(([key,label]) =>
+    [url('sprints',r.product,{...period,period:key}),label]),url('sprints',r.product,period),{caption:'Sprint window'});
+  const title = {current:'Current sprints',upcoming:'Upcoming sprints',past:'Past sprints',window:'Sprints in range'}[mode];
+  const list = matches.map(({p,s,stats}) => {
+    const active = selected?.p === p && selected?.s === s;
+    return `<a class="sprint-option" href="${e(sprintHref(r.product,p.key,s.id,period))}"${active ? ' aria-current="true"' : ''}>
+      ${productMark(p,true)}<span class="sprint-option-name"><strong>${e(p.label)}</strong><small>${e(s.name)} · ${e(span(s.start,s.end))}</small></span>
+      <span class="issue-tally">${stats.open}<span class="sr-only"> open issues</span></span>${icon('right',15)}</a>`;
+  }).join('');
+  const listReturn = `<a class="text-link" href="${e(url('sprints',r.product,period))}">Back to sprints</a>`;
+  const unavailable = `<section class="missing-sprint"><h2>Sprint unavailable</h2><p>This board no longer reports that sprint.</p>${listReturn}</section>`;
+  return `<section class="sprint-workspace${id ? ' has-detail' : ''}"><header class="sprint-heading"><h1>${e(title)}</h1>${picker}</header>
+    ${mode === 'window' ? '<p class="filter-note">' + e(span(timeframe.from,timeframe.through,true)) + '</p>' : ''}
+    <div class="sprint-panes"><section class="sprint-directory" aria-label="Sprint list"><div class="directory-key"><span>Product / sprint</span><span>Open issues</span></div>
+    ${list || empty('No matching sprint windows','Choose another sprint window or product.')}</section>
+    ${selected ? sprintInspector(r,selected,period) : id ? unavailable : ''}</div></section>`;
+}
+function publishedPage(data, products) {
+  const repos = portfolioInventory(products).repositories;
+  const releases = repos.map(key => ({key,release:data.repositories[key]?.published}))
+    .filter(({release}) => release)
+    .sort((a,b) => compare(b.release.publishedAt || '',a.release.publishedAt || '') || compare(a.key,b.key));
+  const rows = releases.map(({key,release}) => {
+    const date = Number.isFinite(Date.parse(release.publishedAt)) ? `<time datetime="${e(release.publishedAt)}">${e(closureDate.format(new Date(release.publishedAt)))}</time>` : '<span>Date unavailable</span>';
+    return `<article class="published-row">${icon('flag',19)}<div><strong>${external(release.url,e(release.tagName) + ' ' + icon('external',13))}</strong><small>${e(key)}</small></div>${date}</article>`;
+  }).join('');
+  const unavailable = repos.filter(key => !data.repositories[key]).length;
+  const noRelease = repos.length - unavailable - releases.length;
+  const notes = [noRelease && (noRelease === 1 ? '1 repository has' : noRelease + ' repositories have') + ' no latest release reported.',
+    unavailable && (unavailable === 1 ? '1 repository is' : unavailable + ' repositories are') + ' temporarily unavailable.'].filter(Boolean);
+  return (rows ? `<section class="panel published-list" aria-label="Latest published releases">${rows}</section>` :
+    empty('No published releases in this selection','GitHub release tags appear here when a linked repository publishes a release.')) +
+    (notes.length ? `<p class="filter-note">${e(notes.join(' '))}</p>` : '');
 }
 function roadmapPage(data, products, r) {
+  if (r.q.get('view') === 'published') return publishedPage(data,products);
   const which = ['releases', 'plans', 'all'].includes(r.q.get('kind')) ? r.q.get('kind') : 'releases';
   const when = ['upcoming', 'dated', 'undated', 'all'].includes(r.q.get('when'))
     ? r.q.get('when')
@@ -282,11 +306,11 @@ function roadmapPage(data, products, r) {
   ];
   const picker = selectPicker('date-filter','Filter milestone dates',dates,when,{leading:'filter'});
   const fromTo = when === 'upcoming' && timeframe ? 'Targets ' + span(data.asOf,timeframe.releaseThrough,true) + '. ' : '';
-  return `${calendar(data,products,r)}<div class="roadmap-controls">${tabs(
+  return `<div class="roadmap-controls">${tabs(
     'Milestone kind',
     options.map(([key,label]) => [key,label,url('roadmap',r.product,{kind:key,when,window:timeframe?.key})]),
     which,
   )}${picker}</div>
-    <p class="filter-note">${e(fromTo)}${which === 'releases' ? 'Versioned GitHub milestones with a target date or outstanding work. Dates are release targets.' : which === 'plans' ? 'Delivery outcomes and queues from open repository milestones.' : 'All open GitHub milestones, including triage, maintenance and milestones with zero outstanding items.'} Progress counts issues and pull requests.</p>${list || empty('No matching milestones', 'Choose another date filter or view all open milestones.')}`;
+    <p class="filter-note">${e(fromTo)}${which === 'releases' ? 'Versioned GitHub milestones with a target date or outstanding work. Dates are release targets.' : which === 'plans' ? 'Delivery outcomes and queues from open repository milestones.' : 'All open GitHub milestones, including triage, maintenance and milestones with zero outstanding items.'} Progress counts issues and pull requests.</p>${list || empty('No matching milestones', 'Choose another date filter or view all open milestones.')}${calendar(data,products,r)}`;
 }
 export { backlogPage, sprintPage, roadmapPage, paintIssues, searchIssues, pageIssues };

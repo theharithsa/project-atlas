@@ -1,4 +1,5 @@
 import { day, iso, fmt, span, monday, phase, sprintStats, targets, shortSprint, deliveryMetrics, upcomingTarget } from './model.js';
+import {sprintHref} from './workspace.js';
 import { icon, e, external, url, productMark, dot, empty, progress } from './ui.js';
 function calendar(data, products, route) {
   const preferred = window.matchMedia('(max-width:580px)').matches ? 4 : 6;
@@ -30,7 +31,7 @@ function calendar(data, products, route) {
             right = Math.min(area, day(s.end) - base + 1);
           const type = phase(s, data.asOf),
             label = shortSprint(s.name);
-          const href = url('sprints', p.key, { sprint: s.id });
+          const href = sprintHref(route.product,p.key,s.id,{period:type});
           return `<a class="interval ${type} tone-${p.color}${right - left < 5 ? ' sliver' : ''}" href="${e(href)}" style="left:${pos(left)};width:calc(${pos(right - left)} - 3px)" title="${e(p.label + ' · ' + s.name + ' · ' + span(s.start, s.end, true))}" aria-label="${e(p.label + ' ' + s.name + ', ' + span(s.start, s.end, true))}"><span>${e(label)}</span></a>`;
         })
         .join('');
@@ -40,6 +41,16 @@ function calendar(data, products, route) {
   return `<section class="calendar-panel" aria-label="Sprint calendar"><div class="calendar-top"><div><h2>Sprint calendar</h2><span class="calendar-range">${e(span(iso(base), iso(stop - 1), true))}</span></div><div class="calendar-actions"><a href="${e(change({ offset: offset - weeks }))}" aria-label="Previous ${weeks} weeks">${icon('left', 15)}</a><a href="${e(change({ offset: 0 }))}" class="cal-reset" aria-label="Return to the current week" title="Return to the current week">${e(fmt(data.asOf))}</a><a href="${e(change({ offset: offset + weeks }))}" aria-label="Next ${weeks} weeks">${icon('right', 15)}</a></div></div>
     <div class="timeline-scroll" role="region" tabindex="0" aria-label="Sprint timeline"><div class="timeline ${weeks === 12 ? 'wide' : weeks === 4 ? 'compact' : ''}"><div class="timeline-head"><span class="lane-caption">Product</span><div class="ticks" style="--weeks:${weeks}">${headerTicks}</div></div>${rows}</div></div>
     <div class="calendar-foot"><span><i class="legend-solid"></i>Current</span><span><i class="legend-outline"></i>Other sprint windows</span><span><i class="legend-date"></i>${e(fmt(data.asOf))}</span>${route.page === 'roadmap' ? `<a class="week-switch" href="${e(change({ weeks: weeks === 12 ? preferred : 12, offset: 0 }))}">Show ${weeks === 12 ? preferred : 12} weeks ${icon('right', 12)}</a>` : ''}</div></section>`;
+}
+function currentSprintsCard(products, route, timeframe) {
+  const current = products.flatMap(p => p.current.map(s => ({p,s,stats:sprintStats(p,s)})))
+    .sort((a,b) => Number(b.stats.open > 0) - Number(a.stats.open > 0) || a.s.end.localeCompare(b.s.end) || a.p.label.localeCompare(b.p.label));
+  const rows = current.slice(0,4).map(({p,s,stats}) =>
+    `<a class="overview-sprint" href="${e(sprintHref(route.product,p.key,s.id,{period:'current',window:timeframe.key}))}">
+      ${productMark(p,true)}<span><strong>${e(p.label)}</strong><small>${e(s.name)} · ${e(span(s.start,s.end))}</small></span><b>${stats.open} open</b>${icon('right',14)}</a>`).join('');
+  return `<section class="panel current-mini"><div class="panel-head"><h2>Current sprints</h2><span class="count-pill">${current.length}</span></div>
+    <div>${rows || empty('No current sprints','No configured sprint covers the latest board check date.')}</div>
+    <a class="section-link" href="${e(url('sprints',route.product,{period:'current',window:timeframe.key}))}">View all sprints ${icon('arrow',15)}</a></section>`;
 }
 function upcomingCard(list, route, timeframe) {
   const entries = list
@@ -54,9 +65,9 @@ function upcomingCard(list, route, timeframe) {
       );
     })
     .join('');
-  return `<section class="panel releases-mini"><div class="panel-head"><h2>Upcoming releases</h2><span class="count-pill">${list.length}</span></div><div class="release-list">${entries || empty('No releases due in the next ' + timeframe.label, 'View the roadmap for other targets.')}</div><a class="section-link" href="${e(url('roadmap',route.product,{when:'upcoming',window:timeframe.key}))}">View release roadmap ${icon('arrow', 15)}</a></section>`;
+  return `<section class="panel releases-mini"><div class="panel-head"><h2>Upcoming releases</h2><span class="count-pill">${list.length}</span></div><div class="release-list">${entries || empty('No releases due in the next ' + timeframe.label, 'View the roadmap for other targets.')}</div><a class="section-link" href="${e(url('roadmap',route.product,{when:'upcoming',window:timeframe.key}))}">View planned releases ${icon('arrow', 15)}</a></section>`;
 }
-function productTable(data, products, timeframe) {
+function productTable(data, products, timeframe, route) {
   return `<section class="panel product-panel"><div class="panel-head"><h2>Product status</h2><span class="subcount">${products.length} ${products.length === 1 ? 'product' : 'products'}</span></div>
   <div class="product-table" role="table" aria-label="Product status"><div class="pt-head pt-grid" role="row">${['Product', 'Current sprint', 'Sprint closure', 'Backlog', 'Next release'].map((t) => `<span role="columnheader">${t}</span>`).join('')}</div>
   ${products
@@ -64,7 +75,7 @@ function productTable(data, products, timeframe) {
       const now = p.current[0],
         stats = now ? sprintStats(p, now) : null;
       const next = targets(data, [p]).find((m) => m.version && upcomingTarget(m,data.asOf));
-      return `<div class="pt-row pt-grid" role="row"><div role="cell"><a class="product-label" href="${e(url('overview',p.key,{window:timeframe.key}))}">${productMark(p)}<span>${e(p.label)}</span></a></div><div role="cell" class="pt-sprint">${now ? `<a href="${e(url('sprints', p.key, { sprint: now.id }))}">${e(shortSprint(now.name))}</a><small>${e(span(now.start, now.end))}</small>` : 'No current sprint'}</div>
+      return `<div class="pt-row pt-grid" role="row"><div role="cell"><a class="product-label" href="${e(url('overview',p.key,{window:timeframe.key}))}">${productMark(p)}<span>${e(p.label)}</span></a></div><div role="cell" class="pt-sprint">${now ? `<a href="${e(sprintHref(route.product,p.key,now.id,{period:'current'}))}">${e(shortSprint(now.name))}</a><small>${e(span(now.start, now.end))}</small>` : 'No current sprint'}</div>
     <div role="cell" class="pt-progress tone-${p.color}"><span class="tiny-label">Sprint closure</span>${stats ? `<span class="closure"><b>${stats.closed}/${stats.total}</b> closed</span>${progress(stats.closed, stats.total)}` : '—'}</div>
     <div role="cell" class="pt-backlog"><span class="tiny-label">Backlog</span><a href="${e(url('backlog', p.key))}">${p.backlog.length}</a></div><div role="cell" class="pt-release"><span class="tiny-label">Next release</span>${next ? external(next.url, `${e(fmt(next.due))} ${icon('external', 12)}`, 'date-link') : '<span class="muted">No date set</span>'}</div></div>`;
     })
@@ -115,8 +126,9 @@ function overview(data, products, route, timeframe) {
     ['flag','amber','Undated releases',delivery.undated,'Version milestones with open work',
       url('roadmap',route.product,{kind:'releases',when:'undated'})],
   ];
-  return `<section class="metrics" aria-label="Delivery metrics">${metrics.map(([ic,c,label,n,help,href]) =>
+  return `<div class="overview-priorities">${currentSprintsCard(products,route,timeframe)}${upcomingCard(delivery.upcoming,route,timeframe)}</div>
+    <section class="metrics" aria-label="Delivery metrics">${metrics.map(([ic,c,label,n,help,href]) =>
     `<a href="${e(href)}" class="metric tone-${c}"><span class="metric-heading"><span class="metric-icon tone-${c}">${icon(ic,17)}</span>${e(label)}<span class="metric-jump">${icon('arrow',14)}</span></span><b>${n}</b><small>${e(help)}</small></a>`).join('')}</section>
-    <div class="overview-panels">${calendar(data,products,route)}${upcomingCard(delivery.upcoming,route,timeframe)}</div>${productTable(data,products,timeframe)}${distribution(products,route)}`;
+    ${calendar(data,products,route)}${productTable(data,products,timeframe,route)}${distribution(products,route)}`;
 }
 export { overview, calendar };

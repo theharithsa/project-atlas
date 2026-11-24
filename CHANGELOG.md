@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 · 24 November 2026
+
+- Navigate through Overview, Work, Releases and Activity with a persistent product selector, cobalt workspace accents and a separate Sources utility.
+- See current sprints and upcoming releases below the workload terrain. Inspect sprint issues alongside the list on desktop or drill into a row on a phone. Product selection, timeframe, shared links and browser Back carry the relevant context.
+- Compare planned milestones with the latest published GitHub release for each selected repository. [Workspace navigation](https://github.com/theharithsa/project-atlas/issues/31)
+
 ## 0.10.2 · 24 November 2026
 
 - Switch Light to a pure white workspace. Refresh navigation, metrics and actions with Phosphor icons and identify products by their board initials.

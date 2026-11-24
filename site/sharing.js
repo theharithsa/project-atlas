@@ -1,7 +1,7 @@
 import {ownerLists} from './portfolio.js';
 
 const pages = new Set(['overview','sprints','backlog','history','roadmap','activity','sources']);
-const filters = ['product','sprint','show','period','scope','status','when','kind','offset','weeks','window','activity','developer','range','metric','month'];
+const filters = ['product','board','sprint','show','period','scope','status','when','kind','view','offset','weeks','window','activity','developer','range','metric','month'];
 const activityFilters = ['activity','developer','range','metric','month'];
 
 export function dashboardPage(raw, params) {

@@ -162,7 +162,7 @@ export function codingPanel(data, products, route, users) {
   const hasScope = developer ? validLogin(login) : products.some(p => p.repos.length);
   const chartBody = hasScope ? `<div id="activity-chart" data-login="${developer ? e(login.toLowerCase()) : ''}"><p class="activity-note" role="status">Checking activity…</p></div>` :
     (developer ? '' : '<p class="activity-note">No public repositories are linked to this selection.</p>');
-  return `<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>${e(span(range.start,range.through,true))} · ${developer ? 'Public activity by one developer':'Default-branch commits across selected projects'}</p></div>${scope}</div><div class="activity-controls">${selector}${measure}${form}</div>${chartBody}</section>`;
+  return `<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>${e(span(range.start,range.through,true))} · ${developer ? 'Developer activity across GitHub':'Default-branch commits across selected projects'}</p></div>${scope}</div><div class="activity-controls">${selector}${measure}${form}</div>${chartBody}</section>`;
 }
 
 const cache = new Map();

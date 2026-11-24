@@ -22,3 +22,5 @@ The workspace uses Astryx’s Neutral theme, site tokens in `site/console.css` a
 Use `deliveryTimeframe` for Overview and its date-sensitive drilldowns. The visible menus share `selectPicker` and Astryx tokens. Keep the native select semantics, date inclusivity and filter state across links.
 
 Light uses white page, card and field surfaces. Keep the selected value in the native select. Shared field geometry and focus styles live in `site/console.css`. Project badges derive their initials from discovered board names.
+
+The top navigation and scoped sprint links live in `site/workspace.js`. Keep product scope independent from the board of an inspected sprint. `site/workspace.css` controls responsive list and detail visibility. Keep the four destinations and Sources keyboard-accessible in both themes.

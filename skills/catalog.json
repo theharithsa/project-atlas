@@ -202,7 +202,9 @@
         "site/atlas-motion.js",
         "site/appearance.js",
         "site/terrain.js",
-        "site/console.css"
+        "site/console.css",
+        "site/workspace.js",
+        "site/workspace.css"
       ],
       "owner": "theharithsa",
       "status": "active",

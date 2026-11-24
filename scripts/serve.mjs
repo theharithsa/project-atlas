@@ -15,8 +15,8 @@ const currentPortfolio = createFeed(() => collectPortfolio(localSettings));
 const site = new URL('../site/', import.meta.url);
 const mime = new Map([
   ['index.html', 'text/html; charset=utf-8'],
-  ...['styles.css','console.css','generated/astryx.css'].map(f => [f,'text/css; charset=utf-8']),
-  ...['app', 'appearance', 'terrain', 'ui', 'work', 'overview', 'model', 'portfolio', 'sharing', 'activity', 'activity-range', 'atlas-motion', 'generated/controls'].map((f) => [
+  ...['styles.css','console.css','workspace.css','generated/astryx.css'].map(f => [f,'text/css; charset=utf-8']),
+  ...['app', 'appearance', 'terrain', 'ui', 'work', 'workspace', 'overview', 'model', 'portfolio', 'sharing', 'activity', 'activity-range', 'atlas-motion', 'generated/controls'].map((f) => [
     f + '.js',
     'text/javascript; charset=utf-8',
   ]),

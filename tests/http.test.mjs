@@ -77,7 +77,7 @@ test('a fresh local preview serves the frontend and keeps local files outside it
   for (const glyph of ['system','light','dark','user','org','search','down','calendar','filter','grid','arrow','link','copy'])
     assert.ok(symbols.has(glyph), 'Missing control symbol ' + glyph);
   assert.match(await (await fetch(origin + '/generated/licenses.txt')).text(), /Phosphor Icons/);
-  for (const path of ['/app.js','/appearance.js','/terrain.js','/portfolio.js','/sharing.js','/activity.js','/activity-range.js','/work.js','/console.css','/atlas-motion.js','/generated/astryx.css','/generated/controls.js','/generated/space-grotesk.woff2','/generated/jetbrains-mono.woff2','/generated/licenses.txt','/assets/atlas-mark.svg']) {
+  for (const path of ['/app.js','/appearance.js','/terrain.js','/portfolio.js','/sharing.js','/activity.js','/activity-range.js','/work.js','/workspace.js','/workspace.css','/console.css','/atlas-motion.js','/generated/astryx.css','/generated/controls.js','/generated/space-grotesk.woff2','/generated/jetbrains-mono.woff2','/generated/licenses.txt','/assets/atlas-mark.svg']) {
     assert.equal((await fetch(origin + path, {method:'HEAD'})).status,200);
   }
   for (const path of ['/snapshot.json','/local-archive/owner-snapshot.json','/firebase.json','/api/v1/portfolio?repo=other','/api/v1/owners/orgs/not%2Fa%2Flogin','/api/v1/owners/users/octo?extra=1','/api/v1/developers/bad%2Flogin/activity','/api/v1/developers/octo/activity?extra=1']) {

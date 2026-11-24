@@ -124,3 +124,11 @@ test('missing and capped streak coverage retains proven active days and flags un
   assert.equal(streakSummary(asOf,[stale]).days.at(-2).complete,false);
   assert.equal(streakSummary(asOf,[stale]).days.at(-1).complete,false);
 });
+
+test('all-product sprint links retain their board and published releases retain their view',()=>{
+  const settings = {users:['dev'],organizations:[]};
+  for (const [page,query] of [['sprints','board=two&sprint=s1&show=open'],['roadmap','view=published']]) {
+    const href = viewLink('https://atlas.example/',settings,route(page,'all',query));
+    assert.equal(decodeView(new URL(href).hash).route,'#'+page+'?'+query);
+  }
+});

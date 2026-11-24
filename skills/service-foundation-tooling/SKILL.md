@@ -20,3 +20,5 @@ Install the root design dependencies with `npm ci --ignore-scripts` before the f
 Load the appearance script from the preview allowlist before styles and app modules. Its control must work while the feed is pending.
 
 The build also extracts the selected Phosphor SVG symbols and includes their MIT notice with the font and Astryx licenses. Serve the sprite at `generated/icons.svg` in preview and Hosting.
+
+The local dashboard serves the workspace navigation module and stylesheet from the static MIME allowlist. Keep these routes covered in the preview HTTP tests.

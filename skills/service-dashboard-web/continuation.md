@@ -25,3 +25,5 @@ Version 0.10.0 adds System, Light and Dark and a workload terrain derived from e
 Version 0.10.1 carries the map design through a cold board read. Hold the first API response to verify the empty survey sheet and usable appearance controls, then return success and a retryable failure in separate runs. [Loading view](https://github.com/theharithsa/project-atlas/issues/27)
 
 Version 0.10.2 aligns native selects, text fields and their icons on a 44px control. Verify both appearances, long option names, the keyboard menu, search, developer and owner entry, and sharing at desktop and phone widths. [Controls issue](https://github.com/theharithsa/project-atlas/issues/29)
+
+For 0.11.0, open Work with All products, select two boards that reuse a sprint ID, then switch product and navigate Back. Check the desktop inspector and the phone return link. Compare planned milestones with the latest published tags. [Navigation issue](https://github.com/theharithsa/project-atlas/issues/31)
