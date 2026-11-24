@@ -153,7 +153,7 @@
         "sh scripts/check.sh"
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
-      "lastReviewedRevision": "604140ebb693a01a38523e88da28803d24ef37c5"
+      "lastReviewedRevision": "c8ddbb6dbde08a468fc4adc402775f654271928f"
     },
     {
       "id": "portfolio-feed",
@@ -220,7 +220,7 @@
         "npm test"
       ],
       "continuation": "skills/service-dashboard-web/continuation.md",
-      "lastReviewedRevision": "0d5c3cb10e43a1621b47fad102cb4f15e90da255"
+      "lastReviewedRevision": "c8ddbb6dbde08a468fc4adc402775f654271928f"
     }
   ]
 }
