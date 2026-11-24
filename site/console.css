@@ -240,6 +240,9 @@ input, select, textarea { color: var(--ink); color-scheme: inherit; }
 }
 .hero-filters, .hero-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 100%; }
 .hero-filters, .view-actions { align-items: end; }
+.page-title { flex-wrap: wrap; }
+.page-title > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.page-title .view-actions { flex-shrink: 0; max-inline-size: 100%; }
 .hero-filters .picker-product { inline-size: min(18rem, 37vw); }
 .hero-filters .picker-timeframe { inline-size: 10.7rem; }
 .hero-actions { align-items: end; }
@@ -485,6 +488,9 @@ a.month-step:hover { border-color: var(--violet); }
   .activity-year > strong { padding-top: 6px; }
   .year-months { grid-template-columns: repeat(6,minmax(0,1fr)); gap: 4px; }
 }
+@media (min-width: 415px) and (max-width: 860px) {
+  .topbar .crumb > strong, .topbar .crumb-slash, .topbar #sync-time { display: none; }
+}
 @media (max-width: 540px) {
   .activity-calendar .heat-day { grid-template-columns: 1fr; padding: 2px 0; align-content: center; min-height: 37px; }
   .activity-section { padding: 10px; }
@@ -705,8 +711,8 @@ a.month-step:hover { border-color: var(--violet); }
 @media (max-width: 414px) {
   .topbar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 10px; height: auto; padding-block: 8px; }
   .topbar .crumb { grid-column: 1/-1; min-width: 0; }
-  .topbar .crumb > strong { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .topbar .picker-portfolio { flex: 0 1 176px; }
+  .topbar .crumb > strong { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .picker-portfolio { flex: 0 0 176px; }
   .topbar .sync-tools { margin-inline-start: 0; }
   .topbar #sync-label { position: static; width: auto; height: auto; clip-path: none; }
   .topbar .appearance { justify-self: end; }
@@ -714,6 +720,8 @@ a.month-step:hover { border-color: var(--violet); }
 @media (max-width: 374px) {
   .hero-filters { grid-template-columns: minmax(0,1fr); }
   .developer-entry { grid-template-columns: minmax(0,1fr); }
+  .picker-activity-metric .picker-control { --picker-start: 12px; }
+  .picker-activity-metric .picker-leading { display: none; }
 }
 .terrain-tools { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; }
 .terrain-tools > button { width: 32px; height: 30px; padding: 0; background: var(--shell); }
