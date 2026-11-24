@@ -12,7 +12,8 @@
   --border-raised: light-dark(#9ba9ad,#526d6e);
 }
 .shell { display: block; }
-.workspace-header { background: var(--shell); }
+html { scroll-padding-top: 72px; }
+.workspace-header { position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--border); background: var(--shell); }
 .masthead, #workspace-context, .workspace .main {
   width: min(100%,1480px); margin-inline: auto;
   padding-inline: clamp(16px,3.5vw,58px);
@@ -35,7 +36,7 @@
   height: 3px; border-radius: 2px 2px 0 0; background: var(--violet);
 }
 .masthead-utilities { margin-inline-start: auto; gap: 16px; }
-.context-band { border-block: 1px solid var(--border); }
+.context-band { background: var(--shell); border-bottom: 1px solid var(--border); }
 #workspace-context { display: flex; align-items: center; justify-content: space-between; gap: 8px 20px; padding-block: 8px; min-height: 59px; }
 .scope-actions, .scope-tools { min-width: 0; gap: 12px; }
 .scope-divider { height: 28px; width: 1px; background: var(--border); }
@@ -67,7 +68,7 @@
 .sprint-heading, .inspector-controls, .directory-key, .sprint-completion, .list-return { display: flex; align-items: center; }
 .sprint-heading { justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
 .sprint-heading .atlas-picker { display: flex; align-items: center; gap: 9px; }
-.sprint-heading .picker-control { width: 124px; }
+.sprint-heading .picker-control { width: 162px; }
 .sprint-panes { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: clamp(20px,3vw,44px); align-items: start; }
 .sprint-directory { min-width: 0; }
 .directory-key { justify-content: space-between; padding: 5px 10px 10px; color: var(--sub); font: 500 11px/1.45 var(--atlas-mono); }
@@ -88,7 +89,7 @@
 .list-return { display: none; }
 .inspector-controls { justify-content: space-between; gap: 10px; }
 .inspector-controls h3 { margin: 0; font-size: 17px; }
-.inspector-controls .picker-control { min-width: 112px; }
+.inspector-controls .picker-control { width: clamp(138px,15vw,165px); }
 .sprint-inspector .issue-panel { background: transparent; border: 0; border-radius: 0; margin: 0; }
 .sprint-inspector .list-head { padding: 9px 0; }
 .sprint-inspector .search-box { width: 100%; }
@@ -107,6 +108,7 @@
   .masthead, .masthead-utilities, .scope-tools, .scope-actions { gap: 8px; }
 }
 @media (max-width: 760px) {
+  html { scroll-padding-top: 102px; }
   .masthead { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 0; padding-top: 7px; }
   .masthead .brand { font-size: 19px; }
   #workspace-nav { grid-row: 2; grid-column: 1/-1; }
@@ -141,7 +143,8 @@
   .workspace .main { padding-top: 20px; }
   .sprint-heading { align-items: end; }
   .sprint-heading .atlas-picker { display: grid; gap: 2px; }
-  .sprint-heading .picker-control { width: 102px; }
+  .sprint-heading .picker-control { width: 144px; --picker-start: 9px; --picker-end: 27px; }
+  .sprint-heading .atlas-select { font-size: 12px; }
   .main > .tabs a { font-size: 13px; padding: 8px 10px; }
   .sprint-option { padding: 12px 8px; gap: 9px; }
   .inspector-issue .astryx-badge { max-width: 6rem; font-size: 10px; }

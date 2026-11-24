@@ -132,3 +132,11 @@ test('all-product sprint links retain their board and published releases retain 
     assert.equal(decodeView(new URL(href).hash).route,'#'+page+'?'+query);
   }
 });
+
+test('workspace destinations inherit the selected timeframe and allow an explicit all-time history',async t=>{
+  const {setRouteWindow} = await import('../site/ui.js');
+  setRouteWindow('90d');
+  t.after(()=>setRouteWindow(null));
+  assert.equal(url('roadmap','alpha',{view:'published'}),'#roadmap?product=alpha&view=published&window=90d');
+  assert.equal(url('history','alpha',{window:null}),'#history?product=alpha');
+});

@@ -38,10 +38,10 @@ Current sprints and upcoming releases appear directly below the workload terrain
 
 | Tile | What it measures and where it opens |
 | --- | --- |
-| Closed in the selected timeframe | Unique board issues with a GitHub closure timestamp in the selected calendar dates. Opens those issues in History. |
+| Closed in the selected timeframe | Unique board issues with a GitHub closure timestamp in the selected calendar dates. Opens those issues in Work → Closed issues. |
 | Open in sprint windows | Open leaf issue assignments in sprints that overlap the selected dates. Opens those windows in Sprints. |
 | Sprint completion | Closed leaf issue assignments divided by all leaf issue assignments in the matching sprint windows. |
-| Dated releases | Versioned GitHub targets due in the forward window. Opens the same dates on Roadmap. |
+| Dated releases | Versioned GitHub targets due in the forward window. Opens the same dates in Releases → Planned. |
 | Open work and unscheduled backlog | Live counts for the selected boards. The tiles open the matching backlog filters. |
 | Needs a sprint | Open leaf issues with a delivery or planning milestone and no assigned sprint. Opens the Milestone only backlog. |
 | Undated releases | Open version milestones with outstanding work and no due date, counted once per repository milestone. Opens the matching roadmap filter. |
@@ -50,7 +50,7 @@ The header counts currently discovered open public boards and unique linked repo
 
 ## Explore coding streaks
 
-Open **Activity** from the sidebar or **Explore activity** on Overview. **Projects** counts default-branch commits in the selected boards’ public repositories. A repository on two boards counts once. **Developer** accepts a GitHub username and uses GitHub’s public commit search across repositories. GitHub must associate the commit author with the chosen account. The product filter continues to apply to the delivery tiles while the developer search follows the username across GitHub. [How GitHub searches commits](https://docs.github.com/en/search-github/searching-on-github/searching-commits)
+Open **Activity** in the main navigation or **Explore activity** on Overview. **Projects** counts default-branch commits in the selected boards’ public repositories. A repository on two boards counts once. **Developer** accepts a GitHub username and uses GitHub’s public commit search across repositories. GitHub must associate the commit author with the chosen account. The product filter continues to apply to the delivery tiles while the developer search follows the username across GitHub. [How GitHub searches commits](https://docs.github.com/en/search-github/searching-on-github/searching-commits)
 
 Use **Time range** to choose four weeks, three or six months, or one through five years. Every window ends on the dashboard date. For example, **5 years** on 18 November 2026 covers 19 November 2021 through 18 November 2026, including leap day. In longer views, the year rows show totals for each month and shade months by daily average. Select a month or use the previous and next arrows above its Monday-first calendar. Tab into the current day and use the arrow keys to move one day or one week. Share view includes the range, selected month and streak measure. Earlier links to the streak on Overview open Activity with their original settings. [Five-year Atlas project history](https://pipeline.theharithsanotes.com/#activity?product=theharithsa-5&range=5y)
 
@@ -62,7 +62,7 @@ The current streak can end yesterday while today is still open. The longest stre
 
 ## Change the shared portfolio owners
 
-1. Select **Shared portfolio**, then open **Data sources → Shared portfolio owners → Edit owners on GitHub**. Sign in to GitHub to propose a change. The two lists contain account logins, as shown in GitHub profile URLs. [Live settings](https://pipeline.theharithsanotes.com/#sources) · [Shared file](../config/owners.json)
+1. Select **Shared portfolio**, then open **Sources → Shared portfolio owners → Edit owners on GitHub**. Sign in to GitHub to propose a change. The two lists contain account logins, as shown in GitHub profile URLs. [Live settings](https://pipeline.theharithsanotes.com/#sources) · [Shared file](../config/owners.json)
 2. Add or remove logins in `users` and `organizations`. Keep both arrays. Either may be empty, and two empty arrays produce an empty dashboard. Repeated logins of the same type count once. Assign each login to exactly one type.
 3. Open a pull request. A repository maintainer can merge it after the checks pass. The merged list applies to everyone. While the dashboard is in use the feed checks for changes every five minutes. GitHub and dashboard caching can add a short delay. Settings-only edits take effect without a Firebase deployment. [GitHub file editing](https://docs.github.com/en/repositories/working-with-files/managing-files/editing-files)
 
