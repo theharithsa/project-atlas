@@ -9,6 +9,7 @@ import { icon, e, external, url, productMark, selectPicker, setRoutePrefix } fro
 import { overview } from './overview.js';
 import { backlogPage, sprintPage, roadmapPage, historyPage, paintIssues, searchIssues, pageIssues, saveIssueView, restoreIssueView } from './work.js';
 const main = document.getElementById('content'),
+  pendingFeed = main.firstElementChild,
   desktop = document.getElementById('desktop-nav'),
   menu = document.getElementById('mobile-menu'),
   topbar = document.getElementById('topbar');
@@ -405,11 +406,11 @@ function pendingPage(error) {
     main.innerHTML = '<section class="panel error-state"><h1>Invalid portfolio link</h1><p>Ask the sender for a new link.</p><button type="button" data-leave-link>Return to my dashboard</button></section>';
     return;
   }
-  const title = error ? 'GitHub feed unavailable' : 'Checking public GitHub projects…';
   document.title = (personal ? 'My portfolio' : 'Shared portfolio') + ' · Project Atlas';
-  main.innerHTML = `<section class="panel error-state"><h1>${title}</h1>${error ? `<p>We’ll retry automatically.</p>${coverageNotes(error.unavailable || [])}<button id="retry-feed">Try again</button>` : ''}</section>` +
+  main.innerHTML = (error ? `<section class="panel error-state"><h1>GitHub feed unavailable</h1><p>We’ll retry automatically.</p>${coverageNotes(error.unavailable || [])}<button id="retry-feed">Try again</button></section>` : '') +
     (linked ? linkedOwnerPanel() + '<button type="button" data-leave-link>Return to my dashboard</button>' : personal || error ? personalOwnerPanel() : '') +
     (error && !personal ? `<p>${external(editOwnersUrl, 'Check shared owner settings on GitHub', 'text-link')}</p>` : '');
+  if (!error) main.prepend(pendingFeed);
 }
 function rememberLinkedSearch() {
   if (!linked?.owners) return;

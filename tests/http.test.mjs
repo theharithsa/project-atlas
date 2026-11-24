@@ -64,6 +64,9 @@ test('a fresh local preview serves the frontend and keeps local files outside it
   assert.equal(page.status,200);
   const document = await page.text();
   assert.match(document,/Project Atlas/);
+  assert.match(document,/<section class="feed-pending" role="status">/);
+  assert.match(document,/<h1>Checking public GitHub projects…<\/h1>/);
+  assert.doesNotMatch(document,/class="terrain-pin"|class="metric-heading"/);
   assert.match(document,/rel="icon" href="assets\/atlas-mark\.svg"/);
   assert.match(document,/data-astryx-theme="neutral" data-theme="dark"/);
   assert.ok(document.indexOf('src="appearance.js"') < document.indexOf('rel="stylesheet"'));

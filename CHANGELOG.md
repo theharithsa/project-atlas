@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1 · 24 November 2026
+
+- Show an empty survey grid while the first GitHub board request is pending. The loading view uses the selected appearance and hands over to the real terrain when the feed arrives. [Loading view](https://github.com/theharithsa/project-atlas/issues/27)
+
 ## 0.10.0 · 24 November 2026
 
 - Explore open work as a rotatable terrain. Select a board’s peak, read its exact workload and open the filtered overview.
