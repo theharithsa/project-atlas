@@ -8,6 +8,8 @@ The three controls at the right of the top bar are **System** (monitor), **Light
 
 ## Explore the workload terrain
 
+While Atlas checks GitHub, an empty survey grid marks the loading state. The data appears when that request completes.
+
 Open **Overview** and choose **All products**. Each marker represents a discovered board. The tallest peak has the most open leaf issues. Heights use a square-root scale across the whole portfolio so smaller workloads remain visible. The selected marker shows the exact count. A board with zero open issues has a marker at ground level.
 
 Select a marker or use **Inspect previous board** and **Inspect next board** beneath the map. Each sheet holds six boards, and the arrows reach the entire portfolio, starting with the busiest. **Rotate terrain 90 degrees** lets you see peaks that overlap from one angle. Select the board name beneath the map to open its delivery overview with the current timeframe.
