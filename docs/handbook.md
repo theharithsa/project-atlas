@@ -4,7 +4,7 @@ Start with the whole portfolio or choose a product in the sidebar. A product sel
 
 ## Choose an appearance
 
-The three controls at the right of the top bar are **System** (monitor), **Light** (sun) and **Dark** (moon). System follows the device and updates when its appearance changes. Choosing the sun or moon saves an override in this browser. Choose the monitor to follow the device again. A shared link leaves the recipient’s appearance choice to them. With reduced motion enabled, Atlas opens directly into the dashboard and map rotation changes the view immediately.
+The three controls at the right of the top bar are **System** (monitor), **Light** (sun) and **Dark** (moon). Light uses a white canvas for the dashboard, forms and menus. System follows the device and updates when its appearance changes. Choosing the sun or moon saves an override in this browser. Choose the monitor to follow the device again. A shared link leaves the recipient’s appearance choice to them. With reduced motion enabled, Atlas opens directly into the dashboard and map rotation changes the view immediately.
 
 ## Explore the workload terrain
 

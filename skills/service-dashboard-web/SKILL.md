@@ -20,3 +20,5 @@ The developer view shows contributions for the selected range and the account li
 The workspace uses Astryx’s Neutral theme, site tokens in `site/console.css` and build-time Button and Badge markup from `scripts/build.mjs`. The boot and route transitions live in `site/atlas-motion.js`. `site/appearance.js` resolves the browser-local appearance before CSS loads. `site/terrain.js` maps prepared open issues to rotatable, keyboard-accessible terrain. Keep the opening dismissible, keep data fetches independent of motion and verify the reduced-motion branch.
 
 Use `deliveryTimeframe` for Overview and its date-sensitive drilldowns. The visible menus share `selectPicker` and Astryx tokens. Keep the native select semantics, date inclusivity and filter state across links.
+
+Light uses white page, card and field surfaces. Keep the selected value in the native select. Shared field geometry and focus styles live in `site/console.css`. Project badges derive their initials from discovered board names.

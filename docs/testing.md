@@ -33,3 +33,5 @@ Inspect every dashboard page at desktop and phone widths. Check the opening on a
 Change the Overview timeframe from 7 to 30 days and compare closures, sprint totals and release targets with their linked detail pages. Check the opened menu, selection and focus at desktop and phone widths. Check the slower opening on a fresh load and verify immediate dismissal on input.
 
 Exercise System, Light and Dark before the feed resolves, after reload and on each route. In Overview, inspect a board, rotate the workload terrain and open its filtered overview. Check keyboard input, reduced motion and a portfolio with more than six boards. A board with no open leaf issues should sit at ground level.
+
+In Light, check the white canvas during loading, on the dashboard and in the share dialog. Open product, timeframe, work and activity filters with a keyboard. Verify that the selected text sits between the leading icon and caret, including at 375px width. Try a long board title and confirm its full text in the menu. Check issue search, owner inputs, developer username and the read-only share link for visible focus and matching heights with nearby buttons.

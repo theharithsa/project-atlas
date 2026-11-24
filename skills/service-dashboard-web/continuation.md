@@ -23,3 +23,5 @@ Version 0.9.0 adds the overview timeframe, darker dropdown menus and a 3.1-secon
 Version 0.10.0 adds System, Light and Dark and a workload terrain derived from each board’s open leaf issues. Check both appearances during loading and on every route, navigate beyond the first six boards, rotate the map, and follow its board link with the selected timeframe. [Design issue](https://github.com/theharithsa/project-atlas/issues/25)
 
 Version 0.10.1 carries the map design through a cold board read. Hold the first API response to verify the empty survey sheet and usable appearance controls, then return success and a retryable failure in separate runs. [Loading view](https://github.com/theharithsa/project-atlas/issues/27)
+
+Version 0.10.2 aligns native selects, text fields and their icons on a 44px control. Verify both appearances, long option names, the keyboard menu, search, developer and owner entry, and sharing at desktop and phone widths. [Controls issue](https://github.com/theharithsa/project-atlas/issues/29)

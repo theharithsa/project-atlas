@@ -2,6 +2,26 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {prepare, sprintStats, targets, closedIssues} from '../site/model.js';
 import {samplePortfolio} from './fixtures/portfolio.mjs';
+import {productMark, selectPicker} from '../site/ui.js';
+
+test('product badges derive initials from discovered names and handle symbol-only titles', () => {
+  const badge = label => productMark({label, color:'green'}, true);
+  assert.match(badge('Project Atlas'), />PA<\/span>/);
+  assert.match(badge('SalesDrone'), />SD<\/span>/);
+  assert.match(badge('東京'), />東京<\/span>/);
+  assert.match(badge('🛰'), /generated\/icons.svg#box/);
+});
+
+test('filters keep one native select, its full selected title and a separate decorative caret', () => {
+  const title = 'A long board title with <markup> & spaces';
+  const filter = selectPicker('product-select','Product filter',[['all','All products'],['long',title]],'long',
+    {leading:'box',caption:'Product'});
+  assert.match(filter, /class="picker-label">Product<\/span>/);
+  assert.match(filter, /<select [^>]*aria-label="Product filter"/);
+  assert.match(filter, /<selectedcontent><\/selectedcontent>/);
+  assert.match(filter, /<option value="long" selected>A long board title with &lt;markup&gt; &amp; spaces<\/option>/);
+  assert.match(filter, /<\/select>\s*<span class="picker-chevron"><svg [^>]*aria-hidden="true"/);
+});
 
 test('current sprint and backlog count leaf issues separately from planned work', () => {
   const sample = samplePortfolio();

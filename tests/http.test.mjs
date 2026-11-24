@@ -71,6 +71,12 @@ test('a fresh local preview serves the frontend and keeps local files outside it
   assert.match(document,/data-astryx-theme="neutral" data-theme="dark"/);
   assert.ok(document.indexOf('src="appearance.js"') < document.indexOf('rel="stylesheet"'));
   assert.match(await (await fetch(origin + '/generated/controls.js')).text(),/astryx-button.*astryx-badge/s);
+  const sprite = await fetch(origin + '/generated/icons.svg');
+  assert.match(sprite.headers.get('content-type'), /image\/svg\+xml/);
+  const symbols = new Set([...(await sprite.text()).matchAll(/<symbol id="([^"]+)"/g)].map(match => match[1]));
+  for (const glyph of ['system','light','dark','user','org','search','down','calendar','filter','grid','arrow','link','copy'])
+    assert.ok(symbols.has(glyph), 'Missing control symbol ' + glyph);
+  assert.match(await (await fetch(origin + '/generated/licenses.txt')).text(), /Phosphor Icons/);
   for (const path of ['/app.js','/appearance.js','/terrain.js','/portfolio.js','/sharing.js','/activity.js','/activity-range.js','/work.js','/console.css','/atlas-motion.js','/generated/astryx.css','/generated/controls.js','/generated/space-grotesk.woff2','/generated/jetbrains-mono.woff2','/generated/licenses.txt','/assets/atlas-mark.svg']) {
     assert.equal((await fetch(origin + path, {method:'HEAD'})).status,200);
   }

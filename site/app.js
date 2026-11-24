@@ -119,8 +119,8 @@ function personalOwnerPanel() {
   const orgs = draft?.organizations ?? preferences.organizations.join(', ');
   return `<section class="panel source-intro personal-settings"><h2>My portfolio owners</h2><p id="owner-help">Enter up to ${maxPersonalOwners} public GitHub users and organizations, separated by commas. This browser remembers your list.</p>
     <form id="personal-owners" aria-describedby="owner-help">
-      <label>GitHub users<input id="personal-users" type="text" maxlength="2000" value="${e(users)}" placeholder="octocat" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
-      <label>GitHub organizations<input id="personal-orgs" type="text" maxlength="2000" value="${e(orgs)}" placeholder="github" spellcheck="false" autocapitalize="none" autocomplete="off"></label>
+      <label><span class="field-label">GitHub users</span><span class="text-field">${icon('user',18)}<input id="personal-users" type="text" aria-describedby="owner-error" maxlength="2000" value="${e(users)}" placeholder="octocat" spellcheck="false" autocapitalize="none" autocomplete="off"></span></label>
+      <label><span class="field-label">GitHub organizations</span><span class="text-field">${icon('org',18)}<input id="personal-orgs" type="text" aria-describedby="owner-error" maxlength="2000" value="${e(orgs)}" placeholder="github" spellcheck="false" autocapitalize="none" autocomplete="off"></span></label>
       <p class="form-feedback" id="owner-error" role="alert">${e(inputError)}</p>
       <div class="owner-actions">${controls.saveOwners}<button type="button" id="clear-owners">Clear list</button></div>
       <p class="form-feedback" role="status" id="owner-notice">${e(settingsNotice)}</p>
@@ -190,7 +190,7 @@ function header(products, timeframe) {
   const share = preferences.mode === 'personal' ? controls.share : '';
   const showProductFilter = r.page !== 'activity' || r.q.get('activity') !== 'developer';
   const productPicker = showProductFilter ? selectPicker('product-select','Product filter',
-    [['all','All products'],...data.projects.map(p => [p.key,p.label])],r.product,{leading:'layers',kind:'product'}) : '';
+    [['all','All products'],...data.projects.map(p => [p.key,p.label])],r.product,{leading:'box',caption:timeframe && 'Product',kind:'product'}) : '';
   const periodPicker = timeframe ? selectPicker('overview-window','Timeframe',timeframeOptions,timeframe.key,
     {leading:'calendar',caption:true,kind:'timeframe'}) : '';
   const actions = share + productPicker + periodPicker;
@@ -225,7 +225,7 @@ function render(updating = false) {
     : null;
   desktop.innerHTML = navigation();
   menu.innerHTML = navigation(true);
-  topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button>${modeControl()}<span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="${e(url('sources'))}" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',15)}</button></div>`;
+  topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button>${modeControl()}<span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="${e(url('sources'))}" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',18)}</button></div>`;
   const missingProduct = linked && r.q.has('product') && r.q.get('product') !== 'all' && r.product === 'all';
   const missingSprint = linked && r.page === 'sprints' && r.q.has('sprint') &&
     (r.product === 'all' || !products[0]?.sprints.some(s => s.id === r.q.get('sprint')));
@@ -316,6 +316,10 @@ document.addEventListener('input', (ev) => {
     document.getElementById('owner-error').textContent = '';
     document.getElementById('owner-notice').textContent = '';
   }
+  if (ev.target.id === 'developer-login') {
+    ev.target.removeAttribute('aria-invalid');
+    document.getElementById('developer-error').textContent = '';
+  }
   if (ev.target.id === 'issue-search') { searchIssues(ev.target.value); rememberLinkedSearch(); }
 });
 document.addEventListener('submit', ev => {
@@ -323,7 +327,12 @@ document.addEventListener('submit', ev => {
     ev.preventDefault();
     const next = developerRoute(r, document.getElementById('developer-login').value);
     if (next) setView(next);
-    else document.getElementById('developer-error').textContent = 'Enter a valid GitHub username.';
+    else {
+      const input = document.getElementById('developer-login');
+      input.setAttribute('aria-invalid','true');
+      document.getElementById('developer-error').textContent = 'Enter a valid GitHub username.';
+      input.focus();
+    }
     return;
   }
   if (ev.target.id !== 'personal-owners') return;

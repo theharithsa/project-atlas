@@ -24,6 +24,7 @@
 body {
   margin: 0;
   min-width: 280px;
+  background: var(--canvas);
 }
 button,
 input,
@@ -1001,29 +1002,6 @@ h2 {
 .list-head {
   flex-wrap: wrap;
 }
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--shell);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 10px;
-  color: var(--sub);
-  max-width: 100%;
-}
-.search-box input {
-  border: 0;
-  background: none;
-  width: 165px;
-  min-width: 0;
-  outline: none;
-  font-size: 12px;
-  color: var(--ink);
-}
-.search-box:focus-within {
-  outline: 2px solid var(--violet);
-}
 .work-row,
 .work-head {
   display: grid;
@@ -1685,9 +1663,6 @@ dialog::backdrop {
   .list-head {
     gap: 9px;
   }
-  .search-box input {
-    width: 125px;
-  }
   .snapshot-link span {
     white-space: nowrap;
   }
@@ -1710,9 +1685,6 @@ dialog::backdrop {
     min-width: 21px;
   }
   .search-box {
-    width: 100%;
-  }
-  .search-box input {
     width: 100%;
   }
 }
@@ -1835,16 +1807,6 @@ dialog::backdrop {
   margin-top: 16px;
 }
 .personal-settings label { display: grid; gap: 6px; font-weight: 600; }
-.personal-settings input {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 10px;
-  color: var(--ink);
-  background: var(--paper);
-  font-weight: 400;
-}
 .owner-actions, .personal-settings .form-feedback { grid-column: 1 / -1; }
 .owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .owner-actions button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
@@ -1868,7 +1830,6 @@ dialog::backdrop {
 #share-dialog::backdrop { background: #000812bb; }
 #share-dialog p { font-size: 14px; color: var(--sub); margin: 10px 0; }
 #share-dialog label { display: grid; gap: 6px; font-weight: 600; margin: 18px 0; }
-#share-address { width: 100%; padding: 9px; font: inherit; border: 1px solid var(--border); border-radius: 8px; }
 #copy-view-link { color: var(--color-on-accent); background: var(--violet); border-color: var(--violet); }
 #share-result:empty { display: none; }
 @media (max-width: 640px) {

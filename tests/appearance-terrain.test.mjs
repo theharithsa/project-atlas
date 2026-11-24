@@ -34,7 +34,7 @@ function appearance(value, blocked = false) {
 test('System resolves before styles and follows a device change, even with an invalid saved value',()=>{
   const ui = appearance('invalid');
   assert.deepEqual(ui.root.dataset,{appearance:'system',theme:'light'});
-  assert.equal(ui.meta.content,'#f3f2e9');
+  assert.equal(ui.meta.content,'#ffffff');
   ui.system.matches = true;
   ui.emit('system');
   assert.equal(ui.root.dataset.theme,'dark');

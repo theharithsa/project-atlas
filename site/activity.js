@@ -155,14 +155,14 @@ export function codingPanel(data, products, route, users) {
     ['project','Projects',activityHref(route,{activity:null,developer:null,metric:null})],
     ['developer','Developer',activityHref(route,{activity:'developer',developer:login || null})],
   ],developer ? 'developer':'project');
-  const selector = selectPicker('activity-range','Time range',ranges,range.key,{caption:true});
+  const selector = selectPicker('activity-range','Time range',ranges,range.key,{caption:true,leading:'calendar',kind:'activity-range'});
   const measure = developer ? selectPicker('activity-metric','Streak based on',
-    [['commits','Commits'],['contributions','Profile contributions']],metric,{caption:true}) : '';
-  const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login">GitHub username</label><div><input id="developer-login" name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none">${controls.developer}</div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
+    [['commits','Commits'],['contributions','Profile contributions']],metric,{caption:true,leading:'filter',kind:'activity-metric'}) : '';
+  const form = developer ? `<form id="developer-form" class="developer-form"><label for="developer-login" class="field-label">GitHub username</label><div class="developer-entry"><span class="text-field">${icon('user',18)}<input id="developer-login"${login && !validLogin(login) ? ' aria-invalid="true"' : ''} name="login" value="${e(login)}" maxlength="39" required autocomplete="off" spellcheck="false" autocapitalize="none" aria-describedby="developer-error"></span>${controls.developer}</div><span id="developer-error" role="alert">${login && !validLogin(login) ? 'Enter a valid GitHub username.' : ''}</span></form>` : '';
   const hasScope = developer ? validLogin(login) : products.some(p => p.repos.length);
   const chartBody = hasScope ? `<div id="activity-chart" data-login="${developer ? e(login.toLowerCase()) : ''}"><p class="activity-note" role="status">Checking activity…</p></div>` :
     (developer ? '' : '<p class="activity-note">No public repositories are linked to this selection.</p>');
-  return `<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>${e(span(range.start,range.through,true))} · ${developer ? 'Public activity by one developer':'Default-branch commits across selected projects'}</p></div>${scope}</div><div class="activity-controls">${selector}${form}${measure}</div>${chartBody}</section>`;
+  return `<section id="coding-activity" class="panel coding-panel" aria-label="Coding streak"><div class="coding-head"><div><h2>Coding streak</h2><p>${e(span(range.start,range.through,true))} · ${developer ? 'Public activity by one developer':'Default-branch commits across selected projects'}</p></div>${scope}</div><div class="activity-controls">${selector}${measure}${form}</div>${chartBody}</section>`;
 }
 
 const cache = new Map();
