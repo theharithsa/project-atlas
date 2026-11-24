@@ -1787,7 +1787,7 @@ dialog::backdrop {
 
 .sync-tools { display: inline-flex; align-items: center; gap: 6px; }
 .snapshot-link b { font-weight: 600; }
-.snapshot-link[data-state="live"] i { background: var(--violet); }
+.snapshot-link[data-state="live"] i { background: var(--color-text-success); }
 .snapshot-link[data-state="warning"] i { background: var(--signal); }
 .sync-refresh {
   width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);

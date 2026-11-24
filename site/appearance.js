@@ -15,7 +15,7 @@
     const theme = effectiveTheme();
     root.dataset.theme = theme;
     root.dataset.appearance = preference;
-    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#0b1519' : '#ffffff';
+    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#101116' : '#ffffff';
     const radio = document.querySelector('input[name="atlas-appearance"][value="' + preference + '"]');
     if (radio) radio.checked = true;
     document.dispatchEvent(new Event('atlas:appearance'));

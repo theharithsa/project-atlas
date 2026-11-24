@@ -17,13 +17,13 @@ const packageFile = name => new URL(import.meta.resolve(name));
 const glyphs = {
   grid: 'squares-four', sprint: 'kanban', inbox: 'tray', road: 'git-branch', clock: 'clock-counter-clockwise',
   code: 'terminal-window', database: 'database', layers: 'stack', box: 'package', flag: 'flag-pennant',
-  check: 'check-circle', calendar: 'calendar-dots', repo: 'book-bookmark', info: 'info',
+  check: 'check-circle', issue: 'circle', calendar: 'calendar-dots', repo: 'book-bookmark', info: 'info',
   rotate: 'arrows-clockwise', refresh: 'arrow-clockwise', arrow: 'arrow-right', external: 'arrow-square-out',
   down: 'caret-down', left: 'caret-left', right: 'caret-right', menu: 'sidebar-simple', close: 'x',
   filter: 'sliders-horizontal', search: 'magnifying-glass', link: 'link-simple', copy: 'copy',
   system: 'monitor', light: 'sun', dark: 'moon-stars', user: 'at', org: 'buildings',
 };
-const regular = new Set(['rotate','refresh','arrow','external','down','left','right','close']);
+const regular = new Set(['issue','rotate','refresh','arrow','external','down','left','right','close']);
 const symbols = await Promise.all(Object.entries(glyphs).map(async ([id, name]) => {
   const asset = regular.has(id) ? `regular/${name}.svg` : `duotone/${name}-duotone.svg`;
   const svg = await read(dependency('@phosphor-icons/core/assets/' + asset));

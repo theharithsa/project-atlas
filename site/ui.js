@@ -23,13 +23,15 @@ function external(url, label, cls = '', aria = '') {
     ? `<a class="${cls}" href="${href}" target="_blank" rel="noopener noreferrer"${aria ? ` aria-label="${e(aria)}"` : ''}>${label}</a>`
     : label;
 }
-let routePrefix = '#';
+let routePrefix = '#', routeWindow;
+export function setRouteWindow(value) { routeWindow = value; }
 export function setRoutePrefix(prefix) { routePrefix = prefix || '#'; }
 function url(page, product = 'all', extras = {}) {
   const q = new URLSearchParams();
   if (product !== 'all') q.set('product', product);
   for (const [k, v] of Object.entries(extras))
     if (v !== undefined && v !== null && v !== '') q.set(k, v);
+  if (routeWindow && !Object.hasOwn(extras, 'window')) q.set('window', routeWindow);
   const qs = q.toString();
   return routePrefix + page + (qs ? '?' + qs : '');
 }

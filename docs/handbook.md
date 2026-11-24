@@ -1,6 +1,6 @@
 # Dashboard guide
 
-Start with the whole portfolio or choose a product in the sidebar. A product selection follows you to Sprints, Backlog, History and Roadmap. A link in the browser’s address bar preserves the selected view and filters. [Open the live dashboard](https://pipeline.theharithsanotes.com/)
+Use the top navigation to open **Overview**, **Work**, **Releases** or **Activity**. The selectors below it set the portfolio and product across those destinations. Choose a different product while viewing a backlog or release plan to see the same view for that product. **Sources** opens owner settings and feed coverage. [Open the live dashboard](https://pipeline.theharithsanotes.com/)
 
 ## Choose an appearance
 
@@ -16,15 +16,15 @@ Select a marker or use **Inspect previous board** and **Inspect next board** ben
 
 ## Use a personal portfolio
 
-**Shared portfolio** is the default on a new browser. Open the portfolio selector in the top bar and choose **My portfolio**. An empty personal list opens **Data sources**. [Open settings](https://pipeline.theharithsanotes.com/#sources)
+**Shared portfolio** is the default on a new browser. Open the portfolio selector in the top bar and choose **My portfolio**. An empty personal list opens **Sources**. [Open settings](https://pipeline.theharithsanotes.com/#sources)
 
 1. In **My portfolio owners**, enter GitHub account logins under **GitHub users** or **GitHub organizations**. Separate multiple logins with commas. For example, try `octocat` under users and `vitejs` under organizations. You can track up to 12 accounts across both lists.
-2. Choose **Save and view my portfolio**. Open Overview, Sprints, Backlog, Roadmap or History to use your selection. Public projects are discovered for each account, including owners outside the shared settings. An account with no open public boards contributes zero products.
-3. Change the selector to **Shared portfolio** to see the maintained dashboard again. Your personal list is available when you switch back or reload. To update it, open **Data sources**. To remove every entry, use **Clear list**.
+2. Choose **Save and view my portfolio**. Open **Work** to explore sprints, backlog or closed issues, or open **Releases** to see milestones and publications. Public projects are discovered for each account, including owners outside the shared settings. An account with no open public boards contributes zero products.
+3. Change the selector to **Shared portfolio** to see the maintained dashboard again. Your personal list is available when you switch back or reload. To update it, open **Sources**. To remove every entry, use **Clear list**.
 
 Your browser stores the list and selected mode on this site. Each feed request carries one public GitHub login and its account type. A different browser starts with its own settings. If browser storage is unavailable, selections last for the current tab session. An ordinary page URL opens with the recipient’s saved portfolio. Use **Share view** to include your owner selection.
 
-If an owner fails, check the login and its type in **Data sources**. The dashboard can show other available owners and identifies missing coverage. You can edit your list or switch back to shared even during a complete outage.
+If an owner fails, check the login and its type in **Sources**. The dashboard can show other available owners and identifies missing coverage. You can edit your list or switch back to shared even during a complete outage.
 
 ## Share the current view
 
@@ -34,14 +34,14 @@ Recipients see **Linked portfolio**. They can follow links within the portfolio,
 
 ## Read the overview metrics
 
-Use **Timeframe** at the top of Overview to choose 7, 14, 30, 60, 90 or 365 days. The default is 30 days. Closure and sprint periods end on the dashboard’s date in India. The release period starts on that date and extends forward by the same number of calendar dates. Clicking a tile carries the timeframe to its detail page.
+Current sprints and upcoming releases appear directly below the workload terrain. Use **Timeframe** at the top of Overview to choose 7, 14, 30, 60, 90 or 365 days. The default is 30 days. Closure and sprint periods end on the dashboard’s date in India. The release period starts on that date and extends forward by the same number of calendar dates. Clicking a tile carries the timeframe to its detail page.
 
 | Tile | What it measures and where it opens |
 | --- | --- |
-| Closed in the selected timeframe | Unique board issues with a GitHub closure timestamp in the selected calendar dates. Opens those issues in History. |
+| Closed in the selected timeframe | Unique board issues with a GitHub closure timestamp in the selected calendar dates. Opens those issues in Work → Closed issues. |
 | Open in sprint windows | Open leaf issue assignments in sprints that overlap the selected dates. Opens those windows in Sprints. |
 | Sprint completion | Closed leaf issue assignments divided by all leaf issue assignments in the matching sprint windows. |
-| Dated releases | Versioned GitHub targets due in the forward window. Opens the same dates on Roadmap. |
+| Dated releases | Versioned GitHub targets due in the forward window. Opens the same dates in Releases → Planned. |
 | Open work and unscheduled backlog | Live counts for the selected boards. The tiles open the matching backlog filters. |
 | Needs a sprint | Open leaf issues with a delivery or planning milestone and no assigned sprint. Opens the Milestone only backlog. |
 | Undated releases | Open version milestones with outstanding work and no due date, counted once per repository milestone. Opens the matching roadmap filter. |
@@ -50,7 +50,7 @@ The header counts currently discovered open public boards and unique linked repo
 
 ## Explore coding streaks
 
-Open **Activity** from the sidebar or **Explore activity** on Overview. **Projects** counts default-branch commits in the selected boards’ public repositories. A repository on two boards counts once. **Developer** accepts a GitHub username and uses GitHub’s public commit search across repositories. GitHub must associate the commit author with the chosen account. The product filter continues to apply to the delivery tiles while the developer search follows the username across GitHub. [How GitHub searches commits](https://docs.github.com/en/search-github/searching-on-github/searching-commits)
+Open **Activity** in the main navigation or **Explore activity** on Overview. **Projects** counts default-branch commits in the selected boards’ public repositories. A repository on two boards counts once. **Developer** accepts a GitHub username and uses GitHub’s public commit search across repositories. GitHub must associate the commit author with the chosen account. The product filter continues to apply to the delivery tiles while the developer search follows the username across GitHub. [How GitHub searches commits](https://docs.github.com/en/search-github/searching-on-github/searching-commits)
 
 Use **Time range** to choose four weeks, three or six months, or one through five years. Every window ends on the dashboard date. For example, **5 years** on 18 November 2026 covers 19 November 2021 through 18 November 2026, including leap day. In longer views, the year rows show totals for each month and shade months by daily average. Select a month or use the previous and next arrows above its Monday-first calendar. Tab into the current day and use the arrow keys to move one day or one week. Share view includes the range, selected month and streak measure. Earlier links to the streak on Overview open Activity with their original settings. [Five-year Atlas project history](https://pipeline.theharithsanotes.com/#activity?product=theharithsa-5&range=5y)
 
@@ -62,7 +62,7 @@ The current streak can end yesterday while today is still open. The longest stre
 
 ## Change the shared portfolio owners
 
-1. Select **Shared portfolio**, then open **Data sources → Shared portfolio owners → Edit owners on GitHub**. Sign in to GitHub to propose a change. The two lists contain account logins, as shown in GitHub profile URLs. [Live settings](https://pipeline.theharithsanotes.com/#sources) · [Shared file](../config/owners.json)
+1. Select **Shared portfolio**, then open **Sources → Shared portfolio owners → Edit owners on GitHub**. Sign in to GitHub to propose a change. The two lists contain account logins, as shown in GitHub profile URLs. [Live settings](https://pipeline.theharithsanotes.com/#sources) · [Shared file](../config/owners.json)
 2. Add or remove logins in `users` and `organizations`. Keep both arrays. Either may be empty, and two empty arrays produce an empty dashboard. Repeated logins of the same type count once. Assign each login to exactly one type.
 3. Open a pull request. A repository maintainer can merge it after the checks pass. The merged list applies to everyone. While the dashboard is in use the feed checks for changes every five minutes. GitHub and dashboard caching can add a short delay. Settings-only edits take effect without a Firebase deployment. [GitHub file editing](https://docs.github.com/en/repositories/working-with-files/managing-files/editing-files)
 
@@ -85,7 +85,9 @@ Select the product in Atlas to follow its work. Project Atlas uses the same disc
 
 ## Follow a sprint
 
-Select a colored sprint window in the calendar. The detail page shows its dates, issue closure and individual issues. The list opens with all issues. Choose **Open** or **Closed** to narrow it. Search by title, number or repository, then open an issue to see the source discussion. Sprint membership uses the native GitHub iteration ID. The first and last days both count, using the board check date in Asia/Kolkata.
+Open **Work → Sprints**. Use **Sprint window** to switch between current, upcoming and past sprints. A timeframe selected on Overview also appears here. Current sprints with open work come first. Select a row to inspect its dates, closure and issues alongside the list. On a phone, selecting a row opens the detail. Use **Back to sprints** to return to the same window and product selection.
+
+The issue list opens on outstanding work, or on closed issues for a finished sprint. Choose **All**, **Open** or **Closed**, search by title, number or repository, then select an issue to open it on GitHub. Opening a sprint from **All products** keeps the other boards available. Sprint membership follows the board’s native iteration ID. Both boundary dates count in Asia/Kolkata.
 
 ![Sprint dates, closure and searchable issue rows for a fictional product](images/sprint.jpg)
 
@@ -95,14 +97,14 @@ Select a colored sprint window in the calendar. The detail page shows its dates,
 
 ## Find closed work
 
-Open **History** for the whole portfolio or select a product to narrow it. Search by title, issue number, repository or closure reason. Each row links to the issue and its product or sprint. An issue on several selected boards appears once with links to each membership. [Portfolio history](https://pipeline.theharithsanotes.com/#history) · [Atlas history](https://pipeline.theharithsanotes.com/#history?product=theharithsa-5)
+Open **Work → Closed issues** for the whole portfolio or select a product to narrow it. Search by title, issue number, repository or closure reason. Each row links to the issue and its product or sprint. An issue on several selected boards appears once with links to each membership. [Portfolio history](https://pipeline.theharithsanotes.com/#history) · [Atlas history](https://pipeline.theharithsanotes.com/#history?product=theharithsa-5)
 
 History includes closed parent issues and issues that never had a sprint. The newest closures appear first using GitHub’s closure timestamp, displayed in India time. If GitHub supplies a reason, such as **Not planned**, the row shows it. Rows with no closure date appear last. When GitHub reopens an issue, it leaves the closed list on refresh. **Repository history** links to GitHub’s full closed-issue list for each represented repository, including issues archived on or removed from the board.
 
 ## Follow a release
 
-The roadmap reads open GitHub milestones. A date is the target set on the milestone. Open **Data sources → Repository releases** to verify which version the repository actually published. A sprint closure percentage measures closed issues, including early closures.
+Open **Releases → Planned** for versioned milestones, other planning targets and the sprint calendar. A milestone date is the target set by its maintainer. Choose **Published** to see each selected repository’s latest GitHub release. Select its tag to open the release notes. Repositories with missing publication dates retain their tag and link.
 
 ## Investigate a discrepancy
 
-Use the board check time in the top bar and check the selection under **Data sources**. A partial feed lists unavailable sources and totals cover the sources that responded. During a temporary full outage an open page retains its previous timestamped view for up to ten minutes. The page retries when it regains visibility or network connectivity. [Source links and counting rules](https://pipeline.theharithsanotes.com/#sources)
+Use the board check time in the top bar and check the selection under **Sources**. A partial feed lists unavailable sources and totals cover the sources that responded. During a temporary full outage an open page retains its previous timestamped view for up to ten minutes. The page retries when it regains visibility or network connectivity. [Source links and counting rules](https://pipeline.theharithsanotes.com/#sources)

@@ -124,3 +124,19 @@ test('missing and capped streak coverage retains proven active days and flags un
   assert.equal(streakSummary(asOf,[stale]).days.at(-2).complete,false);
   assert.equal(streakSummary(asOf,[stale]).days.at(-1).complete,false);
 });
+
+test('all-product sprint links retain their board and published releases retain their view',()=>{
+  const settings = {users:['dev'],organizations:[]};
+  for (const [page,query] of [['sprints','board=two&sprint=s1&show=open'],['roadmap','view=published']]) {
+    const href = viewLink('https://atlas.example/',settings,route(page,'all',query));
+    assert.equal(decodeView(new URL(href).hash).route,'#'+page+'?'+query);
+  }
+});
+
+test('workspace destinations inherit the selected timeframe and allow an explicit all-time history',async t=>{
+  const {setRouteWindow} = await import('../site/ui.js');
+  setRouteWindow('90d');
+  t.after(()=>setRouteWindow(null));
+  assert.equal(url('roadmap','alpha',{view:'published'}),'#roadmap?product=alpha&view=published&window=90d');
+  assert.equal(url('history','alpha',{window:null}),'#history?product=alpha');
+});

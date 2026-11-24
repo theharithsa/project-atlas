@@ -38,7 +38,7 @@ test('System resolves before styles and follows a device change, even with an in
   ui.system.matches = true;
   ui.emit('system');
   assert.equal(ui.root.dataset.theme,'dark');
-  assert.equal(ui.meta.content,'#0b1519');
+  assert.equal(ui.meta.content,'#101116');
 });
 test('explicit appearance persists independently, syncs across tabs and returns to System on clear',()=>{
   const ui = appearance('dark');

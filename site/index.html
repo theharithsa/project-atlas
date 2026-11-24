@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b1519" />
+    <meta name="theme-color" content="#101116" />
     <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="generated/astryx.css" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="console.css" />
+    <link rel="stylesheet" href="workspace.css" />
   </head>
   <body>
     <div class="atlas-intro" id="atlas-intro" aria-hidden="true" hidden>
@@ -31,17 +32,18 @@
     </div>
     <a class="skip" href="#content">Skip to content</a>
     <div class="shell">
-      <aside class="rail" id="desktop-nav" aria-label="Workspace navigation"></aside>
       <div class="workspace">
-        <header class="topbar">
-          <div id="topbar"></div>
+        <header class="workspace-header">
+          <div class="masthead"><div id="workspace-brand"></div><div id="workspace-nav"></div>
+          <div class="masthead-utilities"><div id="sources-link"></div>
           <fieldset class="appearance">
             <legend class="sr-only">Appearance</legend>
             <label title="Use device appearance"><input type="radio" name="atlas-appearance" value="system" aria-label="System theme" checked /><span><svg class="atlas-icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="generated/icons.svg#system"></use></svg></span></label>
             <label title="Use light appearance"><input type="radio" name="atlas-appearance" value="light" aria-label="Light theme" /><span><svg class="atlas-icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="generated/icons.svg#light"></use></svg></span></label>
             <label title="Use dark appearance"><input type="radio" name="atlas-appearance" value="dark" aria-label="Dark theme" /><span><svg class="atlas-icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="generated/icons.svg#dark"></use></svg></span></label>
-          </fieldset>
+          </fieldset></div></div>
         </header>
+        <div class="context-band"><div id="workspace-context"></div></div>
         <main id="content" tabindex="-1" class="main">
           <section class="feed-pending" role="status">
             <div class="hero-copy">
@@ -53,7 +55,6 @@
         </main>
       </div>
     </div>
-    <dialog id="mobile-menu" aria-label="Workspace navigation"></dialog>
     <noscript
       ><p>
         Enable JavaScript to view live GitHub projects.

@@ -5,32 +5,16 @@ import {developerRoute, activityHref, hydrateActivity, codingPanel, selectActivi
 import {decodeView, viewLink, linkedIssueFilter, dashboardPage} from './sharing.js';
 import {fetchSnapshot, maxPersonalOwners, ownerLists, personalPortfolio, preferencesKey, readPreferences, writePreferences} from './portfolio.js';
 import { prepare, portfolioInventory, timeframeOptions, defaultTimeframe, deliveryTimeframe } from './model.js';
-import { icon, e, external, url, productMark, selectPicker, setRoutePrefix } from './ui.js';
+import { icon, e, external, url, productMark, selectPicker, setRoutePrefix, setRouteWindow } from './ui.js';
 import { overview } from './overview.js';
+import {primaryNavigation, sectionNavigation, changeProduct} from './workspace.js';
 import { backlogPage, sprintPage, roadmapPage, historyPage, paintIssues, searchIssues, pageIssues, saveIssueView, restoreIssueView } from './work.js';
 const main = document.getElementById('content'),
   pendingFeed = main.firstElementChild,
-  desktop = document.getElementById('desktop-nav'),
-  menu = document.getElementById('mobile-menu'),
-  topbar = document.getElementById('topbar');
-const pageNames = {
-  overview: 'Overview',
-  sprints: 'Sprints',
-  backlog: 'Backlog',
-  roadmap: 'Roadmap',
-  history: 'History',
-  activity: 'Activity',
-  sources: 'Data sources',
-};
-const navIcons = {
-  overview: 'grid',
-  sprints: 'sprint',
-  backlog: 'inbox',
-  roadmap: 'road',
-  history: 'clock',
-  activity: 'code',
-  sources: 'database',
-};
+  brandSlot = document.getElementById('workspace-brand'),
+  navigationSlot = document.getElementById('workspace-nav'),
+  sourcesSlot = document.getElementById('sources-link'),
+  contextSlot = document.getElementById('workspace-context');
 let data, r, lastContent, activeRequest, terrain, pointerDestination, failed = false, heroTyped = false;
 let savedPreferences = readPreferences(), linked = decodeView(location.hash);
 let preferences = linked?.owners ? {mode:'personal', ...linked.owners} : savedPreferences;
@@ -68,27 +52,16 @@ function setView(href) {
   if (location.hash !== href) location.hash = href;
   else render();
 }
-function brand() {
-  return `<a class="brand" href="${e(url('overview'))}" aria-label="Project Atlas overview"><img src="assets/atlas-mark.svg" width="34" height="34" alt=""><span>Project Atlas</span></a>`;
-}
-function navigation(mobile = false) {
-  const activeProduct = data.projects.find((p) => p.key === r.product);
-  const productPage = ['history','activity'].includes(r.page) ? r.page : 'overview';
-  const productFilters = productPage === 'activity' ? Object.fromEntries(r.q) : {window:r.q.get('window')};
-  delete productFilters.product;
-  const ownerCount = data.directoryOwners?.length ?? (data.owner ? 1 : 0);
-  return `${mobile ? `<button class="menu-close" data-close-menu aria-label="Close navigation">${icon('close')}</button>` : ''}${brand()}
-    <div class="rail-body"><p class="nav-heading">Workspace</p><nav class="nav-links" aria-label="Dashboard pages">${Object.entries(
-      pageNames,
-    )
-      .filter(([k]) => k !== 'sources')
-      .map(
-        ([k, label]) =>
-          `<a href="${e(url(k,r.product,k === 'overview' ? {window:r.q.get('window')} : {}))}" class="${k === r.page ? 'active' : ''}"${k === r.page ? ' aria-current="page"' : ''}>${icon(navIcons[k])}<span>${label}</span></a>`,
-      )
-      .join('')}</nav>
-    <div class="nav-heading product-heading">Products <span>${data.projects.length}</span></div><nav class="product-links" aria-label="Filter by product">${data.projects.map((p) => `<a href="${e(url(productPage,p.key,productFilters))}" class="${activeProduct === p ? 'selected-product' : ''}">${productMark(p, true)}<span>${e(p.label)}</span></a>`).join('')}</nav></div>
-    <div class="rail-footer"><a class="data-link ${r.page === 'sources' ? 'active' : ''}" href="${e(url('sources'))}">${icon('database', 17)} Data sources</a><div class="owner"><span class="owner-avatar">${icon('layers', 17)}</span><div><strong>${linked ? 'Linked portfolio' : preferences.mode === 'personal' ? 'My portfolio' : 'Shared portfolio'}</strong><small>${ownerCount} tracked ${ownerCount === 1 ? 'owner' : 'owners'}</small></div></div></div>`;
+function workspaceHeader(route) {
+  const product = route?.product || 'all';
+  brandSlot.innerHTML = `<a class="brand" href="${e(url('overview',product))}" aria-label="Project Atlas overview"><img src="assets/atlas-mark.svg" width="30" height="30" alt=""><span>Project Atlas</span></a>`;
+  navigationSlot.innerHTML = primaryNavigation(route);
+  sourcesSlot.innerHTML = `<a class="sources-utility" href="${e(url('sources',product))}"${route?.page === 'sources' ? ' aria-current="page"' : ''}>${icon('database',17)}<span>Sources</span></a>`;
+  const picker = route ? selectPicker('product-select','Product filter',
+    [['all','All products'],...data.projects.map(p => [p.key,p.label])],product,{leading:'box',kind:'product'}) : '';
+  const share = route && preferences.mode === 'personal' ? controls.share : '';
+  const status = route ? `<div class="sync-tools"><a class="snapshot-link" href="${e(url('sources',product))}" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',18)}</button></div>` : '';
+  contextSlot.innerHTML = `<div class="scope-tools">${modeControl()}${picker ? '<span class="scope-divider" aria-hidden="true"></span>' + picker : ''}</div><div class="scope-actions">${share}${status}</div>`;
 }
 function sharedOwnerPanel(settings) {
   if (!settings) return '';
@@ -170,8 +143,8 @@ function header(products, timeframe) {
     overview: product ? product.label : 'Delivery overview',
     sprints: 'Sprints',
     backlog: 'Backlog',
-    roadmap: 'Release roadmap',
-    history: 'Issue history',
+    roadmap: r.q.get('view') === 'published' ? 'Published releases' : 'Planned releases',
+    history: 'Closed issues',
     activity: 'Activity',
     sources: 'Data sources',
   }[r.page];
@@ -181,19 +154,16 @@ function header(products, timeframe) {
       : `${inventory.boards} product ${inventory.boards === 1 ? 'board' : 'boards'} across ${repoLabel}`,
     sprints: 'Work assigned to GitHub sprint and iteration windows.',
     backlog: 'Open work, planning commitments and native board status.',
-    roadmap: 'Sprint windows and release targets from the linked repositories.',
+    roadmap: r.q.get('view') === 'published' ? 'The latest published GitHub release from each linked repository.' : 'Release targets and planning milestones from the linked repositories.',
     history: 'Closed issues on the selected boards, newest first. Dates are shown in India time.',
     activity: 'Explore public GitHub contributions and commit history.',
     sources: 'Live coverage, refresh times and GitHub source links.',
   }[r.page];
   document.title = title + ' · Project Atlas';
-  const share = preferences.mode === 'personal' ? controls.share : '';
-  const showProductFilter = r.page !== 'activity' || r.q.get('activity') !== 'developer';
-  const productPicker = showProductFilter ? selectPicker('product-select','Product filter',
-    [['all','All products'],...data.projects.map(p => [p.key,p.label])],r.product,{leading:'box',caption:timeframe && 'Product',kind:'product'}) : '';
   const periodPicker = timeframe ? selectPicker('overview-window','Timeframe',timeframeOptions,timeframe.key,
     {leading:'calendar',caption:true,kind:'timeframe'}) : '';
-  const actions = share + productPicker + periodPicker;
+  const actions = periodPicker;
+  if (r.page === 'sprints') return '';
   if (r.page !== 'overview' || product)
     return `<header class="page-title"><div><span class="terminal-line route-command" aria-hidden="true"><span class="prompt">$</span>atlas ${e(r.page)}</span><h1>${e(title)}</h1><p>${e(subtitle)}</p></div>${actions ? '<div class="view-actions">' + actions + '</div>' : ''}</header>`;
 
@@ -205,7 +175,7 @@ function header(products, timeframe) {
   return `<header class="atlas-hero${typingClass}"><div class="hero-copy">
     <span class="terminal-line hero-command${typingClass}" aria-hidden="true"><span class="prompt">$</span><span class="typed-command">atlas status --source github</span></span>
     <h1>Delivery <em>overview</em></h1><p>${e(subtitle)}</p>
-    </div>${terrainPanel()}<div class="hero-actions"><div class="hero-filters">${productPicker}${periodPicker}</div><div class="hero-links">${share}${cta}</div></div></header>`;
+    </div>${terrainPanel()}<div class="hero-actions"><div class="hero-filters">${periodPicker}</div><div class="hero-links">${cta}</div></div></header>`;
 }
 function render(updating = false) {
   const issueView = updating ? saveIssueView() : null;
@@ -217,20 +187,16 @@ function render(updating = false) {
   const selectedDay = updating ? main.querySelector('[data-activity-day][aria-pressed="true"]')?.dataset.activityDay : null;
   const focusHref = focused?.tagName === 'A' ? focused.getAttribute('href') : null;
   r = currentRoute();
-  if (menu.open && !updating) menu.close();
+  setRouteWindow(deliveryTimeframe(data.asOf,r.q.get('window'))?.key);
   const products =
     r.product === 'all' ? data.projects : data.projects.filter((p) => p.key === r.product);
   const timeframe = r.page === 'overview'
     ? deliveryTimeframe(data.asOf,r.q.get('window')) || deliveryTimeframe(data.asOf,defaultTimeframe)
     : null;
-  desktop.innerHTML = navigation();
-  menu.innerHTML = navigation(true);
-  topbar.innerHTML = `<div class="crumb"><button class="mobile-trigger" aria-label="Open navigation" aria-haspopup="dialog" data-menu>${icon('menu', 19)}</button>${modeControl()}<span class="crumb-slash">/</span><strong>${pageNames[r.page]}</strong></div><div class="sync-tools"><a class="snapshot-link" href="${e(url('sources'))}" aria-label="GitHub feed status and sources"><i></i><b id="sync-label" role="status"></b><span id="sync-time"></span></a><button class="sync-refresh" id="sync-refresh" aria-label="Refresh GitHub data" title="Refresh GitHub data">${icon('refresh',18)}</button></div>`;
+  workspaceHeader(r);
   const missingProduct = linked && r.q.has('product') && r.q.get('product') !== 'all' && r.product === 'all';
-  const missingSprint = linked && r.page === 'sprints' && r.q.has('sprint') &&
-    (r.product === 'all' || !products[0]?.sprints.some(s => s.id === r.q.get('sprint')));
-  const content = missingProduct || missingSprint
-    ? `<section class="panel source-intro"><h2>Linked ${missingProduct ? 'project' : 'sprint'} unavailable</h2><p>Check coverage in Data sources or open another project in this portfolio.</p></section>`
+  const content = missingProduct
+    ? '<section class="panel source-intro"><h1>Linked project unavailable</h1><p>Check coverage in Sources or choose another product.</p></section>'
     : {
     overview: () => overview(data,products,r,timeframe),
     activity: () => codingPanel(data,products,r,preferences.mode === 'personal' ? preferences.users : (data.sourceSettings?.users || [])),
@@ -241,8 +207,8 @@ function render(updating = false) {
     sources: () => sourcePage(products),
   }[r.page]();
   const banner = linked ? '<div class="linked-notice"><span>Viewing a linked portfolio</span><button type="button" data-leave-link>Return to my dashboard</button></div>' : '';
-  main.innerHTML = banner + header(products,timeframe) + content;
-  if (issueView || linked) restoreIssueView(issueView || linkedIssueFilter(r.q));
+  main.innerHTML = banner + sectionNavigation(r) + (missingProduct ? '' : header(products,timeframe)) + content;
+  restoreIssueView(issueView || history.state?.issueView || linkedIssueFilter(r.q));
   paintIssues();
   hydrateActivity(data, r, selectedDay);
   terrain = mountTerrain(main.querySelector('.terrain'),products,timeframe?.key,terrain);
@@ -266,7 +232,7 @@ document.addEventListener('click', (event) => {
     const field = document.getElementById('share-address');
     const feedback = document.getElementById('share-result');
     try {
-      field.value = viewLink(location.href, preferences, r, document.getElementById('issue-search') && saveIssueView());
+      field.value = shareAddress();
       feedback.textContent = '';
     } catch (error) {
       field.value = ''; feedback.textContent = error.message;
@@ -289,16 +255,9 @@ document.addEventListener('click', (event) => {
     changePortfolio({mode:'personal', users:[], organizations:[]}, 'Personal list cleared.');
   }
   if (btn?.id === 'sync-refresh' || btn?.id === 'retry-feed') refresh();
-  if (btn?.hasAttribute('data-menu')) {
-    menu.showModal();
-    menu.querySelector('[data-close-menu]').focus();
-  }
-  if (btn?.hasAttribute('data-close-menu')) menu.close();
-  if (event.target === menu) menu.close();
-  if (event.target.closest('a') && menu.open) menu.close();
   if (btn?.dataset.pager) {
     pageIssues(Number(btn.dataset.pager));
-    rememberLinkedSearch();
+    rememberIssueSearch();
   }
   if (btn?.hasAttribute('data-activity-day')) selectActivityDay(btn);
   if (event.target.closest('a.skip')) {
@@ -320,7 +279,7 @@ document.addEventListener('input', (ev) => {
     ev.target.removeAttribute('aria-invalid');
     document.getElementById('developer-error').textContent = '';
   }
-  if (ev.target.id === 'issue-search') { searchIssues(ev.target.value); rememberLinkedSearch(); }
+  if (ev.target.id === 'issue-search') { searchIssues(ev.target.value); rememberIssueSearch(); }
 });
 document.addEventListener('submit', ev => {
   if (ev.target.id === 'developer-form') {
@@ -350,10 +309,11 @@ document.addEventListener('change', (ev) => {
   if (ev.target.id === 'activity-range') setView(activityHref(r,{range:ev.target.value,month:null}));
   if (ev.target.id === 'activity-metric') setView(activityHref(r,{metric:ev.target.value}));
   if (ev.target.id === 'product-select') {
-    const keep = Object.fromEntries(r.q);
-    delete keep.product;
-    delete keep.sprint;
-    setView(url(r.page, ev.target.value, keep));
+    setView(changeProduct(r,ev.target.value));
+  }
+  if (ev.target.id === 'sprint-period' || ev.target.id === 'sprint-show') {
+    const option = ev.target.selectedOptions[0];
+    if (option) setView(option.value);
   }
   if (ev.target.id === 'status-filter') {
     const keep = Object.fromEntries(r.q);
@@ -395,21 +355,21 @@ window.addEventListener('hashchange', () => {
     !previous ||
     previous.page !== next.page ||
     previous.product !== next.product ||
-    previous.q.get('sprint') !== next.q.get('sprint');
+    previous.q.get('sprint') !== next.q.get('sprint') ||
+    previous.q.get('board') !== next.q.get('board');
   render();
   if (move) {
     window.scrollTo(0, 0);
-    main.focus({ preventScroll: true });
+    const detail = window.matchMedia('(max-width: 760px)').matches && next.q.has('sprint') ? main.querySelector('#sprint-detail-title') : null;
+    (detail || main).focus({preventScroll:true});
     if (pointerDestination === location.hash) enterWorkspacePage(main);
   }
   pointerDestination = null;
 });
 function pendingPage(error) {
   terrain = null;
-  if (menu.open) menu.close();
-  desktop.innerHTML = brand();
-  menu.replaceChildren();
-  topbar.innerHTML = `<div class="crumb">${modeControl()}</div>`;
+  setRouteWindow(null);
+  workspaceHeader(null);
   const personal = preferences.mode === 'personal';
   if (linked?.invalid) {
     main.innerHTML = '<section class="panel error-state"><h1>Invalid portfolio link</h1><p>Ask the sender for a new link.</p><button type="button" data-leave-link>Return to my dashboard</button></section>';
@@ -421,15 +381,35 @@ function pendingPage(error) {
     (error && !personal ? `<p>${external(editOwnersUrl, 'Check shared owner settings on GitHub', 'text-link')}</p>` : '');
   if (!error) main.prepend(pendingFeed);
 }
-function rememberLinkedSearch() {
-  if (!linked?.owners) return;
+function issueRoute() {
+  const route = {...r, q:new URLSearchParams(r.q)};
+  const detail = document.querySelector('.sprint-inspector');
+  if (detail?.getClientRects().length && !route.q.has('sprint')) {
+    route.q.set('sprint',detail.dataset.sprint);
+    if (r.product === 'all') route.q.set('board',detail.dataset.board);
+  }
+  return route;
+}
+function shareAddress() {
+  const visible = document.getElementById('issue-search')?.getClientRects().length;
+  return viewLink(location.href, preferences, issueRoute(), visible ? saveIssueView() : null);
+}
+function rememberIssueSearch() {
+  const state = {issueView:saveIssueView()};
+  if (!linked?.owners) {
+    const route = issueRoute();
+    const address = url(route.page,route.product,Object.fromEntries(route.q));
+    history.replaceState(state,'',address);
+    r = currentRoute();
+    return;
+  }
   try {
-    const address = viewLink(location.href, preferences, r, saveIssueView());
-    history.replaceState(null, '', address);
+    history.replaceState(state, '', shareAddress());
     linked = decodeView(location.hash);
     r = currentRoute();
   } catch {
     // Longer searches still work locally. The share dialog explains the URL limit.
+    history.replaceState(state, '');
   }
 }
 function changePortfolio(next, notice = '', persist = true) {
